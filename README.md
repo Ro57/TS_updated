@@ -1,3 +1,3 @@
 # token-strike
 
-implementation of token strike protocol
+Implementation of token strike protocol
