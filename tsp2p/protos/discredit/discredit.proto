@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package discredit;
+
+option go_package = "token-strike/tsp2p/discredit";
+
+import "protos/DB/tokendb.proto";
+
+// DuplicateBlock 2 identical blocks were generated (Updated the structure)
+message DuplicateBlock {
+    // first_block_header — copied block
+    tokendb.Block first_block_header = 1;
+    // second_block_header — block copy
+    tokendb.Block second_block_header = 2;
+}
+
+// DenialService the issuer accepts a lock_tokens request from a sender but 
+// then ignores the transfer_tokens request from the recipient
+message DenialService {
+    // lock — hash of ignored lock
+    string lock = 1;
+    // htlc_secret — htlc genereted issuer
+    string htlc_secret = 2;
+    // proof_mercle_branch — proof from PKT blockchain
+    string proof_mercle_branch = 3;
+    // creation_height — height of the block on create lock
+    uint64 creation_height = 4;
+    // lock_expire — pkt block on which has expired lock
+    uint64 lock_expire = 5;
+}

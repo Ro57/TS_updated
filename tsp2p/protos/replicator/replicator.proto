@@ -1,0 +1,335 @@
+syntax = "proto3";
+
+package replicator;
+
+option go_package = "token-strike/tsp2p/replicator";
+
+import "google/protobuf/empty.proto";
+import "protos/DB/tokendb.proto";
+import "protos/discredit/discredit.proto";
+
+// Replicator is mainly used to generate compatible querier (client)
+// Generated client can be used to serve two main purposes:
+//  - to interact with it via generated client
+//  - to test generated client implementation by mocking generated server
+service Replicator {
+    // GetTokenOffers returns available token offers
+    // Now deprecated, use GetTokenList instead
+    rpc GetTokenOffers (GetTokenOffersRequest) returns (GetTokenOffersResponse){
+        option deprecated = true;
+    };
+
+    // GetTokenBalances returns current token balances
+    // TODO: rework or delete
+    rpc GetTokenBalances (GetTokenBalancesRequest)
+        returns (GetTokenBalancesResponse) 
+    {
+        option deprecated = true;
+    };
+
+    // IssueToken — Issue new token with given data. Request data equal to
+    // token purchase data, because it is token offer.
+    rpc IssueToken(IssueTokenRequest) returns (google.protobuf.Empty);
+
+    rpc SyncChain(stream SyncChainRequest) returns (google.protobuf.Empty);
+
+    // GetBlockSequence get all sequence from a selected by token name bucket and return it
+    rpc GetBlockSequence(GetBlockSequenceRequest) returns(GetUrlTokenResponse);
+    
+    // GetHeaders returns headers of all block from given hash to last block
+    rpc GetHeaders(GetHeadersRequest) returns (GetHeadersResponse);
+
+    // GetToken returns only one specified token 
+    rpc GetToken(GetTokenRequest) returns (GetTokenResponse);
+
+    rpc GetIssuerTokens(GetIssuerTokensRequest) returns (GetIssuerTokensResponse);
+
+    rpc GetUrlSequence(GetUrlSequenceRequest) returns(GetUrlSequenceResponse);
+
+    // GetTokenList — return list of issued token with infomation about
+    // expiration time and fix price.
+    rpc GetTokenList(GetTokenListRequest)
+        returns(GetTokenListResponse);
+
+    // GenerateURL return url from every replication server to add it to
+    // inforamtion about token
+    rpc GenerateURL(GenerateURLRequest) returns (GenerateURLResponse);
+}
+
+// TransferTokenRequest need to unlock tokens to user
+message TransferTokenRequest {
+    // token name
+    string token = 1;
+    // htlc — secret preimage 
+    string htlc = 2;
+    // lock_id — from LockToken method
+    string lock_id = 3;
+    // address — wallet to send tokens
+    string address = 4;
+}
+
+// GetTokenOffersRequest godoc
+message GetTokenOffersRequest {
+    option deprecated = true;
+    // issuer_id godoc
+    string issuer_id = 1;
+    // params godoc
+    Pagination params = 2;
+}
+
+// GetTokenOffersResponse godoc
+message GetTokenOffersResponse {
+    option deprecated = true;
+    // offers godoc
+    repeated TokenOffer offers = 1;
+    // total godoc
+    uint64 total = 2;
+}
+
+// GetTokenListRequest — request token list with pagination
+message GetTokenListRequest {
+    // issuer_id is user login issued this token
+    string issuer_id = 1;
+    // params of paginaton
+    replicator.Pagination params = 2;
+}
+
+// GetTokenListResponse — list of tokens with additional info
+message GetTokenListResponse {
+    // tokens list of registred tokens
+    
+    /// Caleb: We need to be careful to identify a token by it's ID 
+    // (hash of block 1). This ID cannot be stored inside of the Token object 
+    // because it will change the hash of the Token object which will then 
+    // change the hash of the State object, which will then change the hash of
+    // block 1, which changes the ID. It is important to use the ID to identify
+    //  a token because this contains the initial token holders. IMO this 
+    // should be `repeated string token_ids = 1;`
+    repeated Token tokens = 1;
+    // total number of registered tokens, if the issued_id is passed, only
+    // its tokens are taken into account
+    int32 total = 2;
+}
+
+// Token contain information about token to send it and store in DB
+message Token {
+    // name — identifier of token
+    string name = 1;
+    // token — meta info about token
+    tokendb.Token token = 2;
+    // root — hash of last block in blockchain 
+    string root = 3;
+}
+
+// TokenOffer is used to send an offer to buy a token
+// TODO: rework or remove
+message TokenOffer {
+    // token — name of token 
+    string token = 1;
+
+    // price in PKT tokens
+    uint64 price = 2;
+
+    // issuer_info — contain info about token about the issuer server that 
+    // issued the token
+    IssuerInfo issuer_info = 3;
+
+    // valid_until_seconds — protects issuers from such a case, when potential
+    // buyer successfully acquires dozens of signatures just in case if that 
+    // issuer would raise up the price later. If a Token Wallet holder would
+    // like to open channel with an outdated offer, Replicator would reject to
+    // register this purchase and buyer stays unprotected
+    int64 valid_until_seconds = 4;
+
+    // count — the number of tokens to be issued
+    uint64 count = 5;
+}
+
+// IssuerInfo info about issuer server
+message IssuerInfo {
+    // id — value is explicetely used by Replicator to uniquely identify related
+    // issuer later in order to ban him (discredite case), since
+    // "identity_pubkey", "host" may be changed
+    string id = 1;
+
+    // identity_pubkey — the following field values are used to open payment
+    // channel, invoices commands execution etc.
+    string identity_pubkey = 2;
+
+    // host is used to establish client connection to the issuer's node during
+    // some RPC calls
+    string host = 3;
+}
+
+// GetTokenBalancesRequest godoc
+// NOTE: we don't provide any token holder identification since the reqeuest is
+// authorized with JWT applied to the request metadata. It means, that
+// replicator is capable to extract all data needed to process the request
+message GetTokenBalancesRequest {
+    option deprecated = true;
+
+    // params godoc
+    Pagination params = 1;
+}
+
+// GetTokenBalancesResponse godoc
+message GetTokenBalancesResponse {
+    option deprecated = true;
+
+    // balances godoc
+    repeated TokenBalance balances = 1;
+    // total godoc
+    uint64 total = 2;
+}
+
+// TokenBalance godoc
+message TokenBalance {
+    // token — name of token
+    string token = 1;
+    // available godoc
+    uint64 available = 2;
+    // frozen godoc
+    uint64 frozen = 3;
+}
+
+// Pagination used for separation on page 
+message Pagination {
+    // limit – maximum on the one page
+    uint64 limit = 1;
+    // offset from the beginning of the list
+    uint64 offset = 2;
+}
+
+// IssueTokenRequest — info about token will be issued
+message IssueTokenRequest {
+    // name — identifier of new token
+    string name = 1;
+    // offer on token issue
+    tokendb.Token offer = 2;
+    // genesis block for sending to replicator
+    tokendb.Block block = 3;
+    // list recipients for sending tokens after mint
+    repeated tokendb.Owner recipient = 4;
+}
+
+message SyncChainRequest {
+    string name = 1;
+
+    repeated  tokendb.Block blocks = 2;
+}
+
+// GetBlockSequenceRequest get block sequence by token name
+message GetBlockSequenceRequest{
+    string name = 1;
+}
+
+// GetTokenRequest used for identification token for getting
+message GetTokenRequest {
+    // token_id — name or hash of genesis block of the token
+    string token_id = 1;
+}
+
+// GetTokenRequest contains the found token
+message GetTokenResponse {
+    // token — information about selected token
+    Token token = 1;
+
+    // discredits — in case the replicator is aware that the issuer has been 
+    // discredit set it discredit collection
+    DiscreditList discredits = 2;
+}
+
+message GetIssuerTokensRequest {
+    repeated string issuer = 1;
+    Pagination params = 2;
+}
+
+message GetIssuerTokensResponse {
+  repeated IssuerTokens tokens = 1;
+}
+
+message IssuerTokens {
+  string name = 1;
+  repeated Token tokens = 2;
+}
+
+message GetUrlSequenceRequest {
+    string token_name = 1;
+}
+
+message GetUrlSequenceResponse {
+    string url = 1;
+}
+
+// GetHeadersRequest contains a hash from which need to give all the hashes to
+// the last
+message GetHeadersRequest {
+    // token_id — name or hash of genesis block of the token
+    string token_id = 1;
+
+    // hash from which tokens will be selected 
+    string hash = 2;
+}
+
+// GetHeadersResponse contain block hashes with token information
+message GetHeadersResponse {
+    // token — information about token
+    tokendb.Token token = 1;
+    // blocks — collcetion of block hash from given to last
+    repeated MerkleBlock blocks = 2;
+}
+
+// MerkleBlock — inforamtion about block
+message MerkleBlock {
+    // hash of block
+    string hash = 1;
+    // prev_hash — reference of previous block
+    string prev_hash = 2;
+}
+
+message GetUrlTokenResponse {
+    tokendb.State state = 1;
+    repeated tokendb.Block blocks = 2;
+
+    // root — Hash of the chain tip block
+    string root = 3;
+}
+
+// GenerateURLRequest contain name for generate new url
+message GenerateURLRequest {
+    // name of token
+    string name = 1;
+}
+
+// GenerateURLResponse contains the url to add it to the token information
+message GenerateURLResponse {
+    // url generated from replications
+    string url = 1;
+}
+
+// IssuerConnection contain local information for connect to issuer 
+message IssuerConnection {
+    // host — connection address
+    string host = 1;
+    // pubkey of the issuer, used on the issuer's server, and to get by key in
+    // the descredit local database
+    string pubkey = 2;
+}
+
+// DiscreditList contain collection of dicredit
+message DiscreditList {
+    // dicredits — collections of discredits
+    repeated DiscreditWrapper dicredits = 1;
+
+    // DiscreditWrapper used for resolve problem with repeated oneof
+    // https://github.com/protocolbuffers/protobuf/issues/2592#issuecomment-284540212
+    message DiscreditWrapper {
+        oneof discedit {
+            // duplicate_block — problem with dubled block
+            discredit.DuplicateBlock duplicate_block = 2;
+            // denial_service — ignore transactions after lock
+            discredit.DenialService denial_service = 3;
+        }
+    }
+
+}

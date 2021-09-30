@@ -1,0 +1,601 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "protos/replicator/replicator.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "DiscreditListDiscreditWrapper": {
+      "type": "object",
+      "properties": {
+        "duplicate_block": {
+          "$ref": "#/definitions/discreditDuplicateBlock",
+          "title": "duplicate_block — problem with dubled block"
+        },
+        "denial_service": {
+          "$ref": "#/definitions/discreditDenialService",
+          "title": "denial_service — ignore transactions after lock"
+        }
+      },
+      "title": "DiscreditWrapper used for resolve problem with repeated oneof\nhttps://github.com/protocolbuffers/protobuf/issues/2592#issuecomment-284540212"
+    },
+    "discreditDenialService": {
+      "type": "object",
+      "properties": {
+        "lock": {
+          "type": "string",
+          "title": "lock — hash of ignored lock"
+        },
+        "htlc_secret": {
+          "type": "string",
+          "title": "htlc_secret — htlc genereted issuer"
+        },
+        "proof_mercle_branch": {
+          "type": "string",
+          "title": "proof_mercle_branch — proof from PKT blockchain"
+        },
+        "creation_height": {
+          "type": "string",
+          "format": "uint64",
+          "title": "creation_height — height of the block on create lock"
+        },
+        "lock_expire": {
+          "type": "string",
+          "format": "uint64",
+          "title": "lock_expire — pkt block on which has expired lock"
+        }
+      },
+      "title": "DenialService the issuer accepts a lock_tokens request from a sender but \nthen ignores the transfer_tokens request from the recipient"
+    },
+    "discreditDuplicateBlock": {
+      "type": "object",
+      "properties": {
+        "first_block_header": {
+          "$ref": "#/definitions/tokendbBlock",
+          "title": "first_block_header — copied block"
+        },
+        "second_block_header": {
+          "$ref": "#/definitions/tokendbBlock",
+          "title": "second_block_header — block copy"
+        }
+      },
+      "title": "DuplicateBlock 2 identical blocks were generated (Updated the structure)"
+    },
+    "justificationsGenesis": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "title": "token — token identification by name"
+        }
+      },
+      "title": "Genesis initial block justification"
+    },
+    "justificationsLockTimeOver": {
+      "type": "object",
+      "properties": {
+        "proof_elapsed": {
+          "type": "string",
+          "title": "proof_elapsed — PKT block hash confirming expiration lock"
+        },
+        "lock": {
+          "type": "string",
+          "title": "lock_id — hash with information about lock justification"
+        }
+      },
+      "title": "LockTimeOver timeout for token locking"
+    },
+    "justificationsLockToken": {
+      "type": "object",
+      "properties": {
+        "lock": {
+          "$ref": "#/definitions/lockLock",
+          "title": "lock — information about lock"
+        }
+      },
+      "title": "LockToken the token locking"
+    },
+    "justificationsTranferToken": {
+      "type": "object",
+      "properties": {
+        "htlc_secret": {
+          "type": "string",
+          "title": "htlc_secret — htlc genereted issuer"
+        },
+        "lock": {
+          "type": "string",
+          "title": "lock — hash information about lock"
+        }
+      },
+      "title": "TranferToken receiving funds for tokens and unlcok them"
+    },
+    "lockLock": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "count — number of sending tokens"
+        },
+        "recipient": {
+          "type": "string",
+          "title": "recipient — wallet addres of new owner of tokens"
+        },
+        "sender": {
+          "type": "string",
+          "title": "sender — owner of the wallet address to which tokens will be returned"
+        },
+        "htlc_secret_hash": {
+          "type": "string",
+          "title": "htlc_secret_hash — hash of contract"
+        },
+        "proof_count": {
+          "type": "integer",
+          "format": "int32",
+          "title": "proof_count — lock expiration time in PKT blocks"
+        },
+        "creation_height": {
+          "type": "string",
+          "format": "uint64",
+          "title": "creation_height — creation height in token blockchain"
+        },
+        "signature": {
+          "type": "string",
+          "title": "signature generated with old owner private key"
+        }
+      },
+      "title": "Lock contain information about tokens and contract for transferring"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "replicatorDiscreditList": {
+      "type": "object",
+      "properties": {
+        "dicredits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DiscreditListDiscreditWrapper"
+          },
+          "title": "dicredits — collections of discredits"
+        }
+      },
+      "title": "DiscreditList contain collection of dicredit"
+    },
+    "replicatorGenerateURLResponse": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "title": "url generated from replications"
+        }
+      },
+      "title": "GenerateURLResponse contains the url to add it to the token information"
+    },
+    "replicatorGetHeadersResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/tokendbToken",
+          "title": "token — information about token"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorMerkleBlock"
+          },
+          "title": "blocks — collcetion of block hash from given to last"
+        }
+      },
+      "title": "GetHeadersResponse contain block hashes with token information"
+    },
+    "replicatorGetIssuerTokensResponse": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorIssuerTokens"
+          }
+        }
+      }
+    },
+    "replicatorGetTokenBalancesResponse": {
+      "type": "object",
+      "properties": {
+        "balances": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorTokenBalance"
+          },
+          "title": "balances godoc"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64",
+          "title": "total godoc"
+        }
+      },
+      "title": "GetTokenBalancesResponse godoc"
+    },
+    "replicatorGetTokenListResponse": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorToken"
+          },
+          "title": "/ Caleb: We need to be careful to identify a token by it's ID \n(hash of block 1). This ID cannot be stored inside of the Token object \nbecause it will change the hash of the Token object which will then \nchange the hash of the State object, which will then change the hash of\nblock 1, which changes the ID. It is important to use the ID to identify\n a token because this contains the initial token holders. IMO this \nshould be `repeated string token_ids = 1;`"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int32",
+          "title": "total number of registered tokens, if the issued_id is passed, only\nits tokens are taken into account"
+        }
+      },
+      "title": "GetTokenListResponse — list of tokens with additional info"
+    },
+    "replicatorGetTokenOffersResponse": {
+      "type": "object",
+      "properties": {
+        "offers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorTokenOffer"
+          },
+          "title": "offers godoc"
+        },
+        "total": {
+          "type": "string",
+          "format": "uint64",
+          "title": "total godoc"
+        }
+      },
+      "title": "GetTokenOffersResponse godoc"
+    },
+    "replicatorGetTokenResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/replicatorToken",
+          "title": "token — information about selected token"
+        },
+        "discredits": {
+          "$ref": "#/definitions/replicatorDiscreditList",
+          "title": "discredits — in case the replicator is aware that the issuer has been \ndiscredit set it discredit collection"
+        }
+      },
+      "title": "GetTokenRequest contains the found token"
+    },
+    "replicatorGetUrlSequenceResponse": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "replicatorGetUrlTokenResponse": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "$ref": "#/definitions/tokendbState"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tokendbBlock"
+          }
+        },
+        "root": {
+          "type": "string",
+          "title": "root — Hash of the chain tip block"
+        }
+      }
+    },
+    "replicatorIssuerInfo": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "title": "id — value is explicetely used by Replicator to uniquely identify related\nissuer later in order to ban him (discredite case), since\n\"identity_pubkey\", \"host\" may be changed"
+        },
+        "identity_pubkey": {
+          "type": "string",
+          "description": "identity_pubkey — the following field values are used to open payment\nchannel, invoices commands execution etc."
+        },
+        "host": {
+          "type": "string",
+          "title": "host is used to establish client connection to the issuer's node during\nsome RPC calls"
+        }
+      },
+      "title": "IssuerInfo info about issuer server"
+    },
+    "replicatorIssuerTokens": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorToken"
+          }
+        }
+      }
+    },
+    "replicatorMerkleBlock": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "title": "hash of block"
+        },
+        "prev_hash": {
+          "type": "string",
+          "title": "prev_hash — reference of previous block"
+        }
+      },
+      "title": "MerkleBlock — inforamtion about block"
+    },
+    "replicatorPagination": {
+      "type": "object",
+      "properties": {
+        "limit": {
+          "type": "string",
+          "format": "uint64",
+          "title": "limit – maximum on the one page"
+        },
+        "offset": {
+          "type": "string",
+          "format": "uint64",
+          "title": "offset from the beginning of the list"
+        }
+      },
+      "title": "Pagination used for separation on page"
+    },
+    "replicatorToken": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "title": "name — identifier of token"
+        },
+        "token": {
+          "$ref": "#/definitions/tokendbToken",
+          "title": "token — meta info about token"
+        },
+        "root": {
+          "type": "string",
+          "title": "root — hash of last block in blockchain"
+        }
+      },
+      "title": "Token contain information about token to send it and store in DB"
+    },
+    "replicatorTokenBalance": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "title": "token — name of token"
+        },
+        "available": {
+          "type": "string",
+          "format": "uint64",
+          "title": "available godoc"
+        },
+        "frozen": {
+          "type": "string",
+          "format": "uint64",
+          "title": "frozen godoc"
+        }
+      },
+      "title": "TokenBalance godoc"
+    },
+    "replicatorTokenOffer": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "title": "token — name of token"
+        },
+        "price": {
+          "type": "string",
+          "format": "uint64",
+          "title": "price in PKT tokens"
+        },
+        "issuer_info": {
+          "$ref": "#/definitions/replicatorIssuerInfo",
+          "title": "issuer_info — contain info about token about the issuer server that \nissued the token"
+        },
+        "valid_until_seconds": {
+          "type": "string",
+          "format": "int64",
+          "title": "valid_until_seconds — protects issuers from such a case, when potential\nbuyer successfully acquires dozens of signatures just in case if that \nissuer would raise up the price later. If a Token Wallet holder would\nlike to open channel with an outdated offer, Replicator would reject to\nregister this purchase and buyer stays unprotected"
+        },
+        "count": {
+          "type": "string",
+          "format": "uint64",
+          "title": "count — the number of tokens to be issued"
+        }
+      },
+      "title": "TokenOffer is used to send an offer to buy a token\nTODO: rework or remove"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "tokendbBlock": {
+      "type": "object",
+      "properties": {
+        "prev_block": {
+          "type": "string",
+          "title": "prev_block — hash of previous block"
+        },
+        "justifications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tokendbJustification"
+          },
+          "description": "justifications — collection of one of justification structure with \npayload information."
+        },
+        "creation": {
+          "type": "string",
+          "format": "int64",
+          "title": "creation — date of block creation in unix time format"
+        },
+        "state": {
+          "type": "string",
+          "title": "state — hash of state structure containing locks, owners and meta token \ninfo"
+        },
+        "pkt_block_hash": {
+          "type": "string",
+          "title": "pkt_block_hash —  the hash of the most recent PKT block"
+        },
+        "pkt_block_height": {
+          "type": "integer",
+          "format": "int32",
+          "title": "pkt_block_height — the height of the most recent PKT block"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64",
+          "title": "height — the current height of this TokenStrike chain"
+        },
+        "signature": {
+          "type": "string",
+          "title": "signature — issuer ID, needed for validate. If signature incorrect block\nis not valid"
+        }
+      },
+      "title": "Block is struct of block in blockchain"
+    },
+    "tokendbJustification": {
+      "type": "object",
+      "properties": {
+        "lock": {
+          "$ref": "#/definitions/justificationsLockToken",
+          "title": "lock — payload with lock"
+        },
+        "transfer": {
+          "$ref": "#/definitions/justificationsTranferToken",
+          "title": "transfer — payload with transaction info"
+        },
+        "lock_over": {
+          "$ref": "#/definitions/justificationsLockTimeOver",
+          "title": "lock_over — payload with lock time over"
+        },
+        "genesis": {
+          "$ref": "#/definitions/justificationsGenesis",
+          "title": "genesis — justification to initialize block chian"
+        }
+      },
+      "title": "Justification is a helper to use it in block"
+    },
+    "tokendbOwner": {
+      "type": "object",
+      "properties": {
+        "holder_wallet": {
+          "type": "string",
+          "title": "holder_wallet — hash of wallet address of holder"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "count — number of tokens held on wallet"
+        }
+      },
+      "title": "Owner contains information about the holders' wallets and their balances"
+    },
+    "tokendbState": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/tokendbToken",
+          "title": "token — metadata about token"
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tokendbOwner"
+          },
+          "title": "owners — a set of structures with addresses and their balances"
+        },
+        "locks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/lockLock"
+          },
+          "title": "locks — set of lock structures"
+        }
+      },
+      "title": "State is a current state of blockchain"
+    },
+    "tokendbToken": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "count — number of issued tokens;"
+        },
+        "expiration": {
+          "type": "integer",
+          "format": "int32",
+          "title": "expiration — number of PKT block after which the token expires"
+        },
+        "creation": {
+          "type": "string",
+          "format": "int64",
+          "title": "creation — date of token creation in unix time format"
+        },
+        "issuer_pubkey": {
+          "type": "string",
+          "title": "issuer_pubkey — public key of issuer used for signing"
+        },
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "urls — set of urls for access to blockchain"
+        }
+      },
+      "title": "Token contain information about token"
+    }
+  }
+}

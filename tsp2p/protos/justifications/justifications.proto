@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package justifications;
+
+option go_package = "token-strike/tsp2p/justifications";
+
+import "protos/lock/lock.proto";
+
+// LockToken the token locking
+message LockToken {
+    // lock — information about lock
+    lock.Lock lock = 1;
+}
+
+// TranferToken receiving funds for tokens and unlcok them
+message TranferToken {
+    // htlc_secret — htlc genereted issuer
+    string htlc_secret = 1;
+    // lock — hash information about lock
+    string lock = 2;
+}
+
+// LockTimeOver timeout for token locking
+message LockTimeOver {
+    // proof_elapsed — PKT block hash confirming expiration lock
+    string proof_elapsed = 1;
+    // lock_id — hash with information about lock justification
+    string lock = 2;
+}
+
+// Genesis initial block justification
+message Genesis {
+    // token — token identification by name
+    string token = 1;
+}

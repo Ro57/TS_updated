@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package issuer;
+
+option go_package = "token-strike/tsp2p/issuer";
+
+import "google/protobuf/empty.proto";
+import "protos/replicator/replicator.proto";
+
+// IssuerService Is mainly used to generate compatible querier (client)
+//
+// Generated client can be used to serve two main purposes:
+//  - to interact with it via generated client
+//  - to test generated client implementation by mocking generated server
+//
+/// Caleb: Since IssueToken is UI and LockToken should be present in the replicator, this service can be deleted.
+service IssuerService {
+    // TransferTokens
+    rpc TransferTokens(TransferTokensRequest) returns (TransferTokensResponse);
+
+    // IssueToken — Issue new token with given data. Request data equal to
+    // token purchase data, because it is token offer.
+    rpc IssueToken(replicator.IssueTokenRequest)
+        returns (google.protobuf.Empty);
+
+    // GetTokenList — Return list of issued token with information about
+    // expiration time and fix price.
+    rpc GetTokenList(replicator.GetTokenListRequest)
+        returns(replicator.GetTokenListResponse);
+
+    // LockToken — Return hash of lock token for verify htlc and information
+    // about transaction
+    rpc LockToken(LockTokenRequest)
+        returns(LockTokenResponse);
+}
+
+// LockTokenRequest send information about token
+message LockTokenRequest {
+    // token — token name
+    string token = 1;
+    // count — number of tokens to lock
+    int64 count = 2;
+    // htlc — hash of preimagine
+    string htlc = 3;
+    // recipient — wallet address of new owner of tokens
+    string recipient = 4;
+    // proof_count — lock expiration time in PKT blocks
+    int32 proof_count = 5;
+}
+
+// LockTokenResponse response with hash of lock 
+message LockTokenResponse {
+    // lock_id — hash of lock
+    string lock_id = 1;
+}
+
+message TransferTokensRequest {
+    // token — token name
+    string token = 1;
+    // count — number of tokens to lock
+    int64 count = 2;
+    // total price
+    int64 amt = 3;
+    // recipient — wallet address of new owner of tokens
+    string recipient = 4;
+    // proof_count — lock expiration time in PKT blocks
+    int32 proof_count = 5;
+    string  memo = 6;
+}
+
+// SignTokenSellResponse — info about sign offer
+message TransferTokensResponse {
+    // lock_id — hash of lock
+    string lock_id = 1;
+    // htlc — hash of preimagine
+    string htlc = 2;
+}
