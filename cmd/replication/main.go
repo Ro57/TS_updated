@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	host := ":5300"
+	host := ":8081"
 	someDomain := "http://some.com"
 
 	server, err := replicatorrpc.New(host, someDomain)
