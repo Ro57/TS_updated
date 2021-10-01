@@ -1,20 +1,15 @@
 package main
 
 import (
-	"log"
-
-	"token-strike/server/replicatorrpc"
+	"fmt"
+	"os"
+	"token-strike/cmd/replication/cli"
 )
 
 func main() {
-	host := ":8081"
-	someDomain := "http://some.com"
-
-	server, err := replicatorrpc.New(host, someDomain)
-	if err != nil {
-		log.Fatal(err)
+	app := cli.NewApp()
+	if err := app.Run(os.Args); err != nil {
+		fmt.Fprintf(os.Stderr, "[rpl] %v\n", err)
+		os.Exit(1)
 	}
-
-	server.RunGRPCServer(host)
-
 }

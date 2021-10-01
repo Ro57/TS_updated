@@ -216,24 +216,6 @@
         }
       }
     },
-    "replicatorGetTokenBalancesResponse": {
-      "type": "object",
-      "properties": {
-        "balances": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/replicatorTokenBalance"
-          },
-          "title": "balances godoc"
-        },
-        "total": {
-          "type": "string",
-          "format": "uint64",
-          "title": "total godoc"
-        }
-      },
-      "title": "GetTokenBalancesResponse godoc"
-    },
     "replicatorGetTokenListResponse": {
       "type": "object",
       "properties": {
@@ -251,24 +233,6 @@
         }
       },
       "title": "GetTokenListResponse — list of tokens with additional info"
-    },
-    "replicatorGetTokenOffersResponse": {
-      "type": "object",
-      "properties": {
-        "offers": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/replicatorTokenOffer"
-          },
-          "title": "offers godoc"
-        },
-        "total": {
-          "type": "string",
-          "format": "uint64",
-          "title": "total godoc"
-        }
-      },
-      "title": "GetTokenOffersResponse godoc"
     },
     "replicatorGetTokenResponse": {
       "type": "object",
@@ -309,24 +273,6 @@
           "title": "root — Hash of the chain tip block"
         }
       }
-    },
-    "replicatorIssuerInfo": {
-      "type": "object",
-      "properties": {
-        "id": {
-          "type": "string",
-          "title": "id — value is explicetely used by Replicator to uniquely identify related\nissuer later in order to ban him (discredite case), since\n\"identity_pubkey\", \"host\" may be changed"
-        },
-        "identity_pubkey": {
-          "type": "string",
-          "description": "identity_pubkey — the following field values are used to open payment\nchannel, invoices commands execution etc."
-        },
-        "host": {
-          "type": "string",
-          "title": "host is used to establish client connection to the issuer's node during\nsome RPC calls"
-        }
-      },
-      "title": "IssuerInfo info about issuer server"
     },
     "replicatorIssuerTokens": {
       "type": "object",
@@ -389,55 +335,6 @@
         }
       },
       "title": "Token contain information about token to send it and store in DB"
-    },
-    "replicatorTokenBalance": {
-      "type": "object",
-      "properties": {
-        "token": {
-          "type": "string",
-          "title": "token — name of token"
-        },
-        "available": {
-          "type": "string",
-          "format": "uint64",
-          "title": "available godoc"
-        },
-        "frozen": {
-          "type": "string",
-          "format": "uint64",
-          "title": "frozen godoc"
-        }
-      },
-      "title": "TokenBalance godoc"
-    },
-    "replicatorTokenOffer": {
-      "type": "object",
-      "properties": {
-        "token": {
-          "type": "string",
-          "title": "token — name of token"
-        },
-        "price": {
-          "type": "string",
-          "format": "uint64",
-          "title": "price in PKT tokens"
-        },
-        "issuer_info": {
-          "$ref": "#/definitions/replicatorIssuerInfo",
-          "title": "issuer_info — contain info about token about the issuer server that \nissued the token"
-        },
-        "valid_until_seconds": {
-          "type": "string",
-          "format": "int64",
-          "title": "valid_until_seconds — protects issuers from such a case, when potential\nbuyer successfully acquires dozens of signatures just in case if that \nissuer would raise up the price later. If a Token Wallet holder would\nlike to open channel with an outdated offer, Replicator would reject to\nregister this purchase and buyer stays unprotected"
-        },
-        "count": {
-          "type": "string",
-          "format": "uint64",
-          "title": "count — the number of tokens to be issued"
-        }
-      },
-      "title": "TokenOffer is used to send an offer to buy a token\nTODO: rework or remove"
     },
     "runtimeError": {
       "type": "object",
