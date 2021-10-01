@@ -81,5 +81,5 @@ func (s *Server) GenerateURL(ctx context.Context, req *replicator.GenerateURLReq
 }
 
 func (s *Server) GetUrlSequence(ctx context.Context, req *replicator.GetUrlSequenceRequest) (*replicator.GetUrlSequenceResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "GenerateURL not implimented")
+	return nil, status.Error(codes.Unimplemented, "GetUrlSequence not implimented")
 }
