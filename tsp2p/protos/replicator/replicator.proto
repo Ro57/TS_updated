@@ -13,20 +13,6 @@ import "protos/discredit/discredit.proto";
 //  - to interact with it via generated client
 //  - to test generated client implementation by mocking generated server
 service Replicator {
-    // GetTokenOffers returns available token offers
-    // Now deprecated, use GetTokenList instead
-    rpc GetTokenOffers (GetTokenOffersRequest) returns (GetTokenOffersResponse){
-        option deprecated = true;
-    };
-
-    // GetTokenBalances returns current token balances
-    // TODO: rework or delete
-    rpc GetTokenBalances (GetTokenBalancesRequest)
-        returns (GetTokenBalancesResponse) 
-    {
-        option deprecated = true;
-    };
-
     // IssueToken — Issue new token with given data. Request data equal to
     // token purchase data, because it is token offer.
     rpc IssueToken(IssueTokenRequest) returns (google.protobuf.Empty);
@@ -66,24 +52,6 @@ message TransferTokenRequest {
     string lock_id = 3;
     // address — wallet to send tokens
     string address = 4;
-}
-
-// GetTokenOffersRequest godoc
-message GetTokenOffersRequest {
-    option deprecated = true;
-    // issuer_id godoc
-    string issuer_id = 1;
-    // params godoc
-    Pagination params = 2;
-}
-
-// GetTokenOffersResponse godoc
-message GetTokenOffersResponse {
-    option deprecated = true;
-    // offers godoc
-    repeated TokenOffer offers = 1;
-    // total godoc
-    uint64 total = 2;
 }
 
 // GetTokenListRequest — request token list with pagination
@@ -159,27 +127,6 @@ message IssuerInfo {
     // host is used to establish client connection to the issuer's node during
     // some RPC calls
     string host = 3;
-}
-
-// GetTokenBalancesRequest godoc
-// NOTE: we don't provide any token holder identification since the reqeuest is
-// authorized with JWT applied to the request metadata. It means, that
-// replicator is capable to extract all data needed to process the request
-message GetTokenBalancesRequest {
-    option deprecated = true;
-
-    // params godoc
-    Pagination params = 1;
-}
-
-// GetTokenBalancesResponse godoc
-message GetTokenBalancesResponse {
-    option deprecated = true;
-
-    // balances godoc
-    repeated TokenBalance balances = 1;
-    // total godoc
-    uint64 total = 2;
 }
 
 // TokenBalance godoc
