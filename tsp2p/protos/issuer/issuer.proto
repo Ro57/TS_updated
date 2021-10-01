@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package issuer;
 
-option go_package = "token-strike/tsp2p/issuer";
+option go_package = "token-strike/tsp2p/server/issuer";
 
 import "google/protobuf/empty.proto";
 import "protos/replicator/replicator.proto";

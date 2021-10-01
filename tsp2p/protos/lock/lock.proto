@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package lock;
 
-option go_package = "token-strike/tsp2p/lock";
+option go_package = "token-strike/tsp2p/server/lock";
 
 // Lock contain information about tokens and contract for transferring
 message Lock {

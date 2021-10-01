@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package justifications;
 
-option go_package = "token-strike/tsp2p/justifications";
+option go_package = "token-strike/tsp2p/server/justifications";
 
 import "protos/lock/lock.proto";
 

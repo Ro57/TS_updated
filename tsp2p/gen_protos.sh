@@ -36,7 +36,7 @@ function generate() {
 generate
 
 # move proto files to the right places
-cp -r token-strike/tsp2p/* ./server/
+cp -r token-strike/tsp2p/* ./
 rm -rf token-strike
 
 

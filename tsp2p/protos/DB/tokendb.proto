@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package tokendb;
 
-option go_package = "token-strike/tsp2p/token";
+option go_package = "token-strike/tsp2p/server/DB";
 
 import "protos/justifications/justifications.proto";
 import "protos/lock/lock.proto";

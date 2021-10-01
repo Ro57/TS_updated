@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package discredit;
 
-option go_package = "token-strike/tsp2p/discredit";
+option go_package = "token-strike/tsp2p/server/discredit";
 
 import "protos/DB/tokendb.proto";
 
