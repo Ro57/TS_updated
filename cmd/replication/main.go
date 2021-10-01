@@ -1,7 +1,20 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"token-strike/server/replicatorrpc"
+)
 
 func main() {
-	fmt.Print("Hello replication")
+	host := ":5300"
+	someDomain := "http://some.com"
+
+	server, err := replicatorrpc.New(host, someDomain)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	server.RunGRPCServer(host)
+
 }
