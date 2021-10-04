@@ -13,19 +13,16 @@ var startCommand = cli.Command{
 	Usage:     "",
 	ArgsUsage: "[--home=]",
 	Flags:     []cli.Flag{},
-	Action:    startRun,
+	Action:    preRunDecorator(startRun),
 }
 
 func startRun(ctx *cli.Context) error {
 
-	host := ":8081"
-	someDomain := "http://some.com"
-
-	server, err := replicatorrpc.New(host, someDomain)
+	server, err := replicatorrpc.New(cfg.HttpPort, cfg.Domain)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	server.RunGRPCServer(host)
+	server.RunGRPCServer(cfg.RpcPort)
 	return nil
 }

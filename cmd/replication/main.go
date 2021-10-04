@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+
 	"token-strike/cmd/replication/cli"
 )
 
