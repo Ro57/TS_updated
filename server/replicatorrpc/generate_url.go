@@ -10,5 +10,5 @@ import (
 )
 
 func (s *Server) GenerateURL(ctx context.Context, req *replicator.GenerateURLRequest) (*replicator.GenerateURLResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "GenerateURL not implimented")
+	return nil, status.Error(codes.Unimplemented, "GenerateURL not implemented")
 }

@@ -30,6 +30,8 @@ func (suite *TestSuite) SetupTest() {
 	if err != nil {
 		suite.T().Fatalf(err.Error())
 	}
+
+	suite.initGrpcClient()
 }
 
 func (suite *TestSuite) initGrpcClient() {

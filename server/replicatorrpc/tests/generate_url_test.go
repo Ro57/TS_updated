@@ -2,14 +2,16 @@ package replicatorrpc
 
 import (
 	"context"
-	"reflect"
 	"testing"
 
 	"token-strike/tsp2p/server/replicator"
+
+	"github.com/stretchr/testify/require"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func (suite *TestSuite) TestGenerateURL() {
-
 	type args struct {
 		ctx context.Context
 		req *replicator.GenerateURLRequest
@@ -22,28 +24,26 @@ func (suite *TestSuite) TestGenerateURL() {
 		wantErrMsg string
 	}{
 		{
-			name: "",
+			name: "not implemented",
 			args: args{
-				ctx: nil,
+				ctx: context.Background(),
 				req: &replicator.GenerateURLRequest{
 					Name: "",
 				},
 			},
 			want:       nil,
-			wantErr:    false,
-			wantErrMsg: "",
+			wantErr:    true,
+			wantErrMsg: status.Error(codes.Unimplemented, "GenerateURL not implemented").Error(),
 		},
 	}
 	for _, tt := range tests {
 		suite.T().Run(tt.name, func(t *testing.T) {
 			got, err := suite.grpcClient.GenerateURL(tt.args.ctx, tt.args.req)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GenerateURL() error = %v, wantErr %v", err, tt.wantErr)
+			if tt.wantErr {
+				require.EqualError(t, err, tt.wantErrMsg)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GenerateURL() got = %v, want %v", got, tt.want)
-			}
+			require.Equal(t, got, tt.want)
 		})
 	}
 }
