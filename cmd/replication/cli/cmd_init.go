@@ -14,7 +14,7 @@ var initCommand = cli.Command{
 	Usage:     "initializing home directory (default \"" + homeDir + "\")",
 	ArgsUsage: "",
 	Flags:     []cli.Flag{},
-	Action:    preRunDecorator(initialization),
+	Action:    initialization,
 }
 
 func initialization(ctx *cli.Context) error {
