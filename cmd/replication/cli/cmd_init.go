@@ -14,7 +14,7 @@ var initCommand = cli.Command{
 	Usage:     "initializing home directory (default \"" + homeDir + "\")",
 	ArgsUsage: "",
 	Flags:     []cli.Flag{},
-	Action:    preRunDecorator(initialization),
+	Action:    initialization,
 }
 
 func initialization(ctx *cli.Context) error {
@@ -26,7 +26,7 @@ func initialization(ctx *cli.Context) error {
 
 	_ = os.Mkdir(os.ExpandEnv(homeDir), 0777)
 	return os.WriteFile(
-		os.ExpandEnv(homeDir)+"config.yaml",
+		os.ExpandEnv(homeDir)+"",
 		data,
 		0777,
 	)

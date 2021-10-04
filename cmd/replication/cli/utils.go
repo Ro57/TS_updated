@@ -2,6 +2,7 @@ package cli
 
 import (
 	"io/ioutil"
+	"os"
 
 	"token-strike/config"
 
@@ -23,7 +24,7 @@ func preRunDecorator(f func(ctx *cli.Context) error) func(ctx *cli.Context) erro
 		}
 
 		// read config file
-		dataConfig, err := ioutil.ReadFile(homeDir)
+		dataConfig, err := ioutil.ReadFile(os.ExpandEnv(homeDir) + "config.yaml")
 		if err != nil {
 			return err
 		}
