@@ -26,7 +26,7 @@ func initialization(ctx *cli.Context) error {
 
 	_ = os.Mkdir(os.ExpandEnv(homeDir), 0777)
 	return os.WriteFile(
-		os.ExpandEnv(homeDir)+"config.yaml",
+		os.ExpandEnv(homeDir)+"",
 		data,
 		0777,
 	)

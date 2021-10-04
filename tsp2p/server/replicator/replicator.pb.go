@@ -1564,7 +1564,6 @@ const _ = grpc.SupportPackageIsVersion4
 type ReplicatorClient interface {
 	// IssueToken — Issue new token with given data. Request data equal to
 	// token purchase data, because it is token offer.
-	// (Aleksey)
 	IssueToken(ctx context.Context, in *IssueTokenRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	SyncChain(ctx context.Context, opts ...grpc.CallOption) (Replicator_SyncChainClient, error)
 	// GetBlockSequence get all sequence from a selected by token name bucket and return it
@@ -1572,13 +1571,11 @@ type ReplicatorClient interface {
 	// GetHeaders returns headers of all block from given hash to last block
 	GetHeaders(ctx context.Context, in *GetHeadersRequest, opts ...grpc.CallOption) (*GetHeadersResponse, error)
 	// GetToken returns only one specified token
-	// (Aleksey)
 	GetToken(ctx context.Context, in *GetTokenRequest, opts ...grpc.CallOption) (*GetTokenResponse, error)
 	GetIssuerTokens(ctx context.Context, in *GetIssuerTokensRequest, opts ...grpc.CallOption) (*GetIssuerTokensResponse, error)
 	GetUrlSequence(ctx context.Context, in *GetUrlSequenceRequest, opts ...grpc.CallOption) (*GetUrlSequenceResponse, error)
 	// GetTokenList — return list of issued token with infomation about
 	// expiration time and fix price.
-	// (Aleksey)
 	GetTokenList(ctx context.Context, in *GetTokenListRequest, opts ...grpc.CallOption) (*GetTokenListResponse, error)
 	// GenerateURL return url from every replication server to add it to
 	// inforamtion about token
@@ -1703,7 +1700,6 @@ func (c *replicatorClient) GenerateURL(ctx context.Context, in *GenerateURLReque
 type ReplicatorServer interface {
 	// IssueToken — Issue new token with given data. Request data equal to
 	// token purchase data, because it is token offer.
-	// (Aleksey)
 	IssueToken(context.Context, *IssueTokenRequest) (*empty.Empty, error)
 	SyncChain(Replicator_SyncChainServer) error
 	// GetBlockSequence get all sequence from a selected by token name bucket and return it
@@ -1711,13 +1707,11 @@ type ReplicatorServer interface {
 	// GetHeaders returns headers of all block from given hash to last block
 	GetHeaders(context.Context, *GetHeadersRequest) (*GetHeadersResponse, error)
 	// GetToken returns only one specified token
-	// (Aleksey)
 	GetToken(context.Context, *GetTokenRequest) (*GetTokenResponse, error)
 	GetIssuerTokens(context.Context, *GetIssuerTokensRequest) (*GetIssuerTokensResponse, error)
 	GetUrlSequence(context.Context, *GetUrlSequenceRequest) (*GetUrlSequenceResponse, error)
 	// GetTokenList — return list of issued token with infomation about
 	// expiration time and fix price.
-	// (Aleksey)
 	GetTokenList(context.Context, *GetTokenListRequest) (*GetTokenListResponse, error)
 	// GenerateURL return url from every replication server to add it to
 	// inforamtion about token
