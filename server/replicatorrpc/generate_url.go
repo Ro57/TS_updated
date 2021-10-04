@@ -2,13 +2,16 @@ package replicatorrpc
 
 import (
 	"context"
+	"fmt"
 
 	"token-strike/tsp2p/server/replicator"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
+const tokenUrlPattern = "%s/v2/replicator/blocksequence/%s"
+
 func (s *Server) GenerateURL(ctx context.Context, req *replicator.GenerateURLRequest) (*replicator.GenerateURLResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "GenerateURL not implemented")
+	responseUrl := fmt.Sprintf(tokenUrlPattern, s.domain, req.Name)
+	return &replicator.GenerateURLResponse{
+		Url: responseUrl,
+	}, nil
 }

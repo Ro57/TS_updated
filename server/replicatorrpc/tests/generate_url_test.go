@@ -7,8 +7,6 @@ import (
 	"token-strike/tsp2p/server/replicator"
 
 	"github.com/stretchr/testify/require"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (suite *TestSuite) TestGenerateURL() {
@@ -24,18 +22,21 @@ func (suite *TestSuite) TestGenerateURL() {
 		wantErrMsg string
 	}{
 		{
-			name: "not implemented",
+			name: "valid",
 			args: args{
 				ctx: context.Background(),
 				req: &replicator.GenerateURLRequest{
-					Name: "",
+					Name: "tokenA",
 				},
 			},
-			want:       nil,
-			wantErr:    true,
-			wantErrMsg: status.Error(codes.Unimplemented, "GenerateURL not implemented").Error(),
+			want: &replicator.GenerateURLResponse{
+				Url: domain + "/v2/replicator/blocksequence/tokenA",
+			},
+			wantErr:    false,
+			wantErrMsg: "",
 		},
 	}
+
 	for _, tt := range tests {
 		suite.T().Run(tt.name, func(t *testing.T) {
 			got, err := suite.grpcClient.GenerateURL(tt.args.ctx, tt.args.req)

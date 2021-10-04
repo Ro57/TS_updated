@@ -14,6 +14,10 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 )
 
+var (
+	domain = "http://localhost"
+)
+
 func TestExampleTestSuite(t *testing.T) {
 	suite.Run(t, new(TestSuite))
 }
@@ -50,7 +54,7 @@ func (suite *TestSuite) initListener() error {
 	suite.listener = bufconn.Listen(1000)
 	s := grpc.NewServer()
 
-	server, err := replicatorrpc.New("", "")
+	server, err := replicatorrpc.New("", domain)
 	if err != nil {
 		return err
 	}
