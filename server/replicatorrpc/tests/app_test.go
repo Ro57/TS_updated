@@ -50,6 +50,8 @@ func (suite *TestSuite) initGrpcClient() {
 	suite.grpcClient = replicator.NewReplicatorClient(suite.conn)
 }
 
+// TODO: implement initRestClient function
+
 func (suite *TestSuite) initListener() error {
 	suite.listener = bufconn.Listen(1000)
 	s := grpc.NewServer()

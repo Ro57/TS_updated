@@ -15,7 +15,6 @@ import "protos/discredit/discredit.proto";
 service Replicator {
     // IssueToken — Issue new token with given data. Request data equal to
     // token purchase data, because it is token offer.
-    // (Aleksey)
     rpc IssueToken(IssueTokenRequest) returns (google.protobuf.Empty);
 
     rpc SyncChain(stream SyncChainRequest) returns (google.protobuf.Empty);
@@ -27,7 +26,6 @@ service Replicator {
     rpc GetHeaders(GetHeadersRequest) returns (GetHeadersResponse);
 
     // GetToken returns only one specified token
-    // (Aleksey) 
     rpc GetToken(GetTokenRequest) returns (GetTokenResponse);
 
     rpc GetIssuerTokens(GetIssuerTokensRequest) returns (GetIssuerTokensResponse);
@@ -36,7 +34,6 @@ service Replicator {
 
     // GetTokenList — return list of issued token with infomation about
     // expiration time and fix price.
-    // (Aleksey)
     rpc GetTokenList(GetTokenListRequest)
         returns(GetTokenListResponse);
 
