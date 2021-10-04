@@ -16,6 +16,11 @@ import (
 
 var (
 	domain = "http://localhost"
+
+	pktMock      interface{}
+	httpMock     interface{}
+	databaseMock interface{}
+	hashFuncMock func() string
 )
 
 func TestExampleTestSuite(t *testing.T) {
