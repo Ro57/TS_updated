@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"testing"
+	"token-strike/config"
 
 	"token-strike/server/replicatorrpc"
 	"token-strike/tsp2p/server/replicator"
@@ -61,7 +62,11 @@ func (suite *TestSuite) initListener() error {
 	suite.listener = bufconn.Listen(1000)
 	s := grpc.NewServer()
 
-	server, err := replicatorrpc.New("", domain)
+	server, err := replicatorrpc.New(&config.Config{
+		RpcPort:  "",
+		HttpPort: "",
+		Domain:   domain,
+	})
 	if err != nil {
 		return err
 	}
