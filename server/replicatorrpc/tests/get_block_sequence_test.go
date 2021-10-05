@@ -2,11 +2,10 @@ package replicatorrpc
 
 import (
 	"context"
-	"encoding/json"
-	"io/ioutil"
-	"net/http"
 	"testing"
 	"time"
+
+	"token-strike/internal/errors"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/justifications"
 	"token-strike/tsp2p/server/lock"
@@ -20,16 +19,12 @@ func (suite *TestSuite) TestGetBlockSequence() {
 		ctx context.Context
 		req *replicator.GetBlockSequenceRequest
 	}
-	now := time.Now().Unix()
-
-	var rpcSequances *replicator.GetUrlTokenResponse
-	var jsonSequances *replicator.GetUrlTokenResponse
 
 	tokenResponse := &replicator.GetUrlTokenResponse{
 		State: &DB.State{
 			Token: &DB.Token{
 				Count:        100,
-				Creation:     now,
+				Creation:     time.Now().Unix(),
 				Expiration:   1000000,
 				IssuerPubkey: "someHash",
 				Urls: []string{
@@ -66,7 +61,7 @@ func (suite *TestSuite) TestGetBlockSequence() {
 		wantErrMsg string
 	}{
 		{
-			name: "get block sequances by rpc",
+			name: "valid request",
 			args: args{
 				ctx: context.Background(),
 				req: &replicator.GetBlockSequenceRequest{
@@ -74,93 +69,31 @@ func (suite *TestSuite) TestGetBlockSequence() {
 				},
 			},
 			want:       tokenResponse,
-			wantRpc:    true,
-			wantJson:   false,
 			wantErr:    false,
 			wantErrMsg: "",
 		},
 		{
-			name: "get block sequances by json",
+			name: "chain not found",
 			args: args{
 				ctx: context.Background(),
 				req: &replicator.GetBlockSequenceRequest{
-					Name: "smt",
+					Name: "smt2",
 				},
 			},
 			want:       tokenResponse,
-			wantRpc:    false,
-			wantJson:   true,
-			wantErr:    false,
-			wantErrMsg: "",
-		},
-		{
-			name: "json and rpc equal",
-			args: args{
-				ctx: context.Background(),
-				req: &replicator.GetBlockSequenceRequest{
-					Name: "smt",
-				},
-			},
-			want:       tokenResponse,
-			wantRpc:    false,
-			wantJson:   false,
 			wantErr:    true,
-			wantErrMsg: "",
+			wantErrMsg: errors.TokenNotFoundErr.Error(),
 		},
 	}
 
 	for _, tt := range tests {
 		suite.T().Run(tt.name, func(t *testing.T) {
-			if tt.wantRpc {
-				got, err := suite.grpcClient.GetBlockSequence(tt.args.ctx, tt.args.req)
-				if tt.wantErr {
-					require.EqualError(t, err, tt.wantErrMsg)
-					return
-				}
-
-				rpcSequances = got
-
-				require.Equal(t, got.String(), tt.want.String())
+			got, err := suite.grpcClient.GetBlockSequence(tt.args.ctx, tt.args.req)
+			if tt.wantErr {
+				require.EqualError(t, err, tt.wantErrMsg)
+				return
 			}
-			if tt.wantJson {
-				res, err := http.Get(domain + "/v2/replicator/blocksequence/smt")
-				if tt.wantErr {
-					require.EqualError(t, err, tt.wantErrMsg)
-					return
-				}
-				if err != nil {
-					t.Fatal(err)
-					return
-				}
-
-				body, err := ioutil.ReadAll(res.Body)
-				if tt.wantErr {
-					require.EqualError(t, err, tt.wantErrMsg)
-					return
-				}
-				if err != nil {
-					t.Fatal(err)
-					return
-				}
-
-				err = json.Unmarshal(body, &jsonSequances)
-				if err != nil {
-					t.Fatal(err)
-					return
-				}
-
-				wantJson, err := json.Marshal(tt.want)
-				if err != nil {
-					t.Fatal(err)
-					return
-				}
-
-				require.Equal(t, body, string(wantJson))
-			}
-
-			if tt.Equals {
-				require.Equal(t, jsonSequances, rpcSequances)
-			}
+			require.Equal(t, tt.want, got)
 		})
 	}
 }
