@@ -1,6 +1,7 @@
 package database
 
 import (
+	"token-strike/server/replicatorrpc"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/replicator"
 )
@@ -20,7 +21,7 @@ type SaveRepository interface {
 type GetRepository interface {
 	GetTokenList() ([]*replicator.Token, error)
 	GetToken(name string) (replicator.Token, error)
-	GetIssuerTokens() (replicator.IssuerTokens, error)
+	GetIssuerTokens() (replicatorrpc.IssuerTokens, error)
 	GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error)
 	GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBlock, error)
 }
