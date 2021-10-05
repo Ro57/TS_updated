@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/stretchr/testify/require"
 	"testing"
+	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/replicator"
 )
 
@@ -27,7 +28,19 @@ func (suite *TestSuite) TestGetToken() {
 					TokenId: "t1",
 				},
 			},
-			want:       nil,
+			want:       &replicator.GetTokenResponse{
+				Token:                &replicator.Token{
+					Name:                 "t1",
+					Token:                &DB.Token{
+						Count:                1000,
+						Expiration:           999999999,
+						Creation:             9999999,
+						IssuerPubkey:         "some pub key",
+					},
+					Root:                 "someroot",
+				},
+				Discredits:           nil,
+			},
 			wantErr:    false,
 			wantErrMsg: "",
 		},
