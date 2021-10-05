@@ -280,3 +280,11 @@ message DiscreditList {
     }
 
 }
+
+message ChainInfo {
+    tokendb.State state = 1;
+    repeated tokendb.Block blocks = 2;
+
+    // root — Hash of the chain tip block
+    string root = 3;
+}
