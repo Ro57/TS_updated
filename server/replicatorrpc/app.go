@@ -1,41 +1,69 @@
 package replicatorrpc
 
 import (
-	"fmt"
+	"context"
+	"log"
 	"net"
+	"net/http"
 
+	"token-strike/config"
 	"token-strike/tsp2p/server/replicator"
 
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 )
 
 type Server struct {
-	domain string
+	rpcPort  string
+	restPort string
+	domain   string
 }
 
 var _ replicator.ReplicatorServer = (*Server)(nil)
 
-func New(host, domain string) (*Server, error) {
+func New(cfg *config.Config) (*Server, error) {
 	var serv = &Server{
-		domain: domain,
+		rpcPort:  cfg.RpcPort,
+		restPort: cfg.HttpPort,
+		domain:   cfg.Domain,
 	}
 
 	return serv, nil
 }
 
-func (s *Server) RunGRPCServer(host string) error {
-	opts := []grpc.ServerOption{}
+func (s *Server) RunRestServer() error {
+	var opts []runtime.ServeMuxOption
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
-	root := grpc.NewServer(opts...)
-	replicator.RegisterReplicatorServer(root, s)
+	mux := runtime.NewServeMux(opts...)
+	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
 
-	listener, err := net.Listen("tcp", host)
+	err := replicator.RegisterReplicatorHandlerFromEndpoint(ctx, mux, s.rpcPort, dialOpts)
+	if err != nil {
+		return err
+	}
+	log.Printf("Replication REST server start on port: %v \n", s.restPort)
+	err = http.ListenAndServe(s.restPort, mux)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("Replcication sever start on port: %v \n", host)
+	return nil
+}
 
+func (s *Server) RunGRPCServer() error {
+	listener, err := net.Listen("tcp", s.rpcPort)
+	if err != nil {
+		return err
+	}
+
+	opts := []grpc.ServerOption{}
+	root := grpc.NewServer(opts...)
+	replicator.RegisterReplicatorServer(root, s)
+
+	log.Printf("Replication GRPC server start on port: %v \n", s.rpcPort)
 	err = root.Serve(listener)
 	if err != nil {
 		return err
