@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"token-strike/config"
+	"token-strike/internal/database"
 	"token-strike/tsp2p/server/replicator"
 
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
@@ -17,15 +18,18 @@ type Server struct {
 	rpcPort  string
 	restPort string
 	domain   string
+
+	db database.DBRepository
 }
 
 var _ replicator.ReplicatorServer = (*Server)(nil)
 
-func New(cfg *config.Config) (*Server, error) {
+func New(cfg *config.Config, dbRep database.DBRepository) (*Server, error) {
 	var serv = &Server{
 		rpcPort:  cfg.RpcPort,
 		restPort: cfg.HttpPort,
 		domain:   cfg.Domain,
+		db:       dbRep,
 	}
 
 	return serv, nil
