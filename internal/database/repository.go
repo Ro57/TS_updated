@@ -18,6 +18,7 @@ type SaveRepository interface {
 }
 
 type GetRepository interface {
+	GetTokenList() ([]*replicator.Token, error)
 	GetToken(name string) (replicator.Token, error)
 	GetIssuerTokens() (replicator.IssuerTokens, error)
 	GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error)
