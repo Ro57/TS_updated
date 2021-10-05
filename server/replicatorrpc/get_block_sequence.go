@@ -2,13 +2,18 @@ package replicatorrpc
 
 import (
 	"context"
-
 	"token-strike/tsp2p/server/replicator"
-
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 func (s *Server) GetBlockSequence(ctx context.Context, req *replicator.GetBlockSequenceRequest) (*replicator.GetUrlTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "GetBlockSequence not implimented")
+	chainInfo, err := s.db.GetChainInfoDB(req.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &replicator.GetUrlTokenResponse{
+		State:  chainInfo.GetState(),
+		Blocks: chainInfo.GetBlocks(),
+		Root:   chainInfo.GetRoot(),
+	}, nil
 }
