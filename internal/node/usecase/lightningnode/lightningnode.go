@@ -4,11 +4,13 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 	"io/ioutil"
+
 	"token-strike/internal/node"
 	"token-strike/tsp2p/server/lnrpc"
+
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var _ node.UseCase = &Node{}
