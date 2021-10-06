@@ -1,9 +1,11 @@
 package repository
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	stdErrors "errors"
 	"fmt"
+	"time"
 	"token-strike/internal/errors"
 
 	"token-strike/internal/database"
@@ -374,7 +376,92 @@ func (b *Bbolt) SaveIssuerTokenDB(name string, offer *DB.Token) error {
 }
 
 func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (*DB.Block, error) {
-	panic("implement me")
+	state := DB.State{}
+
+	block := &DB.Block{
+		Justifications: justifications,
+		Creation:       time.Now().Unix(),
+	}
+
+	// TODO: implement after created chain interface
+	//currentBlockHash, currentBlockHeight, err := s.chain.GetBestBlock()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//block.PktBlockHash = currentBlockHash.String()
+	//block.PktBlockHeight = currentBlockHeight
+
+	err := b.db.Update(func(tx *bbolt.Tx) error {
+		var lastBlock DB.Block
+
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(name))
+
+		lastHash := tokenBucket.Get(database.RootHashKey)
+		if lastHash == nil {
+			return errors.LastBlockNotFoundErr
+		}
+
+		chainBucket := tokenBucket.Bucket(database.ChainKey)
+		if chainBucket == nil {
+			return errors.ChainBucketNotFoundErr
+		}
+
+		jsonBlock := chainBucket.Get(lastHash)
+		if jsonBlock == nil {
+			return errors.LastBlockNotFoundErr
+		}
+
+		nativeErr := proto.Unmarshal(jsonBlock, &lastBlock)
+		if nativeErr != nil {
+			return stdErrors.New(fmt.Sprintf("unmarshal block form json: %v", nativeErr))
+		}
+
+		jsonState := tokenBucket.Get(database.StateKey)
+		if jsonState == nil {
+			return errors.StateNotFoundErr
+		}
+
+		nativeErr = proto.Unmarshal(jsonState, &state)
+		if nativeErr != nil {
+			return stdErrors.New(fmt.Sprintf("marshal new state: %v", nativeErr))
+
+		}
+
+		block.Height = lastBlock.Height + 1
+
+		//hashState := encoder.CreateHash(jsonState) // TODO: transfer encoder package
+		hashState := []byte("implement me")
+		block.State = hex.EncodeToString(hashState)
+
+		// TODO: Change to signature generation
+		block.Signature = block.GetState()
+		block.PrevBlock = string(lastHash)
+
+		newBlockBytes, nativeErr := proto.Marshal(block)
+		if nativeErr != nil {
+			return err
+		}
+
+		blockSignatureBytes := []byte(block.GetSignature())
+		err = tokenBucket.Put(database.RootHashKey, blockSignatureBytes)
+		if err != nil {
+			return err
+		}
+
+		return chainBucket.Put(blockSignatureBytes, newBlockBytes)
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return block, nil
 }
 
 func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, recipient []*DB.Owner) error {
