@@ -345,7 +345,32 @@ func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
 }
 
 func (b *Bbolt) SaveIssuerTokenDB(name string, offer *DB.Token) error {
-	panic("implement me")
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokens := rootBucket.Get(database.IssuerTokens)
+		if tokens == nil {
+			tokens, _ = json.Marshal(replicatorrpc.IssuerTokens{})
+		}
+
+		var issuerTokens replicatorrpc.IssuerTokens
+		errUnmarshal := json.Unmarshal(tokens, &issuerTokens)
+		if errUnmarshal != nil {
+			return errUnmarshal
+		}
+
+		issuerTokens.AddToken(offer.IssuerPubkey, name)
+
+		issuerTokensBytes, errMarshal := json.Marshal(issuerTokens)
+		if errMarshal != nil {
+			return errMarshal
+		}
+
+		return rootBucket.Put(database.IssuerTokens, issuerTokensBytes)
+	})
 }
 
 func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (*DB.Block, error) {
