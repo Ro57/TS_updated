@@ -6,10 +6,9 @@ import (
 	stdErrors "errors"
 	"fmt"
 	"time"
-	"token-strike/internal/errors"
 
 	"token-strike/internal/database"
-	"token-strike/server/replicatorrpc"
+	"token-strike/internal/errors"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/replicator"
 
@@ -99,7 +98,7 @@ func (b *Bbolt) GetToken(name string) (replicator.Token, error) {
 	return token, err
 }
 
-func (b *Bbolt) GetIssuerTokens() (tokens replicatorrpc.IssuerTokens, err error) {
+func (b *Bbolt) GetIssuerTokens() (tokens replicator.IssuerToken, err error) {
 	err = b.db.View(func(tx *bbolt.Tx) error {
 		rootBucket := tx.Bucket(database.TokensKey)
 		if rootBucket == nil {
@@ -108,7 +107,7 @@ func (b *Bbolt) GetIssuerTokens() (tokens replicatorrpc.IssuerTokens, err error)
 
 		issuerTokensBytes := rootBucket.Get(database.IssuerTokens)
 		if issuerTokensBytes == nil {
-			tokens = replicatorrpc.IssuerTokens{}
+			tokens = replicator.IssuerToken{}
 			return nil
 		}
 
@@ -355,10 +354,10 @@ func (b *Bbolt) SaveIssuerTokenDB(name string, offer *DB.Token) error {
 
 		tokens := rootBucket.Get(database.IssuerTokens)
 		if tokens == nil {
-			tokens, _ = json.Marshal(replicatorrpc.IssuerTokens{})
+			tokens, _ = json.Marshal(replicator.IssuerToken{})
 		}
 
-		var issuerTokens replicatorrpc.IssuerTokens
+		var issuerTokens replicator.IssuerToken
 		errUnmarshal := json.Unmarshal(tokens, &issuerTokens)
 		if errUnmarshal != nil {
 			return errUnmarshal
