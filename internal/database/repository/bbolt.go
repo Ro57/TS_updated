@@ -465,5 +465,79 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 }
 
 func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, recipient []*DB.Owner) error {
-	panic("implement me")
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokenBucket, err := rootBucket.CreateBucket([]byte(name))
+		if err != nil {
+			return err
+		}
+
+		// if information about token did not exist then create
+		if tokenBucket.Get(database.InfoKey) == nil {
+			tokenBytes, err := proto.Marshal(offer)
+			if err != nil {
+				return err
+			}
+
+			errPut := tokenBucket.Put(database.InfoKey, tokenBytes)
+			if errPut != nil {
+				return errPut
+			}
+		}
+
+		// if token state did not exist then create
+		if tokenBucket.Get(database.StateKey) == nil {
+			state := DB.State{
+				Token:  offer,
+				Owners: recipient,
+				Locks:  nil,
+			}
+
+			stateBytes, err := proto.Marshal(&state)
+			if err != nil {
+				return err
+			}
+
+			errPut := tokenBucket.Put(database.StateKey, stateBytes)
+			if errPut != nil {
+				return errPut
+			}
+		}
+
+		err = tokenBucket.Put(database.RootHashKey, []byte(""))
+		if err != nil {
+			return err
+		}
+
+		if string(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
+			return stdErrors.New(
+				fmt.Sprintf(
+					"invalid hash of the previous block want %s but get %s",
+					tokenBucket.Get(database.RootHashKey),
+					block.PrevBlock,
+				))
+		}
+
+		blockSignatureBytes := []byte(block.GetSignature())
+
+		err = tokenBucket.Put(database.RootHashKey, blockSignatureBytes)
+		if err != nil {
+			return err
+		}
+
+		blockBytes, errMarshal := proto.Marshal(block)
+		if errMarshal != nil {
+			return errMarshal
+		}
+
+		chainBucket, err := tokenBucket.CreateBucketIfNotExists(database.ChainKey)
+		if err != nil {
+			return err
+		}
+		return chainBucket.Put(blockSignatureBytes, blockBytes)
+	})
 }
