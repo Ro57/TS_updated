@@ -43,10 +43,10 @@ func (suite *TestSuite) SetupTest() {
 }
 
 func (suite *TestSuite) AfterTest(suiteName, testName string) {
+	suite.db.Close()
 	err := suite.db.Clear()
 	suite.NoError(err, "Clear test file exception")
 
-	suite.db.Close()
 }
 
 // selectType return function by type of transaction
@@ -199,13 +199,13 @@ func (suite *TestSuite) TestTokenBlock() {
 				b, err := tx.CreateBucket([]byte(tokenName))
 				suite.NoError(err, "create top level bucket")
 
-				chain, err := b.CreateBucket([]byte("chain"))
+				chain, err := b.CreateBucket(ChainKey)
 				suite.NoError(err, "create chain bucket")
 
 				tokenByte, err := json.Marshal(wantToken)
 				suite.NoError(err, "(update) marshal token structure")
 
-				err = b.Put([]byte("Info"), tokenByte)
+				err = b.Put(InfoKey, tokenByte)
 				suite.NoError(err, "put token")
 
 				blockByte, err := json.Marshal(wantBlock)
@@ -226,13 +226,13 @@ func (suite *TestSuite) TestTokenBlock() {
 				b := tx.Bucket([]byte(tokenName))
 				suite.NotNil(b, "bucket %s not found", tokenName)
 
-				chain := b.Bucket([]byte("chain"))
+				chain := b.Bucket(ChainKey)
 				suite.NotNil(b, "bucket chain not found")
 
 				marshalToken, err := json.Marshal(wantToken)
 				suite.NoError(err, "(view) marshal token structure")
 
-				tokenByte := b.Get([]byte("Info"))
+				tokenByte := b.Get(InfoKey)
 				suite.NotNil(tokenByte, "token info with name %s not found", tokenName)
 
 				suite.Equal(
