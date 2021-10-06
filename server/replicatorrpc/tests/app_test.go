@@ -6,6 +6,7 @@ import (
 	"net"
 	"testing"
 	"token-strike/config"
+	"token-strike/internal/database"
 
 	"token-strike/server/replicatorrpc"
 	"token-strike/tsp2p/server/replicator"
@@ -20,7 +21,7 @@ var (
 
 	pktMock      interface{}
 	httpMock     interface{}
-	databaseMock interface{}
+	databaseMock database.DBRepository
 	hashFuncMock func() string
 )
 
@@ -62,11 +63,14 @@ func (suite *TestSuite) initListener() error {
 	suite.listener = bufconn.Listen(1000)
 	s := grpc.NewServer()
 
-	server, err := replicatorrpc.New(&config.Config{
-		RpcPort:  "",
-		HttpPort: "",
-		Domain:   domain,
-	})
+	server, err := replicatorrpc.New(
+		&config.Config{
+			RpcPort:  "",
+			HttpPort: "",
+			Domain:   domain,
+		},
+		databaseMock,
+	)
 	if err != nil {
 		return err
 	}
