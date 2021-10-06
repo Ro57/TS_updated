@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/json"
 	stdErrors "errors"
 	"token-strike/internal/errors"
 
@@ -95,8 +96,27 @@ func (b *Bbolt) GetToken(name string) (replicator.Token, error) {
 	return token, err
 }
 
-func (b *Bbolt) GetIssuerTokens() (replicatorrpc.IssuerTokens, error) {
-	panic("implement me")
+func (b *Bbolt) GetIssuerTokens() (tokens replicatorrpc.IssuerTokens, err error) {
+	err = b.db.View(func(tx *bbolt.Tx) error {
+		rootBucket := tx.Bucket(database.TokensKey)
+		if rootBucket == nil {
+			return errors.TokensDBNotFound
+		}
+
+		issuerTokensBytes := rootBucket.Get(database.IssuerTokens)
+		if issuerTokensBytes == nil {
+			tokens = replicatorrpc.IssuerTokens{}
+			return nil
+		}
+
+		err := json.Unmarshal(issuerTokensBytes, &tokens)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+	return
 }
 
 func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
