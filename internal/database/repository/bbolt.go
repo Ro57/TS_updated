@@ -434,7 +434,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 
 		block.Height = lastBlock.Height + 1
 
-		//hashState := encoder.CreateHash(jsonState) // TODO: transfer encoder package
+		//hashState := encoder.CreateHash(jsonState) // TODO: rework with new signer
 		hashState := []byte("implement me")
 		block.State = hex.EncodeToString(hashState)
 
