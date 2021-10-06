@@ -3,20 +3,19 @@ package database
 import (
 	"crypto/sha256"
 	"encoding/json"
-	"fmt"
+	"os"
 	"testing"
 	"time"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/justifications"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"go.etcd.io/bbolt"
 )
 
 const (
-	path = "~/.lnd/data/chain/pkt"
-	name = "./test.db"
+	path = "/.lnd/data/chain/pkt"
+	name = "/test.db"
 )
 
 const (
@@ -34,22 +33,23 @@ type TestSuite struct {
 }
 
 func (suite *TestSuite) SetupTest() {
-	db, err := Connect(name)
-	if err != nil {
-		suite.T().Fatalf("Connection refused %v", err)
-	}
+	home, err := os.UserHomeDir()
+	suite.NoError(err)
+
+	db, err := Connect(home + path + name)
+	suite.NoError(err)
 
 	suite.db = db
 }
 
 func (suite *TestSuite) AfterTest(suiteName, testName string) {
 	err := suite.db.Clear()
-	if err != nil {
-		suite.T().Fatalf("Clear test file exception %v", err)
-	}
+	suite.NoError(err, "Clear test file exception")
+
 	suite.db.Close()
 }
 
+// selectType return function by type of transaction
 func (suite *TestSuite) selectType(txType string) func(func(*bbolt.Tx) error) error {
 	switch txType {
 	case TypeUpdate:
@@ -63,17 +63,20 @@ func (suite *TestSuite) selectType(txType string) func(func(*bbolt.Tx) error) er
 func (suite *TestSuite) TestConectDB() {
 	suite.T().Run("create DB", func(t *testing.T) {
 		err := suite.db.Ping()
-		require.NoError(t, err, "db not connected: ")
+		suite.NoError(err, "db not connected: ")
 	})
 
 	suite.T().Run("close DB ", func(t *testing.T) {
 		suite.db.Close()
 		err := suite.db.Ping()
-		require.Error(t, err, "ping after close connection")
+		suite.Error(err, "ping after close connection")
 	})
 }
 
 func (suite *TestSuite) TestEmployee() {
+	wantTime := "180h"
+	wantNumber := "Number 100"
+
 	testTransactions := []struct {
 		name   string
 		txType string
@@ -84,10 +87,7 @@ func (suite *TestSuite) TestEmployee() {
 			txType: TypeUpdate,
 			tx: func(tx *bbolt.Tx) error {
 				_, err := tx.CreateBucket([]byte("Business"))
-
-				if err != nil {
-					return fmt.Errorf("create bucket: %s", err)
-				}
+				suite.NoError(err, "create bucket")
 
 				return nil
 			},
@@ -99,9 +99,7 @@ func (suite *TestSuite) TestEmployee() {
 				b := tx.Bucket([]byte("Business"))
 
 				_, err := b.CreateBucket([]byte("Employee"))
-				if err != nil {
-					return fmt.Errorf("create bucket: %s", err)
-				}
+				suite.NoError(err, "create bucket: %s", err)
 
 				return nil
 
@@ -114,13 +112,10 @@ func (suite *TestSuite) TestEmployee() {
 				b := tx.Bucket([]byte("Business"))
 				emp := b.Bucket([]byte("Employee"))
 
-				err := b.Put([]byte("Emp1"), []byte("Number 100"))
+				err := b.Put([]byte("Emp1"), []byte(wantNumber))
+				suite.NoError(err)
 
-				if err != nil {
-					return err
-				}
-
-				err = emp.Put([]byte("Time"), []byte("180h"))
+				err = emp.Put([]byte("Time"), []byte(wantTime))
 
 				return err
 
@@ -134,14 +129,10 @@ func (suite *TestSuite) TestEmployee() {
 				emp := b.Bucket([]byte("Employee"))
 
 				empNum := b.Get([]byte("Emp1"))
-				if string(empNum) != "Number 100" {
-					return fmt.Errorf("want string 'Number 100' but get '%s'", string(empNum))
-				}
+				suite.Equal(string(empNum), wantNumber, "want number '%s' but get '%s'", wantNumber, empNum)
 
 				empTime := emp.Get([]byte("Time"))
-				if string(empTime) != "180h" {
-					return fmt.Errorf("want string '180h' but get '%s'", string(empTime))
-				}
+				suite.Equal(string(empTime), wantTime, "want time '%s' but get '%s'", wantTime, empTime)
 
 				return nil
 			},
@@ -206,35 +197,24 @@ func (suite *TestSuite) TestTokenBlock() {
 			txType: TypeUpdate,
 			tx: func(tx *bbolt.Tx) error {
 				b, err := tx.CreateBucket([]byte(tokenName))
-				if err != nil {
-					return fmt.Errorf("create top level bucket: %s", err)
-				}
+				suite.NoError(err, "create top level bucket")
 
 				chain, err := b.CreateBucket([]byte("chain"))
-				if err != nil {
-					return fmt.Errorf("create chain bucket: %s", err)
-				}
-				tokenByte, nativeErr := json.Marshal(wantToken)
-				if nativeErr != nil {
-					return fmt.Errorf("(update) marshal token structure: %s", nativeErr)
-				}
+				suite.NoError(err, "create chain bucket")
+
+				tokenByte, err := json.Marshal(wantToken)
+				suite.NoError(err, "(update) marshal token structure")
 
 				err = b.Put([]byte("Info"), tokenByte)
-				if err != nil {
-					return fmt.Errorf("put token %s", err)
-				}
+				suite.NoError(err, "put token")
 
-				blockByte, nativeErr := json.Marshal(wantBlock)
-				if nativeErr != nil {
-					return fmt.Errorf("(update) marshal block structure: %s", nativeErr)
-				}
+				blockByte, err := json.Marshal(wantBlock)
+				suite.NoError(err, "(update) marshal block structure")
 
 				lastBlock = sha256.Sum256(blockByte)
 
 				err = chain.Put(lastBlock[:], blockByte)
-				if err != nil {
-					return fmt.Errorf("put block %s", err)
-				}
+				suite.NoError(err, "put block ")
 
 				return nil
 			},
@@ -244,40 +224,38 @@ func (suite *TestSuite) TestTokenBlock() {
 			txType: TypeView,
 			tx: func(tx *bbolt.Tx) error {
 				b := tx.Bucket([]byte(tokenName))
-				if b == nil {
-					return fmt.Errorf("bucket %s not found", tokenName)
-				}
+				suite.NotNil(b, "bucket %s not found", tokenName)
 
 				chain := b.Bucket([]byte("chain"))
-				if chain == nil {
-					return fmt.Errorf("bucket chain not found")
-				}
+				suite.NotNil(b, "bucket chain not found")
 
-				marshalToken, nativeErr := json.Marshal(wantToken)
-				if nativeErr != nil {
-					return fmt.Errorf("(view) marshal token structure: %s", nativeErr)
-				}
+				marshalToken, err := json.Marshal(wantToken)
+				suite.NoError(err, "(view) marshal token structure")
 
 				tokenByte := b.Get([]byte("Info"))
-				if tokenByte == nil {
-					return fmt.Errorf("token info with name %s not found", tokenByte)
-				}
-				if string(marshalToken) != string(tokenByte) {
-					return fmt.Errorf("want token structure %s but get %s", marshalToken, tokenByte)
-				}
+				suite.NotNil(tokenByte, "token info with name %s not found", tokenName)
 
-				marshalBlock, nativeErr := json.Marshal(wantBlock)
-				if nativeErr != nil {
-					return fmt.Errorf("(view) marshal token structure: %s", nativeErr)
-				}
+				suite.Equal(
+					string(marshalToken),
+					string(tokenByte),
+					"want token structure %s but get %s",
+					marshalToken,
+					tokenByte,
+				)
+
+				marshalBlock, err := json.Marshal(wantBlock)
+				suite.NoError(err, "(view) marshal token structure")
 
 				blockByte := chain.Get(lastBlock[:])
-				if blockByte == nil {
-					return fmt.Errorf("block with hash %s not found", string(lastBlock[:]))
-				}
-				if string(marshalBlock) != string(blockByte) {
-					return fmt.Errorf("want block structure %s but get %s", marshalBlock, blockByte)
-				}
+				suite.NotNil(blockByte, "block with hash %s not found", string(lastBlock[:]))
+
+				suite.Equal(
+					string(marshalBlock),
+					string(blockByte),
+					"want block structure %s but get %s",
+					marshalBlock,
+					blockByte,
+				)
 
 				return nil
 			},
