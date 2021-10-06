@@ -34,8 +34,8 @@ func (t *TokenStrikeDB) GetClient() *bbolt.DB {
 	return &t.client
 }
 
-func (t *TokenStrikeDB) Close() {
-	t.client.Close()
+func (t *TokenStrikeDB) Close() error {
+	return t.client.Close()
 }
 
 func (t *TokenStrikeDB) Ping() error {
