@@ -187,7 +187,65 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 }
 
 func (b *Bbolt) GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBlock, error) {
-	panic("implement me")
+	var (
+		blocks = []*replicator.MerkleBlock{}
+	)
+
+	err := b.db.Update(func(tx *bbolt.Tx) error {
+
+		tokensBucket := tx.Bucket(database.TokensKey)
+		tokenBucket := tokensBucket.Bucket([]byte(tokenId))
+		if tokenBucket == nil {
+			return errors.TokenNotFoundErr
+		}
+
+		infoBytes := tokenBucket.Get(database.InfoKey)
+		if infoBytes == nil {
+			return errors.InfoNotFoundErr
+		}
+
+		rootHash := tokenBucket.Get(database.RootHashKey)
+		if rootHash == nil {
+			return errors.RootHashNotFoundErr
+		}
+
+		if string(rootHash) != hash {
+
+			var (
+				currentHash = rootHash
+				chainBucket = tokenBucket.Bucket(database.ChainKey)
+			)
+
+			for {
+				blockBytes := chainBucket.Get(currentHash)
+				if blockBytes == nil {
+					return errors.BlockNotFoundErr
+				}
+
+				var block DB.Block
+				err := proto.Unmarshal(blockBytes, &block)
+				if err != nil {
+					return err
+				}
+
+				if string(currentHash) == hash {
+					break
+				}
+
+				merkleBlock := replicator.MerkleBlock{
+					Hash:     string(currentHash),
+					PrevHash: block.PrevBlock,
+				}
+
+				blocks = append(blocks, &merkleBlock)
+				currentHash = []byte(merkleBlock.PrevHash)
+			}
+		}
+
+		return nil
+	})
+
+	return blocks, err
 }
 
 func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
