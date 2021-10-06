@@ -3,6 +3,7 @@ package repository
 import (
 	"encoding/json"
 	stdErrors "errors"
+	"fmt"
 	"token-strike/internal/errors"
 
 	"token-strike/internal/database"
@@ -120,7 +121,69 @@ func (b *Bbolt) GetIssuerTokens() (tokens replicatorrpc.IssuerTokens, err error)
 }
 
 func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
-	panic("implement me")
+	var (
+		resp = &replicator.ChainInfo{
+			State:  &DB.State{},
+			Blocks: []*DB.Block{},
+			Root:   "",
+		}
+
+		err     error
+		dbstate DB.State
+	)
+	err = b.db.Update(func(tx *bbolt.Tx) error {
+
+		// getting chain buckets
+		rootBucket := tx.Bucket(database.TokensKey)
+		tokenBucket := rootBucket.Bucket([]byte(tokenId))
+		dbStateByte := tokenBucket.Get(database.StateKey)
+
+		// unmarshal chain state
+		err = proto.Unmarshal(dbStateByte, &dbstate)
+		if err != nil {
+			return err
+		}
+
+		// getting chain blocks
+		var (
+			rootHash    = tokenBucket.Get(database.RootHashKey)
+			chainBucket = tokenBucket.Bucket(database.ChainKey)
+
+			currentHash = rootHash
+		)
+
+		for {
+			blockBytes := chainBucket.Get(currentHash)
+			if blockBytes == nil {
+				return stdErrors.New(fmt.Sprintf(
+					"block doesnot find by root hash=%v",
+					currentHash,
+				))
+			}
+
+			var block DB.Block
+			err := proto.Unmarshal(blockBytes, &block)
+			if err != nil {
+				return err
+			}
+
+			resp.Blocks = append(resp.Blocks, &block)
+
+			if block.PrevBlock == "" {
+				break
+			}
+
+			currentHash = []byte(block.PrevBlock)
+
+		}
+
+		resp.State = &dbstate
+		resp.Root = string(rootHash)
+
+		return nil
+	})
+
+	return resp, err
 }
 
 func (b *Bbolt) GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBlock, error) {
