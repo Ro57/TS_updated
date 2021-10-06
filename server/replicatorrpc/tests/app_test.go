@@ -2,11 +2,14 @@ package replicatorrpc
 
 import (
 	"context"
+	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"testing"
 	"token-strike/config"
 	"token-strike/internal/database"
+	"token-strike/internal/database/repository"
 
 	"token-strike/server/replicatorrpc"
 	"token-strike/tsp2p/server/replicator"
@@ -69,7 +72,7 @@ func (suite *TestSuite) initListener() error {
 			HttpPort: "",
 			Domain:   domain,
 		},
-		databaseMock,
+		repository.NewBbolt(suite.initTempDatabase()),
 	)
 	if err != nil {
 		return err
@@ -87,4 +90,37 @@ func (suite *TestSuite) initListener() error {
 
 func (suite *TestSuite) bufDialer(context.Context, string) (net.Conn, error) {
 	return suite.listener.Dial()
+}
+
+func (suite *TestSuite) initTempDatabase() *database.TokenStrikeDB {
+	path := tempfile()
+	defer os.RemoveAll(path)
+
+	db, err := database.Connect(path)
+	if err != nil {
+		suite.T().Fatal(err)
+	} else if db == nil {
+		suite.T().Fatal("expected db")
+	}
+
+	if s := db.GetClient().Path(); s != path {
+		suite.T().Fatalf("unexpected path: %s", s)
+	}
+
+	return db
+}
+
+// tempfile returns a temporary file path.
+func tempfile() string {
+	f, err := ioutil.TempFile("", "bolt-")
+	if err != nil {
+		panic(err)
+	}
+	if err := f.Close(); err != nil {
+		panic(err)
+	}
+	if err := os.Remove(f.Name()); err != nil {
+		panic(err)
+	}
+	return f.Name()
 }
