@@ -13,6 +13,7 @@ type DBRepository interface {
 
 type SaveRepository interface {
 	SaveBlock(name string, block *DB.Block) error
+	SyncBlock(name string, blocks []*DB.Block) error
 	SaveIssuerTokenDB(name string, offer *DB.Token) error
 	AssemblyBlock(name string, justifications []*DB.Justification) (*DB.Block, error)
 	IssueTokenDB(name string, offer *DB.Token, block *DB.Block, recipient []*DB.Owner) error
