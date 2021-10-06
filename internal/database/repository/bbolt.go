@@ -288,7 +288,60 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 }
 
 func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
-	panic("implement me")
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket := tx.Bucket(database.TokensKey)
+		if rootBucket == nil {
+			var err error
+			rootBucket, err = tx.CreateBucketIfNotExists(database.TokensKey)
+			if err != nil {
+				return err
+			}
+		}
+
+		tokenBucket, err := rootBucket.CreateBucketIfNotExists([]byte(name))
+		if err != nil {
+			return err
+		}
+
+		// below is the algorithm for searching and saving blocks in order
+		var (
+			numberCurrentBlock = 0
+			quantityBlocks     = len(blocks)
+		)
+
+		// works until it passes through the entire number of blocks
+		for quantityBlocks != numberCurrentBlock {
+
+			// every time with a new pass we request the current signature
+			// after saving it changes
+			currentSignature := string(tokenBucket.Get(database.RootHashKey))
+
+			// if the first block is incorrect
+			if currentSignature != blocks[0].PrevBlock {
+				// start searching the entire array
+				for index, block := range blocks {
+					// after finding the required block, save it
+					if currentSignature == block.Signature {
+						// save block
+						err := b.SaveBlock(name, block)
+						if err != nil {
+							return err
+						}
+						blocks = append(blocks[:index], blocks[index+1:]...)
+					}
+				}
+			} else { // if the blocks are in the correct order we save block
+				err := b.SaveBlock(name, blocks[0])
+				if err != nil {
+					return err
+				}
+				blocks = append(blocks[:0], blocks[1:]...)
+			}
+			numberCurrentBlock++
+		}
+
+		return nil
+	})
 }
 
 func (b *Bbolt) SaveIssuerTokenDB(name string, offer *DB.Token) error {
