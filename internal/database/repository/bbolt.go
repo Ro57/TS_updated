@@ -2,6 +2,7 @@ package repository
 
 import (
 	stdErrors "errors"
+	"token-strike/internal/errors"
 
 	"token-strike/internal/database"
 	"token-strike/server/replicatorrpc"
@@ -60,7 +61,38 @@ func (b *Bbolt) GetTokenList() ([]*replicator.Token, error) {
 }
 
 func (b *Bbolt) GetToken(name string) (replicator.Token, error) {
-	panic("implement me")
+	var (
+		token = replicator.Token{
+			Name:  name,
+			Token: &DB.Token{},
+		}
+	)
+
+	err := b.db.View(func(tx *bbolt.Tx) error {
+		rootBucket := tx.Bucket(database.TokensKey)
+		if rootBucket == nil {
+			return errors.TokensDBNotFound
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(name))
+		if tokenBucket == nil {
+			return errors.TokenNotFoundErr
+		}
+		infoBytes := tokenBucket.Get(database.InfoKey)
+		if infoBytes == nil {
+			return errors.InfoNotFoundErr
+		}
+
+		err := proto.Unmarshal(infoBytes, token.Token)
+		if err != nil {
+			return err
+		}
+
+		token.Root = string(tokenBucket.Get(database.RootHashKey))
+		return nil
+	})
+
+	return token, err
 }
 
 func (b *Bbolt) GetIssuerTokens() (replicatorrpc.IssuerTokens, error) {
