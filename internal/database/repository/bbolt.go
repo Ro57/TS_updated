@@ -249,7 +249,42 @@ func (b *Bbolt) GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBloc
 }
 
 func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
-	panic("implement me")
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(name))
+
+		if string(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
+			return stdErrors.New(
+				fmt.Sprintf(
+					"invalid hash of the previous block want %s but get %s",
+					tokenBucket.Get(database.RootHashKey),
+					block.PrevBlock,
+				))
+		}
+
+		blockSignatureBytes := []byte(block.GetSignature())
+
+		err = tokenBucket.Put(database.RootHashKey, blockSignatureBytes)
+		if err != nil {
+			return err
+		}
+
+		blockBytes, errMarshal := proto.Marshal(block)
+		if errMarshal != nil {
+			return errMarshal
+		}
+
+		chainBucket, err := tokenBucket.CreateBucketIfNotExists(database.ChainKey)
+		if err != nil {
+			return err
+		}
+
+		return chainBucket.Put(blockSignatureBytes, blockBytes)
+	})
 }
 
 func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
