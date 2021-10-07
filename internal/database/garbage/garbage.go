@@ -43,10 +43,10 @@ func Generate(db *database.TokenStrikeDB) error {
 
 		name := fmt.Sprintf("token%v", i+1)
 		blockchain := generateBlockChain(i)
-		repos.IssueTokenDB(name,
+		err := repos.IssueTokenDB(name,
 			&DB.Token{
-				Count:        int64(1000 * i),
-				Expiration:   int32(time.Hour * time.Duration(i)),
+				Count:        int64(1000 * (i + 1)),
+				Expiration:   int32(time.Hour * time.Duration(i+1)),
 				Creation:     time.Now().Unix(),
 				IssuerPubkey: pubKey,
 				Urls: []string{
@@ -56,9 +56,15 @@ func Generate(db *database.TokenStrikeDB) error {
 			blockchain[0],
 			[]*DB.Owner{},
 		)
+		if err != nil {
+			return err
+		}
 
-		for _, block := range blockchain {
-			repos.SaveBlock(name, block)
+		for _, block := range blockchain[1:] {
+			err := repos.SaveBlock(name, block)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -66,6 +72,10 @@ func Generate(db *database.TokenStrikeDB) error {
 }
 
 func generateBlockChain(index int) []*DB.Block {
+	signature := createHash(fmt.Sprintf("signature%v", index))
+	state := createHash(fmt.Sprintf("state%v", index))
+	pktHash := createHash(fmt.Sprintf("pktHash%v", index))
+
 	genesisBlock := &DB.Block{
 		PrevBlock: "",
 		Justifications: []*DB.Justification{
@@ -77,6 +87,12 @@ func generateBlockChain(index int) []*DB.Block {
 				},
 			},
 		},
+		Creation:       time.Now().Unix(),
+		State:          state,
+		PktBlockHash:   pktHash,
+		PktBlockHeight: int32(2 * index),
+		Height:         uint64(index),
+		Signature:      signature,
 	}
 
 	blockSlice := []*DB.Block{
@@ -94,7 +110,7 @@ func generateBlockChain(index int) []*DB.Block {
 		pktHash := createHash(fmt.Sprintf("pktHash%v%v", i, index))
 
 		blockSlice = append(blockSlice, &DB.Block{
-			PrevBlock: blockSlice[i-1].State,
+			PrevBlock: blockSlice[i-1].Signature,
 			Justifications: []*DB.Justification{
 				&DB.Justification{
 					Content: &DB.Justification_Transfer{

@@ -20,7 +20,13 @@ func TestGarbage(t *testing.T) {
 	db, err := database.Connect(home + path + name)
 	require.NoError(t, err)
 	defer db.Close()
+	defer func() {
+		err := db.Clear()
+		if err != nil {
+			require.NoError(t, err, "clear db exception")
+		}
+	}()
 
-	Generate(db)
-
+	err = Generate(db)
+	require.NoError(t, err, "generate db error")
 }

@@ -482,9 +482,9 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, reci
 				return err
 			}
 
-			errPut := tokenBucket.Put(database.InfoKey, tokenBytes)
-			if errPut != nil {
-				return errPut
+			err = tokenBucket.Put(database.InfoKey, tokenBytes)
+			if err != nil {
+				return err
 			}
 		}
 
