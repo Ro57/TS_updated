@@ -20,17 +20,17 @@ service Replicator {
     rpc SyncChain(stream SyncChainRequest) returns (google.protobuf.Empty);
 
     // GetBlockSequence get all sequence from a selected by token name bucket and return it
-    rpc GetBlockSequence(GetBlockSequenceRequest) returns(GetUrlTokenResponse);
+    // rpc GetBlockSequence(GetBlockSequenceRequest) returns(GetUrlTokenResponse);
     
     // GetHeaders returns headers of all block from given hash to last block
-    rpc GetHeaders(GetHeadersRequest) returns (GetHeadersResponse);
+    // rpc GetHeaders(GetHeadersRequest) returns (GetHeadersResponse);
 
     // GetToken returns only one specified token
     rpc GetToken(GetTokenRequest) returns (GetTokenResponse);
 
-    rpc GetIssuerTokens(GetIssuerTokensRequest) returns (GetIssuerTokensResponse);
+    // rpc GetIssuerTokens(GetIssuerTokensRequest) returns (GetIssuerTokensResponse);
 
-    rpc GetUrlSequence(GetUrlSequenceRequest) returns(GetUrlSequenceResponse);
+    // rpc GetUrlSequence(GetUrlSequenceRequest) returns(GetUrlSequenceResponse);
 
     // GetTokenList — return list of issued token with infomation about
     // expiration time and fix price.
