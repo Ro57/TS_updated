@@ -12,4 +12,9 @@ func TestExampleTestSuite(t *testing.T) {
 
 type TestSuite struct {
 	suite.Suite
+	address Address
+}
+
+func (suite *TestSuite) SetupTest() {
+	suite.address = Address{}
 }
