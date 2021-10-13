@@ -1,7 +1,10 @@
 package utils
 
-import "token-strike/internal/types"
+import (
+	"crypto/ed25519"
+	"token-strike/internal/types"
+)
 
-func (e *Address) Sign(k types.Key, data []byte) []byte {
-	return []byte{}
+func (a *Address) Sign(key types.Key, data []byte) []byte {
+	return ed25519.Sign(key, data)
 }
