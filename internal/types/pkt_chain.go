@@ -1,4 +1,4 @@
-package utils
+package types
 
 // AnnProof — lock expiration time in PKT blocks
 type AnnProof int32

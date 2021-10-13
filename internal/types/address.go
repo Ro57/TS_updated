@@ -1,6 +1,11 @@
-package utils
+package types
 
-type Key []byte
+import (
+	ed "crypto/ed25519"
+)
+
+type Key ed.PrivateKey
+
 type Address interface {
 	CheckSig(address string, signature []byte, data []byte) bool
 	GenerateKey(randomSeed []byte) Key
