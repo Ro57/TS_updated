@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	permitions = 0666
+	permissions = 0666
 )
 
 type TokenStrikeDB struct {
@@ -17,7 +17,7 @@ type TokenStrikeDB struct {
 }
 
 func Connect(path string) (*TokenStrikeDB, error) {
-	db, err := bbolt.Open(path, permitions, nil)
+	db, err := bbolt.Open(path, permissions, nil)
 	if err != nil {
 		return nil, err
 	}

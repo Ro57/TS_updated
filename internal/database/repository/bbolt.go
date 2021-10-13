@@ -16,14 +16,14 @@ import (
 	"go.etcd.io/bbolt"
 )
 
-func NewBbolt(db database.TokenStrikeDB) *Bbolt {
+func NewBbolt(db *database.TokenStrikeDB) *Bbolt {
 	return &Bbolt{
 		db: db,
 	}
 }
 
 type Bbolt struct {
-	db database.TokenStrikeDB
+	db *database.TokenStrikeDB
 }
 
 func (b *Bbolt) GetTokenList() ([]*replicator.Token, error) {
