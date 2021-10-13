@@ -35,7 +35,7 @@ func createHashBytes(data []byte) []byte {
 }
 
 func Generate(db *database.TokenStrikeDB) error {
-	repos := repository.NewBbolt(*db)
+	repos := repository.NewBbolt(db)
 
 	for i := 0; i < tokenCount; i++ {
 		// TODO: change on real algoritm of hash generator
