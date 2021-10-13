@@ -1,4 +1,4 @@
-package utils
+package types
 
 // Make a test dummy implementation MockPktChain of this where:
 // CurrentHeight() -> (unixTime() - 1566269808) / 60
