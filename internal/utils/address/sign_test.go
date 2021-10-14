@@ -5,7 +5,7 @@ import (
 )
 
 func (suite *TestSuite) TestSign() {
-	seed := randomSeed(32)
+	seed := randomSeed(32, 0)
 	wantMsg := "Hello pkt"
 	wantKey := ed25519.NewKeyFromSeed(seed)
 	wantSingature := ed25519.Sign(wantKey, []byte(wantMsg))
