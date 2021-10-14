@@ -1,7 +1,9 @@
 package types
 
 // AnnProof — lock expiration time in PKT blocks
-type AnnProof int32
+type AnnProof struct {
+	Num int32
+}
 
 type PktChain interface {
 	CurrentHeight() int32
