@@ -17,7 +17,7 @@ func (suite *TestSuite) TestAnnounceData() {
 				payload: []byte{},
 			},
 			want:    suite.Equal,
-			wantNum: 0,
+			wantNum: suite.chain.CurrentHeight(),
 		},
 		{
 			name: "Invalid annoncment num",
@@ -25,7 +25,7 @@ func (suite *TestSuite) TestAnnounceData() {
 				payload: []byte{},
 			},
 			want:    suite.NotEqual,
-			wantNum: 1,
+			wantNum: 0,
 		},
 	}
 

@@ -18,15 +18,15 @@ func (suite *TestSuite) TestVerifyProof() {
 	}{
 		{
 			name:    "Valid proof",
-			args:    ann,
+			args:    args{ann},
 			want:    suite.Equal,
-			wantNum: 0,
+			wantNum: suite.chain.CurrentHeight(),
 		},
 		{
 			name:    "Invalid proof",
-			args:    ann,
+			args:    args{ann},
 			want:    suite.NotEqual,
-			wantNum: 1,
+			wantNum: 0,
 		},
 	}
 

@@ -9,8 +9,8 @@ import (
 func (p *pktChain) AnnounceData(data []byte) chan types.AnnProof {
 	annProof := make(chan types.AnnProof)
 
+	// payload simulations
 	go func() {
-
 		n := randomSleep(500, 2000)
 		time.Sleep(time.Duration(n) * time.Millisecond)
 		annProof <- types.AnnProof{
