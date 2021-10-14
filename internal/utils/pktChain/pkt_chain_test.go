@@ -5,3 +5,22 @@ package utils
 // BlockHashAtHeight(height) -> if height > CurrentHeight() { nil } else { sha256(height) }
 // AnnounceData(data) -> go func() { loop { sleepSeconds(random(30, 90)); channel <- AnnProof { num: CurrentHeight() } } }
 // VerifyProof(ap) -> return ap.num
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/suite"
+)
+
+func TestExampleTestSuite(t *testing.T) {
+	suite.Run(t, new(TestSuite))
+}
+
+type TestSuite struct {
+	suite.Suite
+	chain pktChain
+}
+
+func (suite *TestSuite) SetupTest() {
+	suite.chain = pktChain{}
+}
