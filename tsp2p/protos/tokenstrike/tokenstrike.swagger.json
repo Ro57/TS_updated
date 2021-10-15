@@ -1,0 +1,246 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "protos/tokenstrike/tokenstrike.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "justificationsGenesis": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "title": "token — token identification by name"
+        }
+      },
+      "title": "Genesis initial block justification"
+    },
+    "justificationsLockTimeOver": {
+      "type": "object",
+      "properties": {
+        "proof_elapsed": {
+          "type": "string",
+          "title": "proof_elapsed — PKT block hash confirming expiration lock"
+        },
+        "lock": {
+          "type": "string",
+          "title": "lock_id — hash with information about lock justification"
+        }
+      },
+      "title": "LockTimeOver timeout for token locking"
+    },
+    "justificationsLockToken": {
+      "type": "object",
+      "properties": {
+        "lock": {
+          "$ref": "#/definitions/lockLock",
+          "title": "lock — information about lock"
+        }
+      },
+      "title": "LockToken the token locking"
+    },
+    "justificationsTranferToken": {
+      "type": "object",
+      "properties": {
+        "htlc_secret": {
+          "type": "string",
+          "title": "htlc_secret — htlc genereted issuer"
+        },
+        "lock": {
+          "type": "string",
+          "title": "lock — hash information about lock"
+        }
+      },
+      "title": "TranferToken receiving funds for tokens and unlcok them"
+    },
+    "lockLock": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "count — number of sending tokens"
+        },
+        "recipient": {
+          "type": "string",
+          "title": "recipient — wallet addres of new owner of tokens"
+        },
+        "sender": {
+          "type": "string",
+          "title": "sender — owner of the wallet address to which tokens will be returned"
+        },
+        "htlc_secret_hash": {
+          "type": "string",
+          "title": "htlc_secret_hash — hash of contract"
+        },
+        "proof_count": {
+          "type": "integer",
+          "format": "int32",
+          "title": "proof_count — lock expiration time in PKT blocks"
+        },
+        "creation_height": {
+          "type": "string",
+          "format": "uint64",
+          "title": "creation_height — creation height in token blockchain"
+        },
+        "signature": {
+          "type": "string",
+          "title": "signature generated with old owner private key"
+        }
+      },
+      "title": "Lock contain information about tokens and contract for transferring"
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "tokendbBlock": {
+      "type": "object",
+      "properties": {
+        "prev_block": {
+          "type": "string",
+          "title": "prev_block — hash of previous block"
+        },
+        "justifications": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tokendbJustification"
+          },
+          "description": "justifications — collection of one of justification structure with \npayload information."
+        },
+        "creation": {
+          "type": "string",
+          "format": "int64",
+          "title": "creation — date of block creation in unix time format"
+        },
+        "state": {
+          "type": "string",
+          "title": "state — hash of state structure containing locks, owners and meta token \ninfo"
+        },
+        "pkt_block_hash": {
+          "type": "string",
+          "title": "pkt_block_hash —  the hash of the most recent PKT block"
+        },
+        "pkt_block_height": {
+          "type": "integer",
+          "format": "int32",
+          "title": "pkt_block_height — the height of the most recent PKT block"
+        },
+        "height": {
+          "type": "string",
+          "format": "uint64",
+          "title": "height — the current height of this TokenStrike chain"
+        },
+        "signature": {
+          "type": "string",
+          "title": "signature — issuer ID, needed for validate. If signature incorrect block\nis not valid"
+        }
+      },
+      "title": "Block is struct of block in blockchain"
+    },
+    "tokendbJustification": {
+      "type": "object",
+      "properties": {
+        "lock": {
+          "$ref": "#/definitions/justificationsLockToken",
+          "title": "lock — payload with lock"
+        },
+        "transfer": {
+          "$ref": "#/definitions/justificationsTranferToken",
+          "title": "transfer — payload with transaction info"
+        },
+        "lock_over": {
+          "$ref": "#/definitions/justificationsLockTimeOver",
+          "title": "lock_over — payload with lock time over"
+        },
+        "genesis": {
+          "$ref": "#/definitions/justificationsGenesis",
+          "title": "genesis — justification to initialize block chian"
+        }
+      },
+      "title": "Justification is a helper to use it in block"
+    },
+    "tokenstrikeInv": {
+      "type": "object",
+      "properties": {
+        "parent": {
+          "type": "string",
+          "format": "byte",
+          "title": "/ For block or lock, the \"parent\" is the token id (hash block 0)\n/ For new token notifications, the parent is the issuer"
+        },
+        "type": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "entity_hash": {
+          "type": "string",
+          "format": "byte"
+        }
+      },
+      "title": "Inv contains info about data that need replicates to other replicators"
+    },
+    "tokenstrikeInvResp": {
+      "type": "object",
+      "properties": {
+        "needed": {
+          "type": "array",
+          "items": {
+            "type": "boolean",
+            "format": "boolean"
+          }
+        }
+      }
+    },
+    "tokenstrikePostDataResp": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "warning": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "title": "PostData"
+    }
+  }
+}

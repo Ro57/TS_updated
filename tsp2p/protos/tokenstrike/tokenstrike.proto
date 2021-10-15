@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package tokenstrike;
+
+option go_package = "token-strike/tsp2p/server/tokenstrike";
+
+import "protos/lock/lock.proto";
+import "protos/DB/tokendb.proto";
+
+service TokenStrike {
+  rpc Inv(InvReq) returns (InvResp);
+  rpc PostData(Data) returns (PostDataResp);
+}
+
+message InvReq {
+  repeated Inv invs = 1;
+}
+
+// Inv contains info about data that need replicates to other replicators
+message Inv {
+  /// For block or lock, the "parent" is the token id (hash block 0)
+  /// For new token notifications, the parent is the issuer
+  bytes parent = 1;
+  uint32 type = 2;
+  bytes entity_hash = 3;
+}
+
+message InvResp {
+  repeated bool needed = 1;
+}
+
+// PostData
+message PostDataResp {
+  string error = 1;
+  repeated string warning = 2;
+}
+message Data {
+  oneof data {
+    lock.Lock lock = 1;
+    tokendb.Block block = 2;
+    /// will add more later
+  }
+}
