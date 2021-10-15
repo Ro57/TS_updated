@@ -1,4 +1,4 @@
-package utils
+package utils_test
 
 import (
 	"crypto/ed25519"
@@ -10,10 +10,9 @@ func (suite *TestSuite) TestSign() {
 	wantKey := ed25519.NewKeyFromSeed(seed)
 	wantSingature := ed25519.Sign(wantKey, []byte(wantMsg))
 
-	addressHelper := Address{}
-	key := addressHelper.GenerateKey(seed)
+	key := suite.address.GenerateKey(seed)
 
-	singature := addressHelper.Sign(wantKey, []byte(wantMsg))
+	singature := suite.address.Sign(wantKey, []byte(wantMsg))
 	suite.True(key.Equal(wantKey))
 
 	for i, b := range singature {

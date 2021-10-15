@@ -6,7 +6,7 @@ import (
 	"token-strike/internal/types"
 )
 
-func (p *pktChain) AnnounceData(data []byte) chan types.AnnProof {
+func (p *PktChain) AnnounceData(data []byte) chan types.AnnProof {
 	annProof := make(chan types.AnnProof)
 
 	// payload simulations

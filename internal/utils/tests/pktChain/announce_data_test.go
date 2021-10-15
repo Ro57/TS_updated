@@ -1,4 +1,4 @@
-package utils
+package utils_test
 
 func (suite *TestSuite) TestAnnounceData() {
 

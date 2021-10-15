@@ -1,7 +1,8 @@
-package utils
+package utils_test
 
 import (
 	"testing"
+	"token-strike/internal/utils"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -12,9 +13,9 @@ func TestExampleTestSuite(t *testing.T) {
 
 type TestSuite struct {
 	suite.Suite
-	address Address
+	address utils.Address
 }
 
 func (suite *TestSuite) SetupTest() {
-	suite.address = Address{}
+	suite.address = utils.Address{}
 }

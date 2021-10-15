@@ -1,4 +1,4 @@
-package utils
+package utils_test
 
 import "time"
 
@@ -9,7 +9,7 @@ func (suite *TestSuite) TestCurrentHeight() {
 	}{
 		{
 			"Valid",
-			int32((time.Now().Unix() - 1566269808)/60),
+			int32((time.Now().Unix() - 1566269808) / 60),
 		},
 	}
 	for _, tt := range tests {
