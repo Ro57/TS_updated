@@ -1,5 +1,7 @@
 package utils
 
+import "encoding/hex"
+
 func (a Address) String() string {
-	return string(a.publicKey)
+	return hex.EncodeToString(a.publicKey)
 }

@@ -1,7 +1,6 @@
 package utils_test
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"math"
 	"testing"
@@ -21,8 +20,8 @@ const (
 	christyIndex
 )
 
-func randomSeed(l, offset int) []byte {
-	bytes := make([]byte, l)
+func randomSeed(l, offset int) [32]byte {
+	bytes := [32]byte{}
 	for i := 0; i < l; i++ {
 		bytes[i] = byte(i + offset)
 	}
@@ -30,11 +29,11 @@ func randomSeed(l, offset int) []byte {
 }
 
 func TestAllFunctions(t *testing.T) {
-	address := &utils.Address{}
-	PktChain := &utils.PktChain{}
-	seedSlice := [][]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64)}
+	var activeAddressScheme types.AddressScheme = &utils.AddressScheme{}
+	var activePktChain types.PktChain = &utils.PktChain{}
+	seedSlice := [][32]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64)}
 	privKeySlice := []types.PrivateKey{}
-	addressSlice := []string{}
+	addressSlice := []types.Address{}
 
 	db, err := database.Connect("./test.db")
 	if err != nil {
@@ -56,18 +55,21 @@ func TestAllFunctions(t *testing.T) {
 	tokendb := repository.NewBbolt(db)
 
 	for _, s := range seedSlice {
-		privKeySlice = append(privKeySlice, address.GenerateKey(s))
+		privKeySlice = append(privKeySlice, activeAddressScheme.GenerateKey(s))
 	}
 
 	for _, k := range privKeySlice {
-		h := sha256.New()
-		h.Write([]byte(k.Public()))
 
-		addressString := hex.EncodeToString(h.Sum(nil))
-		addressSlice = append(addressSlice, addressString)
+		address, err := activeAddressScheme.ParseAddr(k.Public())
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		addressSlice = append(addressSlice, address)
 	}
 
-	issuerPubKey := hex.EncodeToString(randomSeed(32, 96))
+	issuerSeed := randomSeed(32, 96)
+	issuerPubKey := hex.EncodeToString(issuerSeed[:])
 
 	token := DB.Token{
 		Count:        10,
@@ -83,11 +85,11 @@ func TestAllFunctions(t *testing.T) {
 		Token: &token,
 		Owners: []*DB.Owner{
 			{
-				HolderWallet: addressSlice[aliceIndex],
+				HolderWallet: addressSlice[aliceIndex].String(),
 				Count:        6,
 			},
 			{
-				HolderWallet: addressSlice[bobIndex],
+				HolderWallet: addressSlice[bobIndex].String(),
 				Count:        4,
 			},
 		},
@@ -106,8 +108,8 @@ func TestAllFunctions(t *testing.T) {
 		Justifications: nil,
 		Creation:       time.Now().Unix(),
 		State:          stateHash,
-		PktBlockHash:   string(PktChain.BlockHashAtHeight(PktChain.CurrentHeight())),
-		PktBlockHeight: PktChain.CurrentHeight(),
+		PktBlockHash:   string(activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight())),
+		PktBlockHeight: activePktChain.CurrentHeight(),
 		Height:         0,
 	}
 
@@ -116,7 +118,7 @@ func TestAllFunctions(t *testing.T) {
 		t.Error(err)
 	}
 
-	sig := address.Sign(privKeySlice[aliceIndex], bs0)
+	sig := privKeySlice[aliceIndex].Sign(bs0)
 	block.Signature = string(sig)
 
 	tokenID := hex.EncodeToString(bs0)
