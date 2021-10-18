@@ -37,8 +37,13 @@ func randomSeed(l, offset int) []byte {
 }
 
 func TestAllFunctions(t *testing.T) {
+	tokenName := "smt"
 	address := &utils.Address{}
 	PktChain := &utils.PktChain{}
+	seedSlice := [][]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64)}
+	privKeySlice := []types.Key{}
+	addressSlice := []string{}
+
 	db, err := database.Connect("./test.db")
 	if err != nil {
 		panic(err)
@@ -58,10 +63,6 @@ func TestAllFunctions(t *testing.T) {
 	}()
 	tokendb := repository.NewBbolt(db)
 
-	seedSlice := [][]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64)}
-	privKeySlice := []types.Key{}
-	addressSlice := []string{}
-
 	for _, s := range seedSlice {
 		privKeySlice = append(privKeySlice, address.GenerateKey(s))
 	}
@@ -75,6 +76,8 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	issuerPubKey := addressSlice[aliceIndex]
+
+	tokendb.SaveIssuerTokenDB(tokenName, issuerPubKey)
 
 	token := DB.Token{
 		Count:        10,
@@ -126,5 +129,5 @@ func TestAllFunctions(t *testing.T) {
 	sig := address.Sign(privKeySlice[aliceIndex], bs0)
 	block.Signature = string(sig)
 
-	tokendb.IssueTokenDB(issuerPubKey, &token, block, []*DB.Owner{})
+	tokendb.IssueTokenDB(tokenName, &token, block, []*DB.Owner{})
 }

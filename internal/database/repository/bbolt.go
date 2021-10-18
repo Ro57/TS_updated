@@ -345,7 +345,7 @@ func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
 	})
 }
 
-func (b *Bbolt) SaveIssuerTokenDB(name string, offer *DB.Token) error {
+func (b *Bbolt) SaveIssuerTokenDB(name, issuer string) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
 		if err != nil {
@@ -363,7 +363,7 @@ func (b *Bbolt) SaveIssuerTokenDB(name string, offer *DB.Token) error {
 			return errUnmarshal
 		}
 
-		issuerTokens.AddToken(offer.IssuerPubkey, name)
+		issuerTokens.AddToken(issuer, name)
 
 		issuerTokensBytes, errMarshal := json.Marshal(issuerTokens)
 		if errMarshal != nil {
@@ -463,7 +463,8 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 	return block, nil
 }
 
-// TODO: remove recipient []*DB.Owner argument
+// TODO: Remove recipient []*DB.Owner argument
+// TODO: Rework this method. Now name is a issuer name but not token name. We create issuer bucket and into it append bucket with tocken name.
 func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, recipient []*DB.Owner) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
