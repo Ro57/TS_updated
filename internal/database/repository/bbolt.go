@@ -463,6 +463,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 	return block, nil
 }
 
+// TODO: remove recipient []*DB.Owner argument
 func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, recipient []*DB.Owner) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
@@ -489,6 +490,7 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, reci
 		}
 
 		// if token state did not exist then create
+		// TODO: State generate before call this method and containing into block. Need remove this logic
 		if tokenBucket.Get(database.StateKey) == nil {
 			state := DB.State{
 				Token:  offer,
