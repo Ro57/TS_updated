@@ -6,8 +6,17 @@ import (
 
 type Key = ed.PrivateKey
 
+type AddressScheme interface {
+	GenerateKey(seed [32]byte) PrivateKey
+	ParseAddr(ps string) (Address, error)
+}
+
+type PrivateKey interface {
+	Public() string
+	Sign(data []byte) []byte
+}
+
 type Address interface {
-	CheckSig(address string, signature []byte, data []byte) bool
-	GenerateKey(randomSeed []byte) Key
-	Sign(k Key, data []byte) []byte
+	CheckSig(data []byte, signature []byte) bool
+	String() string
 }

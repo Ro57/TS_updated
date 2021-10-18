@@ -1,8 +1,12 @@
 package utils
 
-import "token-strike/internal/types"
+import (
+	ed "crypto/ed25519"
+	"token-strike/internal/types"
+)
 
 type Address struct {
+	publicKey ed.PublicKey
 }
 
-var _ types.Address = (*Address)(nil)
+var _ types.Address = &Address{}

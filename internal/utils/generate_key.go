@@ -6,6 +6,7 @@ import (
 	"token-strike/internal/types"
 )
 
-func (e *Address) GenerateKey(randomSeed []byte) types.Key {
-	return ed.NewKeyFromSeed(randomSeed)
+func (e *AddressScheme) GenerateKey(randomSeed [32]byte) types.PrivateKey {
+	key := ed.NewKeyFromSeed(randomSeed[:])
+	return PrivateKey{key}
 }
