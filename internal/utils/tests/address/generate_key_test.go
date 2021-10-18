@@ -27,7 +27,7 @@ func (suite *TestSuite) TestGenerateKey() {
 	tests := []struct {
 		name     string
 		args     []args
-		wantKeys []types.Key
+		wantKeys []types.PrivateKey
 		want     func(value bool, msgAndArgs ...interface{}) bool
 	}{
 		{
@@ -37,7 +37,7 @@ func (suite *TestSuite) TestGenerateKey() {
 					seed: seedSlice[aliceIndex],
 				},
 			},
-			wantKeys: []types.Key{
+			wantKeys: []types.PrivateKey{
 				ed25519.NewKeyFromSeed(seedSlice[aliceIndex]),
 			},
 			want: suite.True,
@@ -50,7 +50,7 @@ func (suite *TestSuite) TestGenerateKey() {
 				},
 			},
 
-			wantKeys: []types.Key{
+			wantKeys: []types.PrivateKey{
 				ed25519.NewKeyFromSeed(seedSlice[bobIndex]),
 			},
 			want: suite.False,
@@ -68,7 +68,7 @@ func (suite *TestSuite) TestGenerateKey() {
 					seed: seedSlice[christyIndex],
 				},
 			},
-			wantKeys: []types.Key{
+			wantKeys: []types.PrivateKey{
 				ed25519.NewKeyFromSeed(seedSlice[aliceIndex]),
 				ed25519.NewKeyFromSeed(seedSlice[bobIndex]),
 				ed25519.NewKeyFromSeed(seedSlice[christyIndex]),
@@ -88,7 +88,7 @@ func (suite *TestSuite) TestGenerateKey() {
 					seed: seedSlice[christyIndex],
 				},
 			},
-			wantKeys: []types.Key{
+			wantKeys: []types.PrivateKey{
 				ed25519.NewKeyFromSeed(seedSlice[bobIndex]),
 				ed25519.NewKeyFromSeed(seedSlice[christyIndex]),
 				ed25519.NewKeyFromSeed(seedSlice[aliceIndex]),

@@ -1,7 +1,6 @@
 package utils_test
 
 import (
-	"crypto/ed25519"
 	"crypto/sha256"
 	"encoding/hex"
 	"math"
@@ -22,12 +21,6 @@ const (
 	christyIndex
 )
 
-var ()
-
-func init() {
-
-}
-
 func randomSeed(l, offset int) []byte {
 	bytes := make([]byte, l)
 	for i := 0; i < l; i++ {
@@ -37,11 +30,10 @@ func randomSeed(l, offset int) []byte {
 }
 
 func TestAllFunctions(t *testing.T) {
-	tokenName := "smt"
 	address := &utils.Address{}
 	PktChain := &utils.PktChain{}
 	seedSlice := [][]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64)}
-	privKeySlice := []types.Key{}
+	privKeySlice := []types.PrivateKey{}
 	addressSlice := []string{}
 
 	db, err := database.Connect("./test.db")
@@ -69,15 +61,13 @@ func TestAllFunctions(t *testing.T) {
 
 	for _, k := range privKeySlice {
 		h := sha256.New()
-		h.Write(k.Public().(ed25519.PublicKey))
+		h.Write([]byte(k.Public()))
 
-		address := hex.EncodeToString(h.Sum(nil))
-		addressSlice = append(addressSlice, address)
+		addressString := hex.EncodeToString(h.Sum(nil))
+		addressSlice = append(addressSlice, addressString)
 	}
 
-	issuerPubKey := addressSlice[aliceIndex]
-
-	tokendb.SaveIssuerTokenDB(tokenName, issuerPubKey)
+	issuerPubKey := hex.EncodeToString(randomSeed(32, 96))
 
 	token := DB.Token{
 		Count:        10,
@@ -129,5 +119,9 @@ func TestAllFunctions(t *testing.T) {
 	sig := address.Sign(privKeySlice[aliceIndex], bs0)
 	block.Signature = string(sig)
 
-	tokendb.IssueTokenDB(tokenName, &token, block, []*DB.Owner{})
+	tokenID := hex.EncodeToString(bs0)
+
+	tokendb.SaveIssuerTokenDB(tokenID, issuerPubKey)
+
+	tokendb.IssueTokenDB(tokenID, &token, block, []*DB.Owner{})
 }
