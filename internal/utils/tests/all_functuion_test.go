@@ -18,6 +18,8 @@ const (
 	aliceIndex = iota
 	bobIndex
 	christyIndex
+
+	// this is issuer
 	isaacIndex
 )
 
@@ -60,7 +62,6 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	for _, k := range privKeySlice {
-
 		address, err := activeAddressScheme.ParseAddr(k.Public())
 		if err != nil {
 			t.Fatal(err)
@@ -116,10 +117,17 @@ func TestAllFunctions(t *testing.T) {
 		t.Error(err)
 	}
 
-	sig := privKeySlice[aliceIndex].Sign(bs0)
-	block.Signature = string(sig)
+	sig := privKeySlice[isaacIndex].Sign(bs0)
+	block.Signature = hex.EncodeToString(sig)
 
-	tokenID := hex.EncodeToString(bs0)
+	blockSigned, err := proto.Marshal(block)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blockHash := privKeySlice[isaacIndex].Sign(blockSigned)
+
+	tokenID := hex.EncodeToString(blockHash)
 
 	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
 
