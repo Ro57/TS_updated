@@ -14,19 +14,21 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 	}
 
 	var (
-		resp *tokenstrike.PostDataResp
-		err error
+		resp    *tokenstrike.PostDataResp
+		lockEl  *lock.Lock
+		blockEl *DB.Block
+		err     error
 	)
 
 	switch req.Data.(type) {
 	case *tokenstrike.Data_Block:
-		block := req.GetBlock()
-		err, resp.Warning = validateBlock(block)
+		blockEl = req.GetBlock()
+		err, resp.Warning = validateBlock(blockEl)
 	case *tokenstrike.Data_Lock:
-		lock := req.GetLock()
-		err, resp.Warning = validateLock(lock)
+		lockEl = req.GetLock()
+		err, resp.Warning = validateLock(lockEl)
 	default:
-		return nil,  errors.New("unknown data type")
+		return nil, errors.New("unknown data type")
 	}
 
 	if err != nil {
@@ -38,11 +40,11 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 }
 
 //todo place here checking for ret error with warnings
-func validateBlock(block *DB.Block) (err error,warnings []string){
+func validateBlock(block *DB.Block) (err error, warnings []string) {
 	return nil, nil
 }
 
 //todo place here checking for ret error with warnings
-func validateLock(block *lock.Lock) (err error,warnings []string){
+func validateLock(block *lock.Lock) (err error, warnings []string) {
 	return nil, nil
 }
