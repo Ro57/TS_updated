@@ -1,17 +1,20 @@
 package utils_test
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
+	"github.com/golang/protobuf/proto"
 	"math"
+	"math/rand"
 	"testing"
 	"time"
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 	"token-strike/internal/types"
 	"token-strike/internal/utils"
+	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/DB"
-
-	"github.com/golang/protobuf/proto"
+	"token-strike/tsp2p/server/lock"
 )
 
 const (
@@ -19,6 +22,7 @@ const (
 	bobIndex
 	christyIndex
 	isaacIndex
+	lastIndex
 )
 
 func randomSeed(l, offset int) [32]byte {
@@ -124,4 +128,39 @@ func TestAllFunctions(t *testing.T) {
 	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
 
 	tokendb.IssueTokenDB(tokenID, &token, block, []*DB.Owner{})
+
+	// n3
+	// generate random secret 32 byte
+	randomSecret := make([]byte, 32)
+	rand.Seed(time.Now().UnixNano())
+	rand.Read(randomSecret)
+	htlcFL := sha256.Sum256(randomSecret)
+	htlcSL := sha256.Sum256(htlcFL[:])
+	//populate lock with special data todo check the addresses
+	lockEl := &lock.Lock{
+		Count:          3,
+		Recipient:      addressSlice[isaacIndex].String(),
+		Sender:         addressSlice[aliceIndex].String(),
+		HtlcSecretHash: hex.EncodeToString(htlcSL[:]),
+		ProofCount:     block.PktBlockHeight + 60,
+		PktBlockHash:   activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight()),
+		PktBlockHeight: uint32(activePktChain.CurrentHeight()),
+		Signature:      "",
+	}
+
+	bs0, err = proto.Marshal(lockEl)
+	if err != nil {
+		t.Error(err)
+	}
+
+	sig = privKeySlice[isaacIndex].Sign(bs0) //todo is it right index for signing?
+	lockEl.Signature = hex.EncodeToString(sig)
+
+	//prprd slice of Inv todo think maybe we dont need in extra init, cause each elem have default values
+	var Invs = make([]tokenstrikemock.TokenStrikeMock, lastIndex, lastIndex)
+	Invs[aliceIndex] = tokenstrikemock.TokenStrikeMock{}
+	Invs[bobIndex] = tokenstrikemock.TokenStrikeMock{}
+	Invs[christyIndex] = tokenstrikemock.TokenStrikeMock{}
+	Invs[isaacIndex] = tokenstrikemock.TokenStrikeMock{}
+
 }
