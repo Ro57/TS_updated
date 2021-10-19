@@ -188,6 +188,34 @@
       },
       "title": "GenerateURLResponse contains the url to add it to the token information"
     },
+    "replicatorGetHeadersResponse": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/tokendbToken",
+          "title": "token — information about token"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorMerkleBlock"
+          },
+          "title": "blocks — collcetion of block hash from given to last"
+        }
+      },
+      "title": "GetHeadersResponse contain block hashes with token information"
+    },
+    "replicatorGetIssuerTokensResponse": {
+      "type": "object",
+      "properties": {
+        "tokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorIssuerTokens"
+          }
+        }
+      }
+    },
     "replicatorGetTokenListResponse": {
       "type": "object",
       "properties": {
@@ -219,6 +247,60 @@
         }
       },
       "title": "GetTokenRequest contains the found token"
+    },
+    "replicatorGetUrlSequenceResponse": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string"
+        }
+      }
+    },
+    "replicatorGetUrlTokenResponse": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "$ref": "#/definitions/tokendbState"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tokendbBlock"
+          }
+        },
+        "root": {
+          "type": "string",
+          "title": "root — Hash of the chain tip block"
+        }
+      }
+    },
+    "replicatorIssuerTokens": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "tokens": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/replicatorToken"
+          }
+        }
+      }
+    },
+    "replicatorMerkleBlock": {
+      "type": "object",
+      "properties": {
+        "hash": {
+          "type": "string",
+          "title": "hash of block"
+        },
+        "prev_hash": {
+          "type": "string",
+          "title": "prev_hash — reference of previous block"
+        }
+      },
+      "title": "MerkleBlock — inforamtion about block"
     },
     "replicatorPagination": {
       "type": "object",
@@ -355,6 +437,30 @@
         }
       },
       "title": "Owner contains information about the holders' wallets and their balances"
+    },
+    "tokendbState": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/tokendbToken",
+          "title": "token — metadata about token"
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tokendbOwner"
+          },
+          "title": "owners — a set of structures with addresses and their balances"
+        },
+        "locks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/lockLock"
+          },
+          "title": "locks — set of lock structures"
+        }
+      },
+      "title": "State is a current state of blockchain"
     },
     "tokendbToken": {
       "type": "object",
