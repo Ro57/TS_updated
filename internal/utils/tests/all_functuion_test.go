@@ -18,6 +18,7 @@ const (
 	aliceIndex = iota
 	bobIndex
 	christyIndex
+	issuerIndex
 )
 
 func randomSeed(l, offset int) [32]byte {
@@ -29,9 +30,9 @@ func randomSeed(l, offset int) [32]byte {
 }
 
 func TestAllFunctions(t *testing.T) {
-	var activeAddressScheme types.AddressScheme = &utils.AddressScheme{}
-	var activePktChain types.PktChain = &utils.PktChain{}
-	seedSlice := [][32]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64)}
+	var activeAddressScheme types.AddressScheme = &utils.SimpleAddressScheme{}
+	var activePktChain types.PktChain = &utils.SimplePktChain{}
+	seedSlice := [][32]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64), randomSeed(32, 96)}
 	privKeySlice := []types.PrivateKey{}
 	addressSlice := []types.Address{}
 
@@ -68,14 +69,11 @@ func TestAllFunctions(t *testing.T) {
 		addressSlice = append(addressSlice, address)
 	}
 
-	issuerSeed := randomSeed(32, 96)
-	issuerPubKey := hex.EncodeToString(issuerSeed[:])
-
 	token := DB.Token{
 		Count:        10,
 		Expiration:   math.MaxInt32,
 		Creation:     time.Now().Unix(),
-		IssuerPubkey: issuerPubKey,
+		IssuerPubkey: addressSlice[issuerIndex].String(),
 		Urls: []string{
 			"http://localhost:3333/token1",
 		},
@@ -123,7 +121,7 @@ func TestAllFunctions(t *testing.T) {
 
 	tokenID := hex.EncodeToString(bs0)
 
-	tokendb.SaveIssuerTokenDB(tokenID, issuerPubKey)
+	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[issuerIndex].String())
 
 	tokendb.IssueTokenDB(tokenID, &token, block, []*DB.Owner{})
 }

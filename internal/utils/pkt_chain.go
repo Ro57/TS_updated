@@ -2,7 +2,7 @@ package utils
 
 import "token-strike/internal/types"
 
-type PktChain struct {
+type SimplePktChain struct {
 }
 
-var _ types.PktChain = (*PktChain)(nil)
+var _ types.PktChain = (*SimplePktChain)(nil)

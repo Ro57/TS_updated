@@ -19,9 +19,9 @@ func TestExampleTestSuite(t *testing.T) {
 
 type TestSuite struct {
 	suite.Suite
-	chain utils.PktChain
+	chain utils.SimplePktChain
 }
 
 func (suite *TestSuite) SetupTest() {
-	suite.chain = utils.PktChain{}
+	suite.chain = utils.SimplePktChain{}
 }

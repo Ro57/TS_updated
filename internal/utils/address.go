@@ -5,8 +5,8 @@ import (
 	"token-strike/internal/types"
 )
 
-type Address struct {
+type SimpleAddress struct {
 	publicKey ed.PublicKey
 }
 
-var _ types.Address = &Address{}
+var _ types.Address = &SimpleAddress{}

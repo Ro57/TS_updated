@@ -4,6 +4,6 @@ import (
 	"token-strike/internal/types"
 )
 
-type AddressScheme struct{}
+type SimpleAddressScheme struct{}
 
-var _ types.AddressScheme = &AddressScheme{}
+var _ types.AddressScheme = &SimpleAddressScheme{}

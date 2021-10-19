@@ -5,8 +5,8 @@ import (
 	"token-strike/internal/types"
 )
 
-type PrivateKey struct {
+type SimplePrivateKey struct {
 	key ed.PrivateKey
 }
 
-var _ types.PrivateKey = &PrivateKey{}
+var _ types.PrivateKey = &SimplePrivateKey{}
