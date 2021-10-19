@@ -18,7 +18,7 @@ const (
 	aliceIndex = iota
 	bobIndex
 	christyIndex
-	issuerIndex
+	isaacIndex
 )
 
 func randomSeed(l, offset int) [32]byte {
@@ -73,7 +73,7 @@ func TestAllFunctions(t *testing.T) {
 		Count:        10,
 		Expiration:   math.MaxInt32,
 		Creation:     time.Now().Unix(),
-		IssuerPubkey: addressSlice[issuerIndex].String(),
+		IssuerPubkey: addressSlice[isaacIndex].String(),
 		Urls: []string{
 			"http://localhost:3333/token1",
 		},
@@ -121,7 +121,7 @@ func TestAllFunctions(t *testing.T) {
 
 	tokenID := hex.EncodeToString(bs0)
 
-	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[issuerIndex].String())
+	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
 
 	tokendb.IssueTokenDB(tokenID, &token, block, []*DB.Owner{})
 }
