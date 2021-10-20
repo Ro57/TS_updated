@@ -6,7 +6,7 @@ type AddressScheme interface {
 }
 
 type PrivateKey interface {
-	Public() string
+	Address() Address
 	Sign(data []byte) []byte
 }
 
