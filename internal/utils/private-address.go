@@ -8,7 +8,7 @@ import (
 func (p SimplePrivateKey) Address() types.Address {
 	publicKey := make([]byte, ed.PublicKeySize)
 
-	copy(publicKey, p.key[32:])
+	copy(publicKey, p.Key[32:])
 
 	return SimpleAddress{publicKey}
 }

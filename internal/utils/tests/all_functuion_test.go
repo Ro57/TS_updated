@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"math"
 	"testing"
@@ -62,10 +63,7 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	for _, k := range privKeySlice {
-		address, err := activeAddressScheme.ParseAddr(k.Public())
-		if err != nil {
-			t.Fatal(err)
-		}
+		address := k.Address()
 
 		addressSlice = append(addressSlice, address)
 	}
@@ -125,9 +123,9 @@ func TestAllFunctions(t *testing.T) {
 		t.Error(err)
 	}
 
-	blockHash := privKeySlice[isaacIndex].Sign(blockSigned)
+	blockHash := sha256.Sum256(blockSigned)
 
-	tokenID := hex.EncodeToString(blockHash)
+	tokenID := hex.EncodeToString(blockHash[:])
 
 	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
 

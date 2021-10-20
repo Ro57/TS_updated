@@ -1,21 +1,25 @@
 package utils_test
 
 import (
+	"bytes"
 	"crypto/ed25519"
+	"encoding/hex"
 )
 
 func (suite *TestSuite) TestSign() {
-	seed := randomSeed(32, 0)
+	seed := randomSeed(aliceIndex)
 	wantMsg := "Hello pkt"
-	wantKey := ed25519.NewKeyFromSeed(seed)
+	wantKey := ed25519.NewKeyFromSeed(seed[:])
 	wantSingature := ed25519.Sign(wantKey, []byte(wantMsg))
 
-	key := suite.address.GenerateKey(seed)
+	key := suite.addressScheme.GenerateKey(seed)
 
-	singature := suite.address.Sign(wantKey, []byte(wantMsg))
-	suite.True(key.Equal(wantKey))
+	singature := key.Sign([]byte(wantMsg))
 
-	for i, b := range singature {
-		suite.Equal(b, wantSingature[i], "error with signature bytes")
-	}
+	wantPublic := wantKey.Public().(ed25519.PublicKey)
+	wantPublicHash := hex.EncodeToString(wantPublic)
+
+	suite.True(key.Address().String() == wantPublicHash)
+
+	suite.True(bytes.Equal(singature, wantSingature), "error with signature bytes")
 }

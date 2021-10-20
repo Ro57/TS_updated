@@ -8,5 +8,5 @@ import (
 
 func (e *SimpleAddressScheme) GenerateKey(randomSeed [32]byte) types.PrivateKey {
 	key := ed.NewKeyFromSeed(randomSeed[:])
-	return SimplePrivateKey{key}
+	return SimplePrivateKey{Key: key}
 }

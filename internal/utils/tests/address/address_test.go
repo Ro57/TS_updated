@@ -13,9 +13,9 @@ func TestExampleTestSuite(t *testing.T) {
 
 type TestSuite struct {
 	suite.Suite
-	address utils.SimpleAddress
+	addressScheme utils.SimpleAddressScheme
 }
 
 func (suite *TestSuite) SetupTest() {
-	suite.address = utils.SimpleAddress{}
+	suite.addressScheme = utils.SimpleAddressScheme{}
 }

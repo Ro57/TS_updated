@@ -2,7 +2,8 @@ package utils_test
 
 import (
 	"crypto/ed25519"
-	"token-strike/internal/types"
+	"encoding/hex"
+	"token-strike/internal/utils"
 )
 
 const (
@@ -11,23 +12,29 @@ const (
 	christyIndex
 )
 
-func randomSeed(l, offset int) []byte {
-	bytes := make([]byte, l)
-	for i := 0; i < l; i++ {
-		bytes[i] = byte(i + offset)
+const byte32Size = 32
+
+func randomSeed(offset int) [32]byte {
+	byte32 := [byte32Size]byte{}
+
+	for i := 0; i < byte32Size; i++ {
+		byte32[i] = byte(i + offset)
 	}
-	return bytes
+
+	return byte32
 }
 
 func (suite *TestSuite) TestGenerateKey() {
-	seedSlice := [][]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64)}
+	seedSlice := [][byte32Size]byte{randomSeed(aliceIndex), randomSeed(bobIndex), randomSeed(christyIndex)}
+
 	type args struct {
-		seed []byte
+		seed [byte32Size]byte
 	}
+
 	tests := []struct {
 		name     string
 		args     []args
-		wantKeys []types.PrivateKey
+		wantKeys []ed25519.PrivateKey
 		want     func(value bool, msgAndArgs ...interface{}) bool
 	}{
 		{
@@ -37,8 +44,8 @@ func (suite *TestSuite) TestGenerateKey() {
 					seed: seedSlice[aliceIndex],
 				},
 			},
-			wantKeys: []types.PrivateKey{
-				ed25519.NewKeyFromSeed(seedSlice[aliceIndex]),
+			wantKeys: []ed25519.PrivateKey{
+				ed25519.NewKeyFromSeed(seedSlice[aliceIndex][:]),
 			},
 			want: suite.True,
 		},
@@ -50,8 +57,8 @@ func (suite *TestSuite) TestGenerateKey() {
 				},
 			},
 
-			wantKeys: []types.PrivateKey{
-				ed25519.NewKeyFromSeed(seedSlice[bobIndex]),
+			wantKeys: []ed25519.PrivateKey{
+				ed25519.NewKeyFromSeed(seedSlice[bobIndex][:]),
 			},
 			want: suite.False,
 		},
@@ -68,10 +75,10 @@ func (suite *TestSuite) TestGenerateKey() {
 					seed: seedSlice[christyIndex],
 				},
 			},
-			wantKeys: []types.PrivateKey{
-				ed25519.NewKeyFromSeed(seedSlice[aliceIndex]),
-				ed25519.NewKeyFromSeed(seedSlice[bobIndex]),
-				ed25519.NewKeyFromSeed(seedSlice[christyIndex]),
+			wantKeys: []ed25519.PrivateKey{
+				ed25519.NewKeyFromSeed(seedSlice[aliceIndex][:]),
+				ed25519.NewKeyFromSeed(seedSlice[bobIndex][:]),
+				ed25519.NewKeyFromSeed(seedSlice[christyIndex][:]),
 			},
 			want: suite.True,
 		},
@@ -88,10 +95,10 @@ func (suite *TestSuite) TestGenerateKey() {
 					seed: seedSlice[christyIndex],
 				},
 			},
-			wantKeys: []types.PrivateKey{
-				ed25519.NewKeyFromSeed(seedSlice[bobIndex]),
-				ed25519.NewKeyFromSeed(seedSlice[christyIndex]),
-				ed25519.NewKeyFromSeed(seedSlice[aliceIndex]),
+			wantKeys: []ed25519.PrivateKey{
+				ed25519.NewKeyFromSeed(seedSlice[bobIndex][:]),
+				ed25519.NewKeyFromSeed(seedSlice[christyIndex][:]),
+				ed25519.NewKeyFromSeed(seedSlice[aliceIndex][:]),
 			},
 			want: suite.False,
 		},
@@ -100,8 +107,16 @@ func (suite *TestSuite) TestGenerateKey() {
 	for _, tt := range tests {
 		suite.Run(tt.name, func() {
 			for i, a := range tt.args {
-				key := suite.address.GenerateKey(a.seed)
-				tt.want(key.Equal(tt.wantKeys[i]), "error in test %v want %v but got %v", tt.name, tt.wantKeys[i], key)
+				key := suite.addressScheme.GenerateKey(a.seed)
+				wantKey := utils.SimplePrivateKey{Key: tt.wantKeys[i]}
+
+				tt.want(key.Equal(wantKey), "error in test %v (private) want %v but got %v", tt.name, wantKey, key)
+
+				wantPublic := tt.wantKeys[i].Public().(ed25519.PublicKey)
+				gotPublic := key.Address().String()
+				wantPublicHash := hex.EncodeToString(wantPublic)
+
+				tt.want(gotPublic == wantPublicHash, "error in test %v (public) want %v but got %v", tt.name, wantPublicHash, gotPublic)
 			}
 		})
 
