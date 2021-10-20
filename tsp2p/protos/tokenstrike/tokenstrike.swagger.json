@@ -235,9 +235,6 @@
     "tokenstrikePostDataResp": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "string"
-        },
         "warning": {
           "type": "array",
           "items": {

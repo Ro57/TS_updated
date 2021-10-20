@@ -1,6 +1,7 @@
 package tokenstrikemock
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"token-strike/tsp2p/server/DB"
@@ -15,7 +16,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 
 	var (
 		resp *tokenstrike.PostDataResp
-		err error
+		err  error
 	)
 
 	switch req.Data.(type) {
@@ -26,23 +27,50 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		lock := req.GetLock()
 		err, resp.Warning = validateLock(lock)
 	default:
-		return nil,  errors.New("unknown data type")
+		return nil, errors.New("unknown data type")
 	}
 
 	if err != nil {
-		resp.Error = err.Error()
-		return resp, err
+		return nil, err
 	}
 
 	return resp, nil
 }
 
-//todo place here checking for ret error with warnings
-func validateBlock(block *DB.Block) (err error,warnings []string){
+//todo place here checking for ret warnings
+func validateBlock(block *DB.Block) (err error, warnings []string) {
 	return nil, nil
 }
 
-//todo place here checking for ret error with warnings
-func validateLock(block *lock.Lock) (err error,warnings []string){
+//todo place here checking for ret warnings
+func validateLock(lock *lock.Lock) (err error, warnings []string) {
+	var seed [32]byte
+	privateKey := SimpleAddressSchemeMock{}.GenerateKey(seed)
+	address, err := SimpleAddressSchemeMock{}.ParseAddr(privateKey.Public())
+	if err != nil {
+		return err, nil
+	}
+
+	//Is token issued by issuer ?
+	b0 := lock.GetPktBlockHash()
+	isIsSigByIsaac := address.CheckSig(b0, []byte(lock.GetSignature()))
+	if !isIsSigByIsaac{
+		return errors.New("its not sign by Isaac"), nil
+	}
+
+	//Is pkt block height within 10 blocks old, not in the future ?
+	curHeight := SimplePktChainMock{}.CurrentHeight()
+	if int32(lock.PktBlockHeight) < (curHeight - 10){
+		return errors.New("pkt block height too old"), nil
+	}
+	//Is pkt block hash correct ?
+	pktBlockHash := SimplePktChainMock{}.BlockHashAtHeight(int32(lock.PktBlockHeight))
+	if bytes.Compare(lock.PktBlockHash, pktBlockHash) != 0 {
+		return errors.New("pkt block hash not correct"), nil
+	}
+	//Does sender have count tokens it their possession ? todo need to explain
+	//Is expires_pkt_height at least 2 blocks in the future ? todo  need to explain
+	//Is signature valid for sender address ? todo need to explain
+
 	return nil, nil
 }

@@ -13,13 +13,20 @@ func (t TokenStrikeMock) Inv(ctx context.Context, req *tokenstrike.InvReq) (*tok
 	}
 	invs := req.Invs
 	var resp *tokenstrike.InvResp
-	for _, inv := range invs{
-		if bytes.Compare(inv.Parent, GoodParent) != 0 && bytes.Compare(inv.EntityHash, GoodHash) != 0{
+	for _, inv := range invs {
+
+		if checkNeedHash(inv.EntityHash) {
 			resp.Needed = append(resp.Needed, NeedData)
 			continue
 		}
+
 		resp.Needed = append(resp.Needed, DontNeedData)
 	}
 
-	return nil, nil
+	return resp, nil
+}
+
+func checkNeedHash(hash []byte) bool {
+	//we pretend that we take goodHash from db and then we compare it
+	return bytes.Compare(hash, GoodHash) == 0
 }

@@ -31,7 +31,6 @@ message InvResp {
 
 // PostData
 message PostDataResp {
-  string error = 1;
   repeated string warning = 2;
 }
 message Data {

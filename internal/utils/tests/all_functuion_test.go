@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/golang/protobuf/proto"
@@ -15,6 +16,7 @@ import (
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/lock"
+	"token-strike/tsp2p/server/tokenstrike"
 )
 
 const (
@@ -22,7 +24,6 @@ const (
 	bobIndex
 	christyIndex
 	isaacIndex
-	lastIndex
 )
 
 func randomSeed(l, offset int) [32]byte {
@@ -129,6 +130,9 @@ func TestAllFunctions(t *testing.T) {
 
 	tokendb.IssueTokenDB(tokenID, &token, block, []*DB.Owner{})
 
+	// save block hash for next inv logic
+	block0Hash := sha256.Sum256(bs0)
+
 	// n3
 	// generate random secret 32 byte
 	randomSecret := make([]byte, 32)
@@ -156,11 +160,55 @@ func TestAllFunctions(t *testing.T) {
 	sig = privKeySlice[isaacIndex].Sign(bs0) //todo is it right index for signing?
 	lockEl.Signature = hex.EncodeToString(sig)
 
-	//prprd slice of Inv todo think maybe we dont need in extra init, cause each elem have default values
-	var Invs = make([]tokenstrikemock.TokenStrikeMock, lastIndex, lastIndex)
-	Invs[aliceIndex] = tokenstrikemock.TokenStrikeMock{}
-	Invs[bobIndex] = tokenstrikemock.TokenStrikeMock{}
-	Invs[christyIndex] = tokenstrikemock.TokenStrikeMock{}
-	Invs[isaacIndex] = tokenstrikemock.TokenStrikeMock{}
+	//make isaac inv mock
+	IsaacTokenStrikeServer := tokenstrikemock.TokenStrikeMock{}
+
+	//prepare object with one token data
+	lock3Hash := sha256.Sum256(bs0)
+
+	//saving all locks to map for gets it later
+	locksPost := make(map[string]*lock.Lock,0)
+	locksPost[string(lock3Hash[:])] = lockEl
+
+	invs := []*tokenstrike.Inv{
+		{
+			Parent:     block0Hash[:],
+			Type:       tokenstrike.TYPE_LOCK,
+			EntityHash: lock3Hash[:], //todo is it right data?
+		},
+	}
+
+	var InvReq = &tokenstrike.InvReq{
+		Invs: invs,
+	}
+
+	resp, err := IsaacTokenStrikeServer.Inv(context.TODO(), InvReq)
+	if err != nil {
+		t.Error(err)
+	}
+
+	needed := resp.Needed
+
+	if needed != nil {
+		for idx, need := range needed{
+			if need {
+				//take need elem from list by idx of resp
+				lockdata := locksPost[string(invs[idx].EntityHash)]
+				DataReq := &tokenstrike.Data{
+					Data: &tokenstrike.Data_Lock{lockdata},
+				}
+
+				//send selected lock and NOW skip check of warning
+				_, err := IsaacTokenStrikeServer.PostData(context.TODO(), DataReq)
+				if err != nil {
+					t.Error(err) //todo if it dont pass we should send block, not lock
+				}
+
+			}
+		}
+
+
+
+	}
 
 }
