@@ -132,5 +132,5 @@ func TestAllFunctions(t *testing.T) {
 
 	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
 
-	tokendb.IssueTokenDB(tokenID, &token, block, []*DB.Owner{})
+	tokendb.IssueTokenDB(tokenID, &token, block)
 }

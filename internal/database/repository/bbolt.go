@@ -463,9 +463,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 	return block, nil
 }
 
-// TODO: Remove recipient []*DB.Owner argument
-// TODO: Rework this method. Now name is a issuer name but not token name. We create issuer bucket and into it append bucket with tocken name.
-func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, recipient []*DB.Owner) error {
+func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
 		if err != nil {
@@ -491,20 +489,8 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, reci
 		}
 
 		// if token state did not exist then create
-		// TODO: State generate before call this method and containing into block. Need remove this logic
 		if tokenBucket.Get(database.StateKey) == nil {
-			state := DB.State{
-				Token:  offer,
-				Owners: recipient,
-				Locks:  nil,
-			}
-
-			stateBytes, err := proto.Marshal(&state)
-			if err != nil {
-				return err
-			}
-
-			errPut := tokenBucket.Put(database.StateKey, stateBytes)
+			errPut := tokenBucket.Put(database.StateKey, []byte(block.GetState()))
 			if errPut != nil {
 				return errPut
 			}

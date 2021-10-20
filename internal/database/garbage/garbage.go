@@ -54,7 +54,6 @@ func Generate(db *database.TokenStrikeDB) error {
 				},
 			},
 			blockchain[0],
-			[]*DB.Owner{},
 		)
 		if err != nil {
 			return err
