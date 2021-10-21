@@ -85,10 +85,15 @@
           "format": "int32",
           "title": "proof_count — lock expiration time in PKT blocks"
         },
-        "creation_height": {
+        "pkt_block_hash": {
           "type": "string",
-          "format": "uint64",
-          "title": "creation_height — creation height in token blockchain"
+          "format": "byte",
+          "title": "pkt_block_hash —"
+        },
+        "pkt_block_height": {
+          "type": "integer",
+          "format": "int64",
+          "title": "pkt_block_height —"
         },
         "signature": {
           "type": "string",
@@ -230,9 +235,6 @@
     "tokenstrikePostDataResp": {
       "type": "object",
       "properties": {
-        "error": {
-          "type": "string"
-        },
         "warning": {
           "type": "array",
           "items": {

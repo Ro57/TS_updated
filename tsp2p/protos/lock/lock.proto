@@ -16,8 +16,10 @@ message Lock {
     string htlc_secret_hash = 4;
     // proof_count — lock expiration time in PKT blocks
     int32 proof_count = 5;
-    // creation_height — creation height in token blockchain
-    uint64 creation_height = 6;
+    // pkt_block_hash —
+    bytes pkt_block_hash = 6;
+    // pkt_block_height —
+    uint32 pkt_block_height = 7;
     // signature generated with old owner private key
-    string signature = 7;
+    string signature = 8;
 }
