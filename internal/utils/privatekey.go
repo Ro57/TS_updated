@@ -6,7 +6,7 @@ import (
 )
 
 type SimplePrivateKey struct {
-	key ed.PrivateKey
+	Key ed.PrivateKey
 }
 
 var _ types.PrivateKey = &SimplePrivateKey{}

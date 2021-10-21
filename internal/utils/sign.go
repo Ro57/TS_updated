@@ -5,5 +5,5 @@ import (
 )
 
 func (p SimplePrivateKey) Sign(data []byte) []byte {
-	return ed25519.Sign(p.key, data)
+	return ed25519.Sign(p.Key, data)
 }
