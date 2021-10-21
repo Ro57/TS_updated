@@ -8,7 +8,7 @@ import (
 	"token-strike/internal/types"
 )
 
-// SimpleAddressMock
+// SimpleAddressMock ...
 type SimpleAddressMock struct {
 	publicKey ed.PublicKey
 }
@@ -23,7 +23,7 @@ func (s SimpleAddressMock) String() string {
 	return hex.EncodeToString(s.publicKey)
 }
 
-// SimpleAddressSchemeMock
+// SimpleAddressSchemeMock ...
 type SimpleAddressSchemeMock struct{}
 
 var _ types.AddressScheme = &SimpleAddressSchemeMock{}
@@ -43,17 +43,18 @@ func (s SimpleAddressSchemeMock) ParseAddr(ps string) (types.Address, error) {
 	return address, nil
 }
 
-// SimplePrivateKeyMock
+// SimplePrivateKeyMock ...
 type SimplePrivateKeyMock struct {
 	key ed.PrivateKey
 }
 
 var _ types.PrivateKey = &SimplePrivateKeyMock{}
 
-func (s SimplePrivateKeyMock) Public() string {
+// TODO: rework implementations
+func (s SimplePrivateKeyMock) Address() types.Address {
 	publicKey := make([]byte, ed.PublicKeySize)
 	copy(publicKey, s.key[32:])
-	return string(publicKey)
+	return nil
 }
 
 func (s SimplePrivateKeyMock) Sign(data []byte) []byte {

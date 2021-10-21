@@ -65,13 +65,7 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	for _, k := range privKeySlice {
-
-		address, err := activeAddressScheme.ParseAddr(k.Public())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		addressSlice = append(addressSlice, address)
+		addressSlice = append(addressSlice, k.Address())
 	}
 
 	token := DB.Token{
@@ -167,7 +161,7 @@ func TestAllFunctions(t *testing.T) {
 	lock3Hash := sha256.Sum256(bs0)
 
 	//saving all locks to map for gets it later
-	locksPost := make(map[string]*lock.Lock,0)
+	locksPost := make(map[string]*lock.Lock, 0)
 	locksPost[string(lock3Hash[:])] = lockEl
 
 	invs := []*tokenstrike.Inv{
@@ -190,7 +184,7 @@ func TestAllFunctions(t *testing.T) {
 	needed := resp.Needed
 
 	if needed != nil {
-		for idx, need := range needed{
+		for idx, need := range needed {
 			if need {
 				//take need elem from list by idx of resp
 				lockdata := locksPost[string(invs[idx].EntityHash)]
@@ -206,8 +200,6 @@ func TestAllFunctions(t *testing.T) {
 
 			}
 		}
-
-
 
 	}
 

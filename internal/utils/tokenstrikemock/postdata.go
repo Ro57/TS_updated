@@ -25,7 +25,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		err, resp.Warning = validateBlock(block)
 	case *tokenstrike.Data_Lock:
 		lock := req.GetLock()
-		err, resp.Warning = validateLock(lock)
+		err, resp.Warning = t.validateLock(lock)
 	default:
 		return nil, errors.New("unknown data type")
 	}
@@ -43,24 +43,19 @@ func validateBlock(block *DB.Block) (err error, warnings []string) {
 }
 
 //todo place here checking for ret warnings
-func validateLock(lock *lock.Lock) (err error, warnings []string) {
-	var seed [32]byte
-	privateKey := SimpleAddressSchemeMock{}.GenerateKey(seed)
-	address, err := SimpleAddressSchemeMock{}.ParseAddr(privateKey.Public())
-	if err != nil {
-		return err, nil
-	}
+func (t TokenStrikeMock) validateLock(lock *lock.Lock) (err error, warnings []string) {
+	privateKey := SimpleAddressSchemeMock{}.GenerateKey([32]byte{})
 
 	//Is token issued by issuer ?
 	b0 := lock.GetPktBlockHash()
-	isIsSigByIsaac := address.CheckSig(b0, []byte(lock.GetSignature()))
-	if !isIsSigByIsaac{
+	isIsSigByIsaac := privateKey.Address().CheckSig(b0, []byte(lock.GetSignature()))
+	if !isIsSigByIsaac {
 		return errors.New("its not sign by Isaac"), nil
 	}
 
 	//Is pkt block height within 10 blocks old, not in the future ?
 	curHeight := SimplePktChainMock{}.CurrentHeight()
-	if int32(lock.PktBlockHeight) < (curHeight - 10){
+	if int32(lock.PktBlockHeight) <= (curHeight - 10) {
 		return errors.New("pkt block height too old"), nil
 	}
 	//Is pkt block hash correct ?
