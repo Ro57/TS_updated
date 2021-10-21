@@ -119,6 +119,8 @@ func generateBlockChain(index int) []*DB.Block {
 						},
 					},
 				},
+
+				// TODO: refactor with new lock
 				&DB.Justification{
 					Content: &DB.Justification_Lock{
 						Lock: &justifications.LockToken{
@@ -128,7 +130,8 @@ func generateBlockChain(index int) []*DB.Block {
 								Sender:         sender,
 								HtlcSecretHash: htlcLock,
 								ProofCount:     int32(2 * i),
-								CreationHeight: uint64(i),
+								PktBlockHash:   []byte{byte(i + blockCount)},
+								PktBlockHeight: uint32(i),
 								Signature:      signature,
 							},
 						},
