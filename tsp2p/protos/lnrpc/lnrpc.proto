@@ -4,8 +4,6 @@ package lnrpc;
 
 option go_package = "token-strike/tsp2p/server/lnrpc";
 
-import "google/protobuf/empty.proto";
-
 /*
  * Comments in this file will be directly parsed into the API
  * Documentation as descriptions of the associated method, message, or field.
