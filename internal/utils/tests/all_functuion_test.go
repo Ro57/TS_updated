@@ -98,18 +98,11 @@ func TestAllFunctions(t *testing.T) {
 		Locks: nil,
 	}
 
-	stateBytes, err := proto.Marshal(state)
-	if err != nil {
-		t.Error(err)
-	}
-
-	stateHash := hex.EncodeToString(stateBytes)
-
 	block := &DB.Block{
 		PrevBlock:      "0000000000000000000000000000000000000000000000000000000000000000",
 		Justifications: nil,
 		Creation:       time.Now().Unix(),
-		State:          stateHash,
+		State:          state.GetStateHash(),
 		PktBlockHash:   string(activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight())),
 		PktBlockHeight: activePktChain.CurrentHeight(),
 		Height:         0,
@@ -134,7 +127,7 @@ func TestAllFunctions(t *testing.T) {
 
 	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
 
-	tokendb.IssueTokenDB(tokenID, &token, block)
+	tokendb.IssueTokenDB(tokenID, &token, block, state)
 
 	// save block hash for next inv logic
 	block0Hash := sha256.Sum256(bs0)

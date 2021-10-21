@@ -43,18 +43,15 @@ func Generate(db *database.TokenStrikeDB) error {
 
 		name := fmt.Sprintf("token%v", i+1)
 		blockchain := generateBlockChain(i)
-		err := repos.IssueTokenDB(name,
-			&DB.Token{
-				Count:        int64(1000 * (i + 1)),
-				Expiration:   int32(time.Hour * time.Duration(i+1)),
-				Creation:     time.Now().Unix(),
-				IssuerPubkey: pubKey,
-				Urls: []string{
-					"https://replication.com/" + name,
-				},
+		err := repos.IssueTokenDB(name, &DB.Token{
+			Count:        int64(1000 * (i + 1)),
+			Expiration:   int32(time.Hour * time.Duration(i+1)),
+			Creation:     time.Now().Unix(),
+			IssuerPubkey: pubKey,
+			Urls: []string{
+				"https://replication.com/" + name,
 			},
-			blockchain[0],
-		)
+		}, blockchain[0], nil)
 		if err != nil {
 			return err
 		}

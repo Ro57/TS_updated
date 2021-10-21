@@ -137,9 +137,12 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 		// getting chain buckets
 		rootBucket := tx.Bucket(database.TokensKey)
 		tokenBucket := rootBucket.Bucket([]byte(tokenId))
-		dbStateByte := tokenBucket.Get(database.StateKey)
+		if tokenBucket == nil {
+			return errors.TokensDBNotFound
+		}
 
 		// unmarshal chain state
+		dbStateByte := tokenBucket.Get(database.StateKey)
 		err = proto.Unmarshal(dbStateByte, &dbstate)
 		if err != nil {
 			return err
@@ -463,7 +466,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 	return block, nil
 }
 
-func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block) error {
+func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, state *DB.State) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
 		if err != nil {
@@ -490,7 +493,11 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block) erro
 
 		// if token state did not exist then create
 		if tokenBucket.Get(database.StateKey) == nil {
-			errPut := tokenBucket.Put(database.StateKey, []byte(block.GetState()))
+			marshaledState, err := proto.Marshal(state)
+			if err != nil {
+				return err
+			}
+			errPut := tokenBucket.Put(database.StateKey, marshaledState)
 			if errPut != nil {
 				return errPut
 			}
