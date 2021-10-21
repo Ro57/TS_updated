@@ -253,14 +253,6 @@
       },
       "title": "GetTokenRequest contains the found token"
     },
-    "replicatorGetUrlSequenceResponse": {
-      "type": "object",
-      "properties": {
-        "url": {
-          "type": "string"
-        }
-      }
-    },
     "replicatorGetUrlTokenResponse": {
       "type": "object",
       "properties": {

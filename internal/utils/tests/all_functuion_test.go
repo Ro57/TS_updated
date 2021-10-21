@@ -134,7 +134,7 @@ func TestAllFunctions(t *testing.T) {
 
 	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
 
-	tokendb.IssueTokenDB(tokenID, &token, block, []*DB.Owner{})
+	tokendb.IssueTokenDB(tokenID, &token, block)
 
 	// save block hash for next inv logic
 	block0Hash := sha256.Sum256(bs0)
