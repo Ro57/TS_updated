@@ -1,14 +1,13 @@
 package tokenstrikemock
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"errors"
 	"token-strike/tsp2p/server/tokenstrike"
 )
 
-func (t TokenStrikeMock) Inv(ctx context.Context, req *tokenstrike.InvReq) (*tokenstrike.InvResp, error) {
+func (t *TokenStrikeMock) Inv(ctx context.Context, req *tokenstrike.InvReq) (*tokenstrike.InvResp, error) {
 	if req.Invs == nil {
 		return nil, errors.New("empty Invs list")
 	}
@@ -23,20 +22,25 @@ func (t TokenStrikeMock) Inv(ctx context.Context, req *tokenstrike.InvReq) (*tok
 	return resp, nil
 }
 
-func (t TokenStrikeMock) selectNeeded(inv *tokenstrike.Inv) bool {
-	if !t.containToken(hex.EncodeToString(inv.Parent)) {
+func (t *TokenStrikeMock) selectNeeded(inv *tokenstrike.Inv) bool {
+	entity := hex.EncodeToString(inv.EntityHash)
+	parent := hex.EncodeToString(inv.Parent)
+
+	if !t.isStoreToken(parent) {
 		return DontNeedData
 	}
 
-	// TODO: rework with correct data
-	if !bytes.Equal(inv.EntityHash, GoodHash) {
+	if _, ok := t.invCache[entity]; ok {
 		return DontNeedData
 	}
+
+	// TODO: move invCache out of this function
+	t.invCache[entity] = *inv
 
 	return NeedData
 }
 
-func (t TokenStrikeMock) containToken(token string) bool {
+func (t TokenStrikeMock) isStoreToken(token string) bool {
 	issuerTokens, err := t.bboltDB.GetIssuerTokens()
 	if err != nil {
 		return false
