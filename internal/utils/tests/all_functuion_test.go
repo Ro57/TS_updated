@@ -105,7 +105,7 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	block := &DB.Block{
-		PrevBlock:      "0000000000000000000000000000000000000000000000000000000000000000",
+		PrevBlock:      "",
 		Justifications: nil,
 		Creation:       time.Now().Unix(),
 		State:          hex.EncodeToString(stateBytes),
@@ -131,9 +131,15 @@ func TestAllFunctions(t *testing.T) {
 
 	tokenID := hex.EncodeToString(blockHash[:])
 
-	tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
+	err = tokendb.SaveIssuerTokenDB(tokenID, addressSlice[isaacIndex].String())
+	if err != nil {
+		t.Error(err)
+	}
 
-	tokendb.IssueTokenDB(tokenID, &token, block, state)
+	err = tokendb.IssueTokenDB(tokenID, &token, block, state)
+	if err != nil {
+		t.Error(err)
+	}
 
 	// n3
 	// generate random secret 32 byte
@@ -159,12 +165,12 @@ func TestAllFunctions(t *testing.T) {
 		t.Error(err)
 	}
 
-	sig = privKeySlice[isaacIndex].Sign(bs0) //todo is it right index for signing?
+	sig = privKeySlice[aliceIndex].Sign(bs0)
 	lockEl.Signature = hex.EncodeToString(sig)
 
 	//make isaac inv mock
-	IsaacTokenStrikeServer := tokenstrikemock.TokenStrikeMock{}
-	AliceTokenStrikeServer := tokenstrikemock.TokenStrikeMock{}
+	IsaacTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[isaacIndex])
+	AliceTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[aliceIndex])
 
 	lockSigned, err := proto.Marshal(lockEl)
 	if err != nil {
@@ -175,7 +181,7 @@ func TestAllFunctions(t *testing.T) {
 
 	//saving all locks to map for gets it later
 	locksPost := make(map[string]*lock.Lock, 0)
-	locksPost[lockEl.GetSignature()] = lockEl
+	locksPost[hex.EncodeToString(lockHash[:])] = lockEl
 
 	invs := []*tokenstrike.Inv{
 		{
@@ -196,7 +202,7 @@ func TestAllFunctions(t *testing.T) {
 		for idx, need := range resp.Needed {
 			if need {
 				//take need elem from list by idx of resp
-				lockdata := locksPost[string(invs[idx].EntityHash)]
+				lockdata := locksPost[hex.EncodeToString(invs[idx].EntityHash)]
 				DataReq := &tokenstrike.Data{
 					Data: &tokenstrike.Data_Lock{lockdata},
 				}
@@ -284,5 +290,4 @@ func TestAllFunctions(t *testing.T) {
 			}
 		}
 	}
-
 }

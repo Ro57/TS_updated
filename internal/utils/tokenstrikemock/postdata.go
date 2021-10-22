@@ -19,12 +19,11 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		return nil, errors.New("nil data")
 	}
 
-	var (
-		resp    *tokenstrike.PostDataResp
-		lockEl  *lock.Lock
-		blockEl *DB.Block
-		err     error
-	)
+	resp := &tokenstrike.PostDataResp{}
+	lockEl := &lock.Lock{}
+	blockEl := &DB.Block{}
+
+	var err error
 
 	switch req.Data.(type) {
 	case *tokenstrike.Data_Block:
@@ -32,7 +31,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		resp.Warning, err = validateBlock(blockEl)
 	case *tokenstrike.Data_Lock:
 		lockEl = req.GetLock()
-		resp.Warning, err = t.validateLock(lockEl)
+		resp.Warning, err = t.validateLock(*lockEl)
 	default:
 		return nil, errors.New("unknown data type")
 	}
@@ -50,7 +49,7 @@ func validateBlock(block *DB.Block) (warnings []string, err error) {
 }
 
 //TODO: place here checking for ret warnings
-func (t TokenStrikeMock) validateLock(reqLock *lock.Lock) (warnings []string, err error) {
+func (t TokenStrikeMock) validateLock(reqLock lock.Lock) (warnings []string, err error) {
 	validatorErrors := []error{
 		t.validateLockSignature(reqLock),
 		t.validateLockHashCorrect(reqLock),
@@ -70,8 +69,8 @@ func (t TokenStrikeMock) validateLock(reqLock *lock.Lock) (warnings []string, er
 }
 
 // Is token issued by issuer ?
-func (t TokenStrikeMock) validateLockIssuer(lock *lock.Lock) error {
-	lockBytes, err := proto.Marshal(lock)
+func (t TokenStrikeMock) validateLockIssuer(lock lock.Lock) error {
+	lockBytes, err := proto.Marshal(&lock)
 	if err != nil {
 		return err
 	}
@@ -86,14 +85,14 @@ func (t TokenStrikeMock) validateLockIssuer(lock *lock.Lock) error {
 	tokenSlice := issuerStore[t.issuer.String()]
 
 	if !isContainToken(tokenID, tokenSlice) {
-		errors.New("token not in storage")
+		return errors.New("token not in storage")
 	}
 
 	return nil
 }
 
 // Is pkt block height within 10 blocks old, not in the future ?
-func (t TokenStrikeMock) validateLockHeight(lock *lock.Lock) error {
+func (t TokenStrikeMock) validateLockHeight(lock lock.Lock) error {
 	curHeight := t.pktChain.CurrentHeight()
 
 	if int32(lock.PktBlockHeight) <= (curHeight - 10) {
@@ -104,7 +103,7 @@ func (t TokenStrikeMock) validateLockHeight(lock *lock.Lock) error {
 }
 
 //Is pkt block hash correct ?
-func (t TokenStrikeMock) validateLockHashCorrect(lock *lock.Lock) error {
+func (t TokenStrikeMock) validateLockHashCorrect(lock lock.Lock) error {
 	pktBlockHash := t.pktChain.BlockHashAtHeight(int32(lock.PktBlockHeight))
 
 	if bytes.Compare(lock.PktBlockHash, pktBlockHash) != 0 {
@@ -115,7 +114,7 @@ func (t TokenStrikeMock) validateLockHashCorrect(lock *lock.Lock) error {
 }
 
 // Is signature valid for sender address ?
-func (t TokenStrikeMock) validateLockSignature(lock *lock.Lock) error {
+func (t TokenStrikeMock) validateLockSignature(lock lock.Lock) error {
 	senderAddress, err := t.addressScheme.ParseAddr(lock.Sender)
 	if err != nil {
 		return err
@@ -126,14 +125,15 @@ func (t TokenStrikeMock) validateLockSignature(lock *lock.Lock) error {
 		return err
 	}
 
-	lock.Signature = ""
+	unsignedLock := lock
+	unsignedLock.Signature = ""
 
-	unsignedLock, err := proto.Marshal(lock)
+	unsignedLockBytes, err := proto.Marshal(&unsignedLock)
 	if err != nil {
 		return err
 	}
 
-	isSigByIsaac := senderAddress.CheckSig(unsignedLock, sig)
+	isSigByIsaac := senderAddress.CheckSig(unsignedLockBytes, sig)
 	if !isSigByIsaac {
 		return errors.New("it's not sign by sender")
 	}
@@ -142,7 +142,7 @@ func (t TokenStrikeMock) validateLockSignature(lock *lock.Lock) error {
 }
 
 // Is expires_pkt_height at least 2 blocks in the future ?
-func (t TokenStrikeMock) validateLockPktHeight(lock *lock.Lock) error {
+func (t TokenStrikeMock) validateLockPktHeight(lock lock.Lock) error {
 	if lock.ProofCount-t.pktChain.CurrentHeight() < 2 {
 		return errors.New("lock expired")
 	}
@@ -151,8 +151,8 @@ func (t TokenStrikeMock) validateLockPktHeight(lock *lock.Lock) error {
 }
 
 // Does sender have count tokens it their possession ?
-func (t TokenStrikeMock) validateLockSenderOwnedTokens(lock *lock.Lock) error {
-	lockBytes, err := proto.Marshal(lock)
+func (t TokenStrikeMock) validateLockSenderOwnedTokens(lock lock.Lock) error {
+	lockBytes, err := proto.Marshal(&lock)
 	if err != nil {
 		return err
 	}
