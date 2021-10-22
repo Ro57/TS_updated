@@ -11,7 +11,8 @@ import (
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 	"token-strike/internal/types"
-	"token-strike/internal/utils"
+	"token-strike/internal/utils/address"
+	"token-strike/internal/utils/pktchain"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/justifications"
@@ -39,8 +40,8 @@ func randomSeed(l, offset int) [32]byte {
 }
 
 func TestAllFunctions(t *testing.T) {
-	var activeAddressScheme types.AddressScheme = &utils.SimpleAddressScheme{}
-	var activePktChain types.PktChain = &utils.SimplePktChain{}
+	var activeAddressScheme types.AddressScheme = &address.SimpleAddressScheme{}
+	var activePktChain types.PktChain = &pktchain.SimplePktChain{}
 	seedSlice := [][32]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64), randomSeed(32, 96)}
 	privKeySlice := []types.PrivateKey{}
 	addressSlice := []types.Address{}
@@ -69,8 +70,7 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	for _, k := range privKeySlice {
-		address := k.Address()
-
+		address := address.NewSimpleAddress(k.GetPublicKey())
 		addressSlice = append(addressSlice, address)
 	}
 

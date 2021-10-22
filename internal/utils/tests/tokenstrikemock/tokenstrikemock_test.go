@@ -4,7 +4,7 @@ import (
 	"testing"
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
-	"token-strike/internal/utils"
+	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/tokenstrikemock"
 
 	"github.com/stretchr/testify/suite"
@@ -48,8 +48,8 @@ func (suite *TestSuite) SetupTest() {
 
 	tokendb := repository.NewBbolt(db)
 
-	activeAddressScheme := &utils.SimpleAddressScheme{}
+	activeAddressScheme := &address.SimpleAddressScheme{}
 	privKey := activeAddressScheme.GenerateKey(randomSeed(32, 0))
 
-	suite.tokenStrike = *tokenstrikemock.New(tokendb, privKey.Address())
+	suite.tokenStrike = *tokenstrikemock.New(tokendb, address.NewSimpleAddress(privKey.GetPublicKey()))
 }
