@@ -99,11 +99,16 @@ func TestAllFunctions(t *testing.T) {
 		Locks: nil,
 	}
 
+	stateBytes, err := state.GetStateHash()
+	if err != nil {
+		t.Error(err)
+	}
+
 	block := &DB.Block{
 		PrevBlock:      "0000000000000000000000000000000000000000000000000000000000000000",
 		Justifications: nil,
 		Creation:       time.Now().Unix(),
-		State:          state.GetStateHash(),
+		State:          hex.EncodeToString(stateBytes),
 		PktBlockHash:   string(activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight())),
 		PktBlockHeight: activePktChain.CurrentHeight(),
 		Height:         0,
@@ -209,6 +214,11 @@ func TestAllFunctions(t *testing.T) {
 		}
 	}
 
+	stateBytes, err = state.GetStateHash()
+	if err != nil {
+		t.Error(err)
+	}
+
 	blockIsaac := &DB.Block{
 		PrevBlock: "0000000000000000000000000000000000000000000000000000000000000001",
 		Justifications: []*DB.Justification{
@@ -222,7 +232,7 @@ func TestAllFunctions(t *testing.T) {
 			},
 		},
 		Creation:       time.Now().Unix(),
-		State:          state.GetStateHash(),
+		State:          hex.EncodeToString(stateBytes),
 		PktBlockHash:   string(activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight())),
 		PktBlockHeight: activePktChain.CurrentHeight(),
 		Height:         1,

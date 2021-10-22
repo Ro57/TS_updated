@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/hex"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -102,18 +103,23 @@ func validInitDB(db database.DBRepository) {
 		Locks: nil,
 	}
 
+	stateBytes, err := state.GetStateHash()
+	if err != nil {
+		panic(err)
+	}
+
 	block := &DB.Block{
 		PrevBlock:      "",
 		Justifications: nil,
 		Creation:       time.Now().Unix(),
-		State:          state.GetStateHash(),
+		State:          hex.EncodeToString(stateBytes),
 		PktBlockHash:   "some hash",
 		PktBlockHeight: 10000,
 		Height:         10010,
 		Signature:      "some signature",
 	}
 
-	err := db.IssueTokenDB("test", &token, block, state)
+	err = db.IssueTokenDB("test", &token, block, state)
 	if err != nil {
 		panic(err.Error())
 	}

@@ -2,17 +2,22 @@ package DB
 
 import (
 	"crypto/sha256"
-	"encoding/hex"
 	"github.com/golang/protobuf/proto"
 )
 
-func (m Block) GetBlockHash() []byte {
-	data, _ := proto.Marshal(&m)
+func (m Block) GetBlockHash() ([]byte, error) {
+	data, err := proto.Marshal(&m)
+	if err != nil {
+		return nil, err
+	}
 	res := sha256.Sum256(data)
-	return res[:]
+	return res[:], nil
 }
 
-func (m State) GetStateHash() string {
-	stateBytes, _ := proto.Marshal(&m)
-	return hex.EncodeToString(stateBytes)
+func (m State) GetStateHash() ([]byte, error) {
+	stateBytes, err := proto.Marshal(&m)
+	if err != nil {
+		return nil, err
+	}
+	return stateBytes, nil
 }
