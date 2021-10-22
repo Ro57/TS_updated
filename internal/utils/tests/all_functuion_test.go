@@ -99,7 +99,7 @@ func TestAllFunctions(t *testing.T) {
 		Locks: nil,
 	}
 
-	stateBytes, err := state.GetStateHash()
+	stateBytes, err := state.GetHash()
 	if err != nil {
 		t.Error(err)
 	}
@@ -214,7 +214,7 @@ func TestAllFunctions(t *testing.T) {
 		}
 	}
 
-	stateBytes, err = state.GetStateHash()
+	stateBytes, err = state.GetHash()
 	if err != nil {
 		t.Error(err)
 	}
