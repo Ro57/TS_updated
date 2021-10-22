@@ -14,6 +14,7 @@ import (
 	"token-strike/internal/utils"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/DB"
+	"token-strike/tsp2p/server/justifications"
 	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/tokenstrike"
 
@@ -129,9 +130,6 @@ func TestAllFunctions(t *testing.T) {
 
 	tokendb.IssueTokenDB(tokenID, &token, block, state)
 
-	// save block hash for next inv logic
-	block0Hash := sha256.Sum256(bs0)
-
 	// n3
 	// generate random secret 32 byte
 	randomSecret := make([]byte, 32)
@@ -161,35 +159,36 @@ func TestAllFunctions(t *testing.T) {
 
 	//make isaac inv mock
 	IsaacTokenStrikeServer := tokenstrikemock.TokenStrikeMock{}
+	AliceTokenStrikeServer := tokenstrikemock.TokenStrikeMock{}
 
-	//prepare object with one token data
-	lock3Hash := sha256.Sum256(bs0)
-
-	//saving all locks to map for gets it later
-	locksPost := make(map[string]*lock.Lock, 0)
-	locksPost[string(lock3Hash[:])] = lockEl
-
-	invs := []*tokenstrike.Inv{
-		{
-			Parent:     block0Hash[:],
-			Type:       tokenstrike.TYPE_LOCK,
-			EntityHash: lock3Hash[:], //todo is it right data?
-		},
-	}
-
-	var InvReq = &tokenstrike.InvReq{
-		Invs: invs,
-	}
-
-	resp, err := IsaacTokenStrikeServer.Inv(context.TODO(), InvReq)
+	lockSigned, err := proto.Marshal(lockEl)
 	if err != nil {
 		t.Error(err)
 	}
 
-	needed := resp.Needed
+	lockHash := sha256.Sum256(lockSigned)
 
-	if needed != nil {
-		for idx, need := range needed {
+	//saving all locks to map for gets it later
+	locksPost := make(map[string]*lock.Lock, 0)
+	locksPost[lockEl.GetSignature()] = lockEl
+
+	invs := []*tokenstrike.Inv{
+		{
+			Parent:     blockHash[:],
+			Type:       tokenstrike.TYPE_LOCK,
+			EntityHash: lockHash[:],
+		},
+	}
+
+	resp, err := IsaacTokenStrikeServer.Inv(context.TODO(), &tokenstrike.InvReq{
+		Invs: invs,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if resp.Needed != nil {
+		for idx, need := range resp.Needed {
 			if need {
 				//take need elem from list by idx of resp
 				lockdata := locksPost[string(invs[idx].EntityHash)]
@@ -200,12 +199,80 @@ func TestAllFunctions(t *testing.T) {
 				//send selected lock and NOW skip check of warning
 				_, err := IsaacTokenStrikeServer.PostData(context.TODO(), DataReq)
 				if err != nil {
-					t.Error(err) //todo if it dont pass we should send block, not lock
+					t.Error(err)
+				}
+
+				// Update state: add lock to state and reduce number of tokens owned by A by 3
+				state.Locks = []*lock.Lock{locksPost[string(invs[idx].EntityHash)]}
+				state.Owners[0].Count = state.Owners[0].Count - lockEl.Count
+			}
+		}
+	}
+
+	blockIsaac := &DB.Block{
+		PrevBlock: "0000000000000000000000000000000000000000000000000000000000000001",
+		Justifications: []*DB.Justification{
+			{
+				Content: &DB.Justification_Transfer{
+					Transfer: &justifications.TranferToken{
+						HtlcSecret: lockEl.HtlcSecretHash,
+						Lock:       lockEl.Signature,
+					},
+				},
+			},
+		},
+		Creation:       time.Now().Unix(),
+		State:          state.GetStateHash(),
+		PktBlockHash:   string(activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight())),
+		PktBlockHeight: activePktChain.CurrentHeight(),
+		Height:         1,
+	}
+
+	bs0Isaac, err := proto.Marshal(blockIsaac)
+	if err != nil {
+		t.Error(err)
+	}
+
+	sigIsaac := privKeySlice[isaacIndex].Sign(bs0Isaac)
+	blockIsaac.Signature = hex.EncodeToString(sigIsaac)
+
+	blockIsaacSigned, err := proto.Marshal(blockIsaac)
+	if err != nil {
+		t.Error(err)
+	}
+
+	blockIsaacHash := sha256.Sum256(blockIsaacSigned)
+
+	invsIsaac := []*tokenstrike.Inv{
+		{
+			Parent:     blockHash[:],
+			Type:       tokenstrike.TYPE_BLOCK,
+			EntityHash: blockIsaacHash[:],
+		},
+	}
+
+	resp, err = AliceTokenStrikeServer.Inv(context.TODO(), &tokenstrike.InvReq{
+		Invs: invsIsaac,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if resp.Needed != nil {
+		for _, need := range resp.Needed {
+			if need {
+				DataReq := &tokenstrike.Data{
+					Data: &tokenstrike.Data_Block{Block: blockIsaac},
+				}
+
+				//send selected lock and NOW skip check of warning
+				_, err := IsaacTokenStrikeServer.PostData(context.TODO(), DataReq)
+				if err != nil {
+					t.Error(err)
 				}
 
 			}
 		}
-
 	}
 
 }
