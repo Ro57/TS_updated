@@ -132,10 +132,14 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 		err     error
 		dbstate DB.State
 	)
-	err = b.db.Update(func(tx *bbolt.Tx) error {
+	err = b.db.View(func(tx *bbolt.Tx) error {
 
 		// getting chain buckets
 		rootBucket := tx.Bucket(database.TokensKey)
+		if rootBucket == nil {
+			return errors.TokensDBNotFound
+		}
+
 		tokenBucket := rootBucket.Bucket([]byte(tokenId))
 		if tokenBucket == nil {
 			return errors.TokensDBNotFound
