@@ -23,12 +23,18 @@ func (s *State) ApplyJustification(justification isJustification_Content) error 
 func (s *State) lockToken(justification *Justification_Lock) error {
 	s.Locks = append(s.Locks, justification.Lock.Lock)
 
-	OwnerIndex := getOwnerIndexByHolder(justification.Lock.Lock.Sender, s.Owners)
-	if OwnerIndex == nil {
+	senderIndex := getOwnerIndexByHolder(justification.Lock.Lock.Sender, s.Owners)
+	if senderIndex == nil {
 		return fmt.Errorf("holder with name %v not found in state", justification.Lock.Lock.Sender)
 	}
 
-	s.Owners[*OwnerIndex].Count = s.Owners[*OwnerIndex].Count - justification.Lock.Lock.Count
+	recipientIndex := getOwnerIndexByHolder(justification.Lock.Lock.Recipient, s.Owners)
+	if recipientIndex == nil {
+		return fmt.Errorf("holder with name %v not found in state", justification.Lock.Lock.Recipient)
+	}
+
+	s.Owners[*senderIndex].Count = s.Owners[*senderIndex].Count - justification.Lock.Lock.Count
+
 	return nil
 }
 
@@ -39,7 +45,18 @@ func (s *State) transferToken(justification *Justification_Transfer) error {
 		return fmt.Errorf("not found lock %v in state", justification.Transfer.Lock)
 	}
 
+	lock := s.Locks[*lockHashIndex]
+
+	recipientIndex := getOwnerIndexByHolder(lock.Recipient, s.Owners)
+	if recipientIndex == nil {
+		return fmt.Errorf("holder with name %v not found in state", lock.Recipient)
+	}
+
+	// Remove lock
 	s.Locks = append(s.Locks[:*lockHashIndex], s.Locks[*lockHashIndex+1:]...)
+
+	// Change balance
+	s.Owners[*recipientIndex].Count = s.Owners[*recipientIndex].Count + lock.Count
 
 	return nil
 }
