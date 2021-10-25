@@ -243,6 +243,19 @@
         }
       },
       "title": "PostData"
+    },
+    "tokenstrikeTransferTokens": {
+      "type": "object",
+      "properties": {
+        "htlc": {
+          "type": "string",
+          "format": "byte"
+        },
+        "lock": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
     }
   }
 }
