@@ -151,7 +151,7 @@ func TestAllFunctions(t *testing.T) {
 	//populate lock with special data todo check the addresses
 	lockEl := &lock.Lock{
 		Count:          3,
-		Recipient:      addressSlice[isaacIndex].String(),
+		Recipient:      addressSlice[christyIndex].String(),
 		Sender:         addressSlice[aliceIndex].String(),
 		HtlcSecretHash: hex.EncodeToString(htlcSL[:]),
 		ProofCount:     block.PktBlockHeight + 60,
@@ -226,13 +226,12 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	blockIsaac := &DB.Block{
-		PrevBlock: "0000000000000000000000000000000000000000000000000000000000000001",
+		PrevBlock: hex.EncodeToString(blockHash[:]),
 		Justifications: []*DB.Justification{
 			{
-				Content: &DB.Justification_Transfer{
-					Transfer: &justifications.TranferToken{
-						HtlcSecret: lockEl.HtlcSecretHash,
-						Lock:       lockEl.Signature,
+				Content: &DB.Justification_Lock{
+					Lock: &justifications.LockToken{
+						Lock: lockEl,
 					},
 				},
 			},
