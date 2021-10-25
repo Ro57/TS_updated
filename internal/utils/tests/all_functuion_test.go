@@ -322,4 +322,40 @@ func TestAllFunctions(t *testing.T) {
 		}
 	}
 
+	err = state.TransferTokens(
+		addressSlice[aliceIndex].String(),
+		addressSlice[christyIndex].String(),
+	)
+	if err != nil {
+		t.Error(err)
+	}
+
+	stateHash, err := state.GetHash()
+	if err != nil {
+		t.Error(err)
+	}
+
+	transferTokensBlock := &DB.Block{
+		PrevBlock: hex.EncodeToString(blockIsaacHash[:]),
+		Justifications: []*DB.Justification{
+			{
+				Content: &DB.Justification_Transfer{
+					Transfer: &justifications.TranferToken{
+						HtlcSecret: hex.EncodeToString(htlcSL[:]),
+						Lock:       hex.EncodeToString(lockHash[:]),
+					},
+				},
+			},
+		},
+		Creation:       time.Now().Unix(),
+		State:          hex.EncodeToString(stateHash),
+		PktBlockHash:   string(activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight())),
+		PktBlockHeight: activePktChain.CurrentHeight(),
+		Height:         2,
+	}
+
+	if err := transferTokensBlock.Sing(privKeySlice[isaacIndex]); err != nil {
+		t.Error(err)
+	}
+
 }
