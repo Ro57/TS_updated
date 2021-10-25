@@ -55,6 +55,12 @@ func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err 
 	return nil, nil
 }
 
+//TODO: place here checking for ret error with warnings
+func validateTransfer(block *DB.Block) (warnings []string, err error) {
+
+	return nil, nil
+}
+
 //TODO: place here checking for ret warnings
 func (t TokenStrikeMock) validateLock(reqLock lock.Lock) (warnings []string, err error) {
 	validatorErrors := []error{
