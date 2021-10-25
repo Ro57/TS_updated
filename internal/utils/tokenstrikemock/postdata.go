@@ -79,12 +79,6 @@ func validateTransfer(block *DB.Block) (warnings []string, err error) {
 	return nil, nil
 }
 
-//TODO: place here checking for ret error with warnings
-func validateTransfer(block *DB.Block) (warnings []string, err error) {
-
-	return nil, nil
-}
-
 //TODO: place here checking for ret warnings
 func (t TokenStrikeMock) validateLock(reqLock lock.Lock) (warnings []string, err error) {
 	validatorErrors := []error{
@@ -345,4 +339,20 @@ func getLock(lockHash []byte, lockSlice []*lock.Lock) (*lock.Lock, error) {
 	}
 
 	return nil, errors.New("lock not found")
+}
+
+func isLockExist(lockHash []byte, lockSlice []*lock.Lock) bool {
+	for _, lock := range lockSlice {
+		lockBytes, err := proto.Marshal(lock)
+		if err != nil {
+			return false
+		}
+
+		curLockHash := sha256.Sum256(lockBytes)
+		if bytes.Equal(curLockHash[:], lockBytes) {
+			return true
+		}
+	}
+
+	return false
 }
