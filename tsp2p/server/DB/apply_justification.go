@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func (s *State) applyJustification(justification isJustification_Content) error {
+func (s *State) ApplyJustification(justification isJustification_Content) error {
 	switch j := justification.(type) {
 	case *Justification_Lock:
 		return s.lockToken(j)

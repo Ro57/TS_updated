@@ -212,10 +212,6 @@ func TestAllFunctions(t *testing.T) {
 				if err != nil {
 					t.Error(err)
 				}
-
-				// Update state: add lock to state and reduce number of tokens owned by A by 3
-				state.Locks = []*lock.Lock{locksPost[string(invs[idx].EntityHash)]}
-				state.Owners[0].Count = state.Owners[0].Count - lockEl.Count
 			}
 		}
 	}
@@ -286,6 +282,7 @@ func TestAllFunctions(t *testing.T) {
 					t.Error(err)
 				}
 
+				state.ApplyJustification(blockIsaac.Justifications[0].Content)
 			}
 		}
 	}
