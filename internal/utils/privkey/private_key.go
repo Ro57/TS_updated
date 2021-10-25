@@ -23,7 +23,7 @@ func (p SimplePrivateKey) Equal(private types.PrivateKey) bool {
 	if !ok {
 		return false
 	}
-	return bytes.Equal(simple.Key.Seed(), p.Key.Seed())
+	return bytes.Equal(simple.Key, p.Key)
 }
 
 func (p SimplePrivateKey) Sign(data []byte) []byte {

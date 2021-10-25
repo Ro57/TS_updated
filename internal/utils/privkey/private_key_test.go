@@ -21,7 +21,7 @@ func TestSimplePrivateKey_Equal(t *testing.T) {
 	}{
 		{
 			name: "Valid key",
-			Key:  seed[:],
+			Key:  ed25519.NewKeyFromSeed(seed[:]),
 			args: args{
 				private: SimplePrivateKey{ed25519.NewKeyFromSeed(seed[:])},
 			},
@@ -29,7 +29,7 @@ func TestSimplePrivateKey_Equal(t *testing.T) {
 		},
 		{
 			name: "Invalid key",
-			Key:  seed[:],
+			Key:  ed25519.NewKeyFromSeed(seed[:]),
 			args: args{
 				private: SimplePrivateKey{ed25519.NewKeyFromSeed(seed2[:])},
 			},
