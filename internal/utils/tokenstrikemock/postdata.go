@@ -22,6 +22,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 	resp := &tokenstrike.PostDataResp{}
 	lockEl := &lock.Lock{}
 	blockEl := &DB.Block{}
+	transferEl := &tokenstrike.TransferTokens{}
 
 	var err error
 
@@ -33,7 +34,8 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		lockEl = req.GetLock()
 		resp.Warning, err = t.validateLock(*lockEl)
 	case *tokenstrike.Data_Transfer:
-		// TODO: implementation
+		transferEl = req.GetTransfer()
+		resp.Warning, err = t.validateTransfer(*transferEl)
 	default:
 		return nil, errors.New("unknown data type")
 	}
@@ -56,7 +58,16 @@ func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err 
 }
 
 //TODO: place here checking for ret error with warnings
-func validateTransfer(block *DB.Block) (warnings []string, err error) {
+func (t TokenStrikeMock) validateTransfer(transfer tokenstrike.TransferTokens) (warnings []string, err error) {
+	validatorErrors := []error{
+		t.validateTransferLock(transfer),
+	}
+
+	for _, err := range validatorErrors {
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	return nil, nil
 }
@@ -187,6 +198,27 @@ func (t TokenStrikeMock) validateLockSenderOwnedTokens(lock lock.Lock) error {
 	return nil
 }
 
+// Does the lock exist?
+func (t TokenStrikeMock) validateTransferLock(transfer tokenstrike.TransferTokens) error {
+	transferBytes, err := proto.Marshal(&transfer)
+	if err != nil {
+		return err
+	}
+
+	tokenID := t.getTokenID(transferBytes)
+
+	chain, err := t.bboltDB.GetChainInfoDB(tokenID)
+	if err != nil {
+		return err
+	}
+
+	if !isLockExist(transfer.Lock, chain.State.Locks) {
+		return fmt.Errorf("undefined lock id")
+	}
+
+	return nil
+}
+
 // Type of Inv correct?
 func (t TokenStrikeMock) validateLockInv(checkedLock *lock.Lock) error {
 	lockHash, err := proto.Marshal(checkedLock)
@@ -250,6 +282,22 @@ func getOwner(ownerName string, owners []*DB.Owner) *DB.Owner {
 func isContainToken(tokenName string, tokenSlice []string) bool {
 	for _, token := range tokenSlice {
 		if token == tokenName {
+			return true
+		}
+	}
+
+	return false
+}
+
+func isLockExist(lockHash []byte, lockSlice []*lock.Lock) bool {
+	for _, lock := range lockSlice {
+		lockBytes, err := proto.Marshal(lock)
+		if err != nil {
+			return false
+		}
+
+		curLockHash := sha256.Sum256(lockBytes)
+		if bytes.Equal(curLockHash[:], lockBytes) {
 			return true
 		}
 	}
