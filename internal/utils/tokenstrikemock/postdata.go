@@ -32,6 +32,8 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 	case *tokenstrike.Data_Lock:
 		lockEl = req.GetLock()
 		resp.Warning, err = t.validateLock(*lockEl)
+	case *tokenstrike.Data_Transfer:
+		// TODO: implementation
 	default:
 		return nil, errors.New("unknown data type")
 	}
