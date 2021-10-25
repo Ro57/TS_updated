@@ -2,7 +2,7 @@ package utils_test
 
 import (
 	"testing"
-	"token-strike/internal/utils"
+	"token-strike/internal/utils/pktchain"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -19,9 +19,9 @@ func TestExampleTestSuite(t *testing.T) {
 
 type TestSuite struct {
 	suite.Suite
-	chain utils.SimplePktChain
+	chain pktchain.SimplePktChain
 }
 
 func (suite *TestSuite) SetupTest() {
-	suite.chain = utils.SimplePktChain{}
+	suite.chain = pktchain.SimplePktChain{}
 }

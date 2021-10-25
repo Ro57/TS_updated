@@ -103,7 +103,7 @@ func validInitDB(db database.DBRepository) {
 		Locks: nil,
 	}
 
-	stateBytes, err := state.GetStateHash()
+	stateBytes, err := state.GetHash()
 	if err != nil {
 		panic(err)
 	}

@@ -5,7 +5,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func (m Block) GetBlockHash() ([]byte, error) {
+func (m Block) GetHash() ([]byte, error) {
 	data, err := proto.Marshal(&m)
 	if err != nil {
 		return nil, err
@@ -14,10 +14,11 @@ func (m Block) GetBlockHash() ([]byte, error) {
 	return res[:], nil
 }
 
-func (m State) GetStateHash() ([]byte, error) {
+func (m State) GetHash() ([]byte, error) {
 	stateBytes, err := proto.Marshal(&m)
 	if err != nil {
 		return nil, err
 	}
-	return stateBytes, nil
+	res := sha256.Sum256(stateBytes)
+	return res[:], nil
 }

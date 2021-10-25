@@ -6,7 +6,7 @@ type AddressScheme interface {
 }
 
 type PrivateKey interface {
-	Address() Address
+	GetPublicKey() []byte
 	Sign(data []byte) []byte
 	Equal(PrivateKey) bool
 }
