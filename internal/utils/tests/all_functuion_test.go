@@ -114,13 +114,10 @@ func TestAllFunctions(t *testing.T) {
 		Height:         0,
 	}
 
-	bs0, err := proto.Marshal(block)
+	err = block.Sing(privKeySlice[isaacIndex])
 	if err != nil {
-		t.Error(err)
+		t.Error(t)
 	}
-
-	sig := privKeySlice[isaacIndex].Sign(bs0)
-	block.Signature = hex.EncodeToString(sig)
 
 	blockSigned, err := proto.Marshal(block)
 	if err != nil {
@@ -160,13 +157,10 @@ func TestAllFunctions(t *testing.T) {
 		Signature:      "",
 	}
 
-	bs0, err = proto.Marshal(lockEl)
+	err = lockEl.Sing(privKeySlice[aliceIndex])
 	if err != nil {
 		t.Error(err)
 	}
-
-	sig = privKeySlice[aliceIndex].Sign(bs0)
-	lockEl.Signature = hex.EncodeToString(sig)
 
 	//make isaac inv mock
 	IsaacTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[isaacIndex])
@@ -243,13 +237,10 @@ func TestAllFunctions(t *testing.T) {
 		Height:         1,
 	}
 
-	bs0Isaac, err := proto.Marshal(blockIsaac)
+	err = blockIsaac.Sing(privKeySlice[isaacIndex])
 	if err != nil {
 		t.Error(err)
 	}
-
-	sigIsaac := privKeySlice[isaacIndex].Sign(bs0Isaac)
-	blockIsaac.Signature = hex.EncodeToString(sigIsaac)
 
 	blockIsaacSigned, err := proto.Marshal(blockIsaac)
 	if err != nil {
@@ -281,7 +272,7 @@ func TestAllFunctions(t *testing.T) {
 				}
 
 				//send selected lock and NOW skip check of warning
-				_, err := IsaacTokenStrikeServer.PostData(context.TODO(), DataReq)
+				_, err := AliceTokenStrikeServer.PostData(context.TODO(), DataReq)
 				if err != nil {
 					t.Error(err)
 				}
