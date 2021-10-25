@@ -277,4 +277,49 @@ func TestAllFunctions(t *testing.T) {
 			}
 		}
 	}
+
+	transferTokens := &tokenstrike.TransferTokens{
+		Htlc: htlcSL[:],
+		Lock: lockHash[:],
+	}
+
+	transferTokensB, err := proto.Marshal(transferTokens)
+	if err != nil {
+		t.Error(err)
+	}
+
+	signedTransferTokens := privKeySlice[isaacIndex].Sign(transferTokensB)
+	transferTokensHash := sha256.Sum256(signedTransferTokens)
+
+	transferInvs := []*tokenstrike.Inv{
+		{
+			Parent:     blockHash[:],
+			Type:       tokenstrike.TYPE_TX,
+			EntityHash: transferTokensHash[:],
+		},
+	}
+
+	resp, err = IsaacTokenStrikeServer.Inv(context.TODO(), &tokenstrike.InvReq{
+		Invs: transferInvs,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if resp.Needed != nil {
+		for _, need := range resp.Needed {
+			if need {
+				DataReq := &tokenstrike.Data{
+					Data: &tokenstrike.Data_Transfer{Transfer: transferTokens},
+				}
+
+				//send selected lock and NOW skip check of warning
+				_, err := IsaacTokenStrikeServer.PostData(context.TODO(), DataReq)
+				if err != nil {
+					t.Error(err)
+				}
+			}
+		}
+	}
+
 }

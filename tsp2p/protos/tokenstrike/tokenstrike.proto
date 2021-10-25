@@ -37,6 +37,12 @@ message Data {
   oneof data {
     lock.Lock lock = 1;
     tokendb.Block block = 2;
+    TransferTokens transfer = 3;
     /// will add more later
   }
+}
+
+message TransferTokens {
+  bytes htlc = 1;
+  bytes lock = 2;
 }
