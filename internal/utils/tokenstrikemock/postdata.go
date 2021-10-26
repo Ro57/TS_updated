@@ -333,7 +333,7 @@ func getLock(lockHash []byte, lockSlice []*lock.Lock) (*lock.Lock, error) {
 		}
 
 		curLockHash := sha256.Sum256(lockBytes)
-		if bytes.Equal(curLockHash[:], lockBytes) {
+		if bytes.Equal(curLockHash[:], lockHash) {
 			return lock, nil
 		}
 	}
