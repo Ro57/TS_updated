@@ -61,6 +61,7 @@ func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err 
 func (t TokenStrikeMock) validateTransfer(transfer tokenstrike.TransferTokens) (warnings []string, err error) {
 	validatorErrors := []error{
 		t.validateTransferLock(transfer),
+		t.validateTransferHtlc(transfer),
 	}
 
 	for _, err := range validatorErrors {
@@ -218,10 +219,39 @@ func (t TokenStrikeMock) validateTransferLock(transfer tokenstrike.TransferToken
 		return err
 	}
 
-	if !isLockExist(transfer.Lock, chain.State.Locks) {
-		return fmt.Errorf("undefined lock id")
+	if _, err := getLock(transfer.Lock, chain.State.Locks); err != nil {
+		return err
 	}
 
+	return nil
+}
+
+// Is the htlc secret correct for the hash?
+func (t TokenStrikeMock) validateTransferHtlc(transfer tokenstrike.TransferTokens) error {
+	transferBytes, err := proto.Marshal(&transfer)
+	if err != nil {
+		return err
+	}
+
+	tokenID := t.getTokenID(transferBytes)
+
+	chain, err := t.bboltDB.GetChainInfoDB(tokenID)
+	if err != nil {
+		return err
+	}
+
+	lock, err := getLock(transfer.Lock, chain.State.Locks)
+	if err != nil {
+		return err
+	}
+
+	htlcSingleHash := sha256.Sum256(transfer.Htlc)
+	htlcDoubleHash := sha256.Sum256(htlcSingleHash[:])
+	htlcHash := hex.EncodeToString(htlcDoubleHash[:])
+
+	if lock.HtlcSecretHash != htlcHash {
+		return errors.New("htlc secret incorrect")
+	}
 	return nil
 }
 
@@ -295,18 +325,18 @@ func isContainToken(tokenName string, tokenSlice []string) bool {
 	return false
 }
 
-func isLockExist(lockHash []byte, lockSlice []*lock.Lock) bool {
+func getLock(lockHash []byte, lockSlice []*lock.Lock) (*lock.Lock, error) {
 	for _, lock := range lockSlice {
 		lockBytes, err := proto.Marshal(lock)
 		if err != nil {
-			return false
+			return nil, err
 		}
 
 		curLockHash := sha256.Sum256(lockBytes)
 		if bytes.Equal(curLockHash[:], lockBytes) {
-			return true
+			return lock, nil
 		}
 	}
 
-	return false
+	return nil, errors.New("lock not found")
 }
