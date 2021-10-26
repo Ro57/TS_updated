@@ -341,7 +341,7 @@ func TestAllFunctions(t *testing.T) {
 			{
 				Content: &DB.Justification_Transfer{
 					Transfer: &justifications.TranferToken{
-						HtlcSecret: hex.EncodeToString(htlcSL[:]),
+						HtlcSecret: hex.EncodeToString(randomSecret[:]),
 						Lock:       hex.EncodeToString(lockHash[:]),
 					},
 				},
