@@ -280,7 +280,7 @@ func (t TokenStrikeMock) validateBlockInv(block *DB.Block) error {
 
 	inv := t.getInv(blockHash)
 	if inv.Type != tokenstrike.TYPE_BLOCK {
-		return fmt.Errorf("type of justification want lock(1) but get %v", inv.Type)
+		return fmt.Errorf("type of justification want block(2) but get %v", inv.Type)
 	}
 
 	return nil

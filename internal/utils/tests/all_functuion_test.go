@@ -282,7 +282,7 @@ func TestAllFunctions(t *testing.T) {
 	}
 
 	transferTokens := &tokenstrike.TransferTokens{
-		Htlc: htlcSL[:],
+		Htlc: randomSecret[:],
 		Lock: lockHash[:],
 	}
 
@@ -360,7 +360,7 @@ func TestAllFunctions(t *testing.T) {
 	transferInvs = []*tokenstrike.Inv{
 		{
 			Parent:     blockHash[:],
-			Type:       tokenstrike.TYPE_TX,
+			Type:       tokenstrike.TYPE_BLOCK,
 			EntityHash: transferTokensBlockHash[:],
 		},
 	}
