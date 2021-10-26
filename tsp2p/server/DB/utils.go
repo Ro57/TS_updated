@@ -85,9 +85,14 @@ func (m State) GetOwner(addr string) *Owner {
 	return nil
 }
 
-func (m *State) RemoveLock(lock *lock.Lock) error {
-	// TODO: implement me
-	return nil
+func (m *State) RemoveLock(incomingLock *lock.Lock) error {
+	for index, lock := range m.Locks {
+		if lock == incomingLock {
+			m.Locks = append(m.Locks[:index], m.Locks[index+1:]...)
+			return nil
+		}
+	}
+	return nil //TODO: error - lock not found
 }
 
 func (m State) GetLock(sender, recipient string) *lock.Lock {
