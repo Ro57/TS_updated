@@ -288,8 +288,8 @@ func TestAllFunctions(t *testing.T) {
 		t.Error(err)
 	}
 
-	signedTransferTokens := privKeySlice[isaacIndex].Sign(transferTokensB)
-	transferTokensHash := sha256.Sum256(signedTransferTokens)
+	// signedTransferTokens := privKeySlice[isaacIndex].Sign(transferTokensB)
+	transferTokensHash := sha256.Sum256(transferTokensB)
 
 	transferInvs := []*tokenstrike.Inv{
 		{
