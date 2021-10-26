@@ -28,7 +28,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 	switch req.Data.(type) {
 	case *tokenstrike.Data_Block:
 		blockEl = req.GetBlock()
-		resp.Warning, err = validateBlock(blockEl)
+		resp.Warning, err = t.validateBlock(blockEl)
 	case *tokenstrike.Data_Lock:
 		lockEl = req.GetLock()
 		resp.Warning, err = t.validateLock(*lockEl)
@@ -44,13 +44,19 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 }
 
 //TODO: place here checking for ret error with warnings
-func validateBlock(block *DB.Block) (warnings []string, err error) {
+func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err error) {
+	err = t.validateBlockInv(block)
+	if err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
 //TODO: place here checking for ret warnings
 func (t TokenStrikeMock) validateLock(reqLock lock.Lock) (warnings []string, err error) {
 	validatorErrors := []error{
+		t.validateLockInv(&reqLock),
 		t.validateLockSignature(reqLock),
 		t.validateLockHashCorrect(reqLock),
 		t.validateLockIssuer(reqLock),
@@ -171,6 +177,47 @@ func (t TokenStrikeMock) validateLockSenderOwnedTokens(lock lock.Lock) error {
 	}
 
 	return nil
+}
+
+// Type of Inv correct?
+func (t TokenStrikeMock) validateLockInv(checkedLock *lock.Lock) error {
+	lockHash, err := proto.Marshal(checkedLock)
+	if err != nil {
+		return err
+	}
+
+	inv := t.getInv(lockHash)
+	if inv.Type != tokenstrike.TYPE_LOCK {
+		return fmt.Errorf("type of justification want lock(1) but get %v", inv.Type)
+	}
+
+	return nil
+
+}
+
+// Type of Inv correct?
+func (t TokenStrikeMock) validateBlockInv(block *DB.Block) error {
+	blockHash, err := proto.Marshal(block)
+	if err != nil {
+		return err
+	}
+
+	inv := t.getInv(blockHash)
+	if inv.Type != tokenstrike.TYPE_BLOCK {
+		return fmt.Errorf("type of justification want lock(1) but get %v", inv.Type)
+	}
+
+	return nil
+
+}
+
+func (t TokenStrikeMock) getInv(data []byte) tokenstrike.Inv {
+	dataHash := sha256.Sum256(data)
+	entity := hex.EncodeToString(dataHash[:])
+
+	inv := t.invCache[entity]
+
+	return inv
 }
 
 func (t TokenStrikeMock) getTokenID(data []byte) string {

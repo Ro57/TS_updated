@@ -164,7 +164,7 @@ func TestAllFunctions(t *testing.T) {
 
 	//make isaac inv mock
 	IsaacTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[isaacIndex])
-	AliceTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[aliceIndex])
+	AliceTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[isaacIndex])
 
 	lockSigned, err := proto.Marshal(lockEl)
 	if err != nil {
