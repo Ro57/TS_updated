@@ -164,7 +164,7 @@ func TestAllFunctions(t *testing.T) {
 
 	//make isaac inv mock
 	IsaacTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[isaacIndex])
-	AliceTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[aliceIndex])
+	AliceTokenStrikeServer := tokenstrikemock.New(tokendb, addressSlice[isaacIndex])
 
 	lockSigned, err := proto.Marshal(lockEl)
 	if err != nil {
@@ -288,8 +288,7 @@ func TestAllFunctions(t *testing.T) {
 		t.Error(err)
 	}
 
-	signedTransferTokens := privKeySlice[isaacIndex].Sign(transferTokensB)
-	transferTokensHash := sha256.Sum256(signedTransferTokens)
+	transferTokensHash := sha256.Sum256(transferTokensB)
 
 	transferInvs := []*tokenstrike.Inv{
 		{
@@ -322,14 +321,6 @@ func TestAllFunctions(t *testing.T) {
 		}
 	}
 
-	err = state.TransferTokens(
-		addressSlice[aliceIndex].String(),
-		addressSlice[christyIndex].String(),
-	)
-	if err != nil {
-		t.Error(err)
-	}
-
 	stateHash, err := state.GetHash()
 	if err != nil {
 		t.Error(err)
@@ -356,6 +347,44 @@ func TestAllFunctions(t *testing.T) {
 
 	if err := transferTokensBlock.Sing(privKeySlice[isaacIndex]); err != nil {
 		t.Error(err)
+	}
+
+	transferTokensBlockHash, err := transferTokensBlock.GetHash()
+	if err != nil {
+		t.Error(err)
+	}
+
+	transferInvs = []*tokenstrike.Inv{
+		{
+			Parent:     blockHash[:],
+			Type:       tokenstrike.TYPE_TX,
+			EntityHash: transferTokensBlockHash[:],
+		},
+	}
+
+	resp, err = AliceTokenStrikeServer.Inv(context.TODO(), &tokenstrike.InvReq{
+		Invs: transferInvs,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if resp.Needed != nil {
+		for _, need := range resp.Needed {
+			if need {
+				DataReq := &tokenstrike.Data{
+					Data: &tokenstrike.Data_Block{Block: transferTokensBlock},
+				}
+
+				//send selected lock and NOW skip check of warning
+				_, err := AliceTokenStrikeServer.PostData(context.TODO(), DataReq)
+				if err != nil {
+					t.Error(err)
+				}
+
+				state.ApplyJustification(transferTokensBlock.Justifications[0].Content)
+			}
+		}
 	}
 
 }

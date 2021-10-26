@@ -257,7 +257,7 @@ func isLockExist(lockHash []byte, lockSlice []*lock.Lock) bool {
 		}
 
 		curLockHash := sha256.Sum256(lockBytes)
-		if bytes.Equal(curLockHash[:], lockBytes) {
+		if bytes.Equal(curLockHash[:], lockHash) {
 			return true
 		}
 	}
