@@ -273,7 +273,10 @@ func TestAllFunctions(t *testing.T) {
 					t.Error(err)
 				}
 
-				state.ApplyJustification(blockIsaac.Justifications[0].Content)
+				err = tokendb.ApplyJustification(tokenID, blockIsaac.Justifications[0])
+				if err != nil {
+					t.Error(err)
+				}
 			}
 		}
 	}
@@ -382,7 +385,10 @@ func TestAllFunctions(t *testing.T) {
 					t.Error(err)
 				}
 
-				state.ApplyJustification(transferTokensBlock.Justifications[0].Content)
+				err = tokendb.ApplyJustification(tokenID, transferTokensBlock.Justifications[0])
+				if err != nil {
+					t.Error(err)
+				}
 			}
 		}
 	}
