@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"github.com/golang/protobuf/proto"
+	"token-strike/internal/errors"
 	"token-strike/internal/types"
 	"token-strike/tsp2p/server/lock"
 )
@@ -38,7 +39,7 @@ func (m *State) TransferTokens(sender, recipient string) error {
 
 		sendOwner := m.GetOwner(sender)
 		if sendOwner == nil {
-			return nil // TODO: add error which provide context
+			return errors.OwnerNoFoundErr
 		}
 
 		recipOwner := m.GetOwner(recipient)
@@ -55,7 +56,7 @@ func (m *State) TransferTokens(sender, recipient string) error {
 		return m.RemoveLock(transferLock)
 	}
 
-	return nil // TODO: add error which provide context
+	return errors.LockNotFoundErr
 }
 
 func (m State) GetHash() ([]byte, error) {
@@ -92,7 +93,7 @@ func (m *State) RemoveLock(incomingLock *lock.Lock) error {
 			return nil
 		}
 	}
-	return nil //TODO: error - lock not found
+	return errors.LockNotFoundErr
 }
 
 func (m State) GetLock(sender, recipient string) *lock.Lock {
