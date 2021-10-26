@@ -6,6 +6,7 @@ import (
 	stdErrors "errors"
 	"fmt"
 	"time"
+	"token-strike/tsp2p/server/lock"
 
 	"token-strike/internal/database"
 	"token-strike/internal/errors"
@@ -538,5 +539,94 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 			return err
 		}
 		return chainBucket.Put(blockSignatureBytes, blockBytes)
+	})
+}
+
+func (b *Bbolt) TransferTokens(tokenID, lock string) error {
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(tokenID))
+		if err != nil {
+			return err
+		}
+
+		var state DB.State
+		stateBytes := tokenBucket.Get(database.StateKey)
+		err = proto.Unmarshal(stateBytes, &state)
+		if err != nil {
+			return err
+		}
+
+		lockHashIndex := state.GetLockIndexByHash(lock, state.Locks)
+
+		if lockHashIndex == nil {
+			return fmt.Errorf("not found lock %v in state", lock)
+		}
+
+		lock := state.Locks[*lockHashIndex]
+
+		recipientIndex := state.GetOwnerIndexByHolder(lock.Recipient, state.Owners)
+		if recipientIndex == nil {
+			return fmt.Errorf("holder with name %v not found in state", lock.Recipient)
+		}
+
+		// Remove lock
+		state.Locks = append(state.Locks[:*lockHashIndex], state.Locks[*lockHashIndex+1:]...)
+
+		// Change balance
+		state.Owners[*recipientIndex].Count = state.Owners[*recipientIndex].Count + lock.Count
+
+		stateBytes, err = proto.Marshal(&state)
+		if err != nil {
+			return nil
+		}
+
+		return tokenBucket.Put(database.StateKey, stateBytes)
+	})
+}
+
+func (b *Bbolt) LockToken(tokenID string, lock *lock.Lock) error {
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(tokenID))
+		if err != nil {
+			return err
+		}
+
+		var state DB.State
+		stateBytes := tokenBucket.Get(database.StateKey)
+		err = proto.Unmarshal(stateBytes, &state)
+		if err != nil {
+			return err
+		}
+
+		state.Locks = append(state.Locks, lock)
+
+		senderIndex := state.GetOwnerIndexByHolder(lock.Sender, state.Owners)
+		if senderIndex == nil {
+			return fmt.Errorf("holder with name %v not found in state", lock.Sender)
+		}
+
+		recipientIndex := state.GetOwnerIndexByHolder(lock.Recipient, state.Owners)
+		if recipientIndex == nil {
+			return fmt.Errorf("holder with name %v not found in state", lock.Recipient)
+		}
+
+		state.Owners[*senderIndex].Count = state.Owners[*senderIndex].Count - lock.Count
+
+		stateBytes, err = proto.Marshal(&state)
+		if err != nil {
+			return nil
+		}
+
+		return tokenBucket.Put(database.StateKey, stateBytes)
 	})
 }
