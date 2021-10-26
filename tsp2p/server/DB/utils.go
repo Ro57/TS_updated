@@ -69,3 +69,29 @@ func (m State) GetLock(sender, recipient string) *lock.Lock {
 	}
 	return nil
 }
+
+func (m State) GetLockIndexByHash(lockHash string, locks []*lock.Lock) *int {
+	for index, lock := range locks {
+		lockByte, err := proto.Marshal(lock)
+		if err != nil {
+			return nil
+		}
+
+		curLockHash := sha256.Sum256(lockByte)
+
+		if hex.EncodeToString(curLockHash[:]) == lockHash {
+			return &index
+		}
+
+	}
+	return nil
+}
+
+func (m State) GetOwnerIndexByHolder(holder string, Owners []*Owner) *int {
+	for index, owner := range Owners {
+		if owner.HolderWallet == holder {
+			return &index
+		}
+	}
+	return nil
+}
