@@ -630,3 +630,14 @@ func (b *Bbolt) LockToken(tokenID string, lock *lock.Lock) error {
 		return tokenBucket.Put(database.StateKey, stateBytes)
 	})
 }
+
+func (b *Bbolt) ApplyJustification(tokenID string, justification *DB.Justification) error {
+	switch j := justification.Content.(type) {
+	case *DB.Justification_Lock:
+		return b.LockToken(tokenID, j.Lock.Lock)
+	case *DB.Justification_Transfer:
+		return b.TransferTokens(tokenID, j.Transfer.Lock)
+	default:
+		return nil
+	}
+}
