@@ -6,10 +6,10 @@ import (
 	stdErrors "errors"
 	"fmt"
 	"time"
-
 	"token-strike/internal/database"
 	"token-strike/internal/errors"
 	"token-strike/tsp2p/server/DB"
+	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/replicator"
 
 	"github.com/golang/protobuf/proto"
@@ -163,10 +163,10 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 		for {
 			blockBytes := chainBucket.Get(currentHash)
 			if blockBytes == nil {
-				return stdErrors.New(fmt.Sprintf(
+				return fmt.Errorf(
 					"block doesnot find by root hash=%v",
 					currentHash,
-				))
+				)
 			}
 
 			var block DB.Block
@@ -266,12 +266,11 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 		tokenBucket := rootBucket.Bucket([]byte(name))
 
 		if string(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
-			return stdErrors.New(
-				fmt.Sprintf(
-					"invalid hash of the previous block want %s but get %s",
-					tokenBucket.Get(database.RootHashKey),
-					block.PrevBlock,
-				))
+			return fmt.Errorf(
+				"invalid hash of the previous block want %s but get %s",
+				tokenBucket.Get(database.RootHashKey),
+				block.PrevBlock,
+			)
 		}
 
 		blockSignatureBytes := []byte(block.GetSignature())
@@ -425,7 +424,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 
 		nativeErr := proto.Unmarshal(jsonBlock, &lastBlock)
 		if nativeErr != nil {
-			return stdErrors.New(fmt.Sprintf("unmarshal block form json: %v", nativeErr))
+			return fmt.Errorf("unmarshal block form json: %v", nativeErr)
 		}
 
 		jsonState := tokenBucket.Get(database.StateKey)
@@ -435,7 +434,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 
 		nativeErr = proto.Unmarshal(jsonState, &state)
 		if nativeErr != nil {
-			return stdErrors.New(fmt.Sprintf("marshal new state: %v", nativeErr))
+			return fmt.Errorf("marshal new state: %v", nativeErr)
 
 		}
 
@@ -513,12 +512,11 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 		}
 
 		if string(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
-			return stdErrors.New(
-				fmt.Sprintf(
-					"invalid hash of the previous block want %s but get %s",
-					tokenBucket.Get(database.RootHashKey),
-					block.PrevBlock,
-				))
+			return fmt.Errorf(
+				"invalid hash of the previous block want %s but get %s",
+				tokenBucket.Get(database.RootHashKey),
+				block.PrevBlock,
+			)
 		}
 
 		blockSignatureBytes := []byte(block.GetSignature())
@@ -539,4 +537,101 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 		}
 		return chainBucket.Put(blockSignatureBytes, blockBytes)
 	})
+}
+
+func (b *Bbolt) TransferTokens(tokenID, lock string) error {
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(tokenID))
+		if err != nil {
+			return err
+		}
+
+		var state DB.State
+		stateBytes := tokenBucket.Get(database.StateKey)
+		err = proto.Unmarshal(stateBytes, &state)
+		if err != nil {
+			return err
+		}
+
+		lockHashIndex := state.GetLockIndexByHash(lock, state.Locks)
+
+		if lockHashIndex == nil {
+			return fmt.Errorf("not found lock %v in state", lock)
+		}
+
+		lock := state.Locks[*lockHashIndex]
+
+		recipientIndex := state.GetOwnerIndexByHolder(lock.Recipient, state.Owners)
+		if recipientIndex == nil {
+			index := len(state.Owners)
+			recipientIndex = &index
+			state.Owners = append(state.Owners, &DB.Owner{HolderWallet: lock.Recipient, Count: 0})
+		}
+
+		// Remove lock
+		state.Locks = append(state.Locks[:*lockHashIndex], state.Locks[*lockHashIndex+1:]...)
+
+		// Change balance
+		state.Owners[*recipientIndex].Count = state.Owners[*recipientIndex].Count + lock.Count
+
+		stateBytes, err = proto.Marshal(&state)
+		if err != nil {
+			return nil
+		}
+
+		return tokenBucket.Put(database.StateKey, stateBytes)
+	})
+}
+
+func (b *Bbolt) LockToken(tokenID string, lock *lock.Lock) error {
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
+		if err != nil {
+			return err
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(tokenID))
+		if err != nil {
+			return err
+		}
+
+		var state DB.State
+		stateBytes := tokenBucket.Get(database.StateKey)
+		err = proto.Unmarshal(stateBytes, &state)
+		if err != nil {
+			return err
+		}
+
+		state.Locks = append(state.Locks, lock)
+
+		senderIndex := state.GetOwnerIndexByHolder(lock.Sender, state.Owners)
+		if senderIndex == nil {
+			return fmt.Errorf("holder with name %v not found in state", lock.Sender)
+		}
+
+		state.Owners[*senderIndex].Count = state.Owners[*senderIndex].Count - lock.Count
+
+		stateBytes, err = proto.Marshal(&state)
+		if err != nil {
+			return nil
+		}
+
+		return tokenBucket.Put(database.StateKey, stateBytes)
+	})
+}
+
+func (b *Bbolt) ApplyJustification(tokenID string, justification *DB.Justification) error {
+	switch j := justification.Content.(type) {
+	case *DB.Justification_Lock:
+		return b.LockToken(tokenID, j.Lock.Lock)
+	case *DB.Justification_Transfer:
+		return b.TransferTokens(tokenID, j.Transfer.Lock)
+	default:
+		return nil
+	}
 }

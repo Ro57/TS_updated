@@ -22,6 +22,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 	resp := &tokenstrike.PostDataResp{}
 	lockEl := &lock.Lock{}
 	blockEl := &DB.Block{}
+	transferEl := &tokenstrike.TransferTokens{}
 
 	var err error
 
@@ -33,7 +34,8 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		lockEl = req.GetLock()
 		resp.Warning, err = t.validateLock(*lockEl)
 	case *tokenstrike.Data_Transfer:
-		// TODO: implementation
+		transferEl = req.GetTransfer()
+		resp.Warning, err = t.validateTransfer(*transferEl)
 	default:
 		return nil, errors.New("unknown data type")
 	}
@@ -51,6 +53,28 @@ func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err 
 	if err != nil {
 		return nil, err
 	}
+
+	return nil, nil
+}
+
+//TODO: place here checking for ret error with warnings
+func (t TokenStrikeMock) validateTransfer(transfer tokenstrike.TransferTokens) (warnings []string, err error) {
+	validatorErrors := []error{
+		t.validateTransferLock(transfer),
+		t.validateTransferHtlc(transfer),
+	}
+
+	for _, err := range validatorErrors {
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
+}
+
+//TODO: place here checking for ret error with warnings
+func validateTransfer(block *DB.Block) (warnings []string, err error) {
 
 	return nil, nil
 }
@@ -181,6 +205,56 @@ func (t TokenStrikeMock) validateLockSenderOwnedTokens(lock lock.Lock) error {
 	return nil
 }
 
+// Does the lock exist?
+func (t TokenStrikeMock) validateTransferLock(transfer tokenstrike.TransferTokens) error {
+	transferBytes, err := proto.Marshal(&transfer)
+	if err != nil {
+		return err
+	}
+
+	tokenID := t.getTokenID(transferBytes)
+
+	chain, err := t.bboltDB.GetChainInfoDB(tokenID)
+	if err != nil {
+		return err
+	}
+
+	if _, err := getLock(transfer.Lock, chain.State.Locks); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Is the htlc secret correct for the hash?
+func (t TokenStrikeMock) validateTransferHtlc(transfer tokenstrike.TransferTokens) error {
+	transferBytes, err := proto.Marshal(&transfer)
+	if err != nil {
+		return err
+	}
+
+	tokenID := t.getTokenID(transferBytes)
+
+	chain, err := t.bboltDB.GetChainInfoDB(tokenID)
+	if err != nil {
+		return err
+	}
+
+	lock, err := getLock(transfer.Lock, chain.State.Locks)
+	if err != nil {
+		return err
+	}
+
+	htlcSingleHash := sha256.Sum256(transfer.Htlc)
+	htlcDoubleHash := sha256.Sum256(htlcSingleHash[:])
+	htlcHash := hex.EncodeToString(htlcDoubleHash[:])
+
+	if lock.HtlcSecretHash != htlcHash {
+		return errors.New("htlc secret incorrect")
+	}
+	return nil
+}
+
 // Type of Inv correct?
 func (t TokenStrikeMock) validateLockInv(checkedLock *lock.Lock) error {
 	lockHash, err := proto.Marshal(checkedLock)
@@ -206,7 +280,7 @@ func (t TokenStrikeMock) validateBlockInv(block *DB.Block) error {
 
 	inv := t.getInv(blockHash)
 	if inv.Type != tokenstrike.TYPE_BLOCK {
-		return fmt.Errorf("type of justification want lock(1) but get %v", inv.Type)
+		return fmt.Errorf("type of justification want block(2) but get %v", inv.Type)
 	}
 
 	return nil
@@ -249,4 +323,20 @@ func isContainToken(tokenName string, tokenSlice []string) bool {
 	}
 
 	return false
+}
+
+func getLock(lockHash []byte, lockSlice []*lock.Lock) (*lock.Lock, error) {
+	for _, lock := range lockSlice {
+		lockBytes, err := proto.Marshal(lock)
+		if err != nil {
+			return nil, err
+		}
+
+		curLockHash := sha256.Sum256(lockBytes)
+		if bytes.Equal(curLockHash[:], lockHash) {
+			return lock, nil
+		}
+	}
+
+	return nil, errors.New("lock not found")
 }
