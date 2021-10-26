@@ -277,4 +277,85 @@ func TestAllFunctions(t *testing.T) {
 			}
 		}
 	}
+
+	transferTokens := &tokenstrike.TransferTokens{
+		Htlc: htlcSL[:],
+		Lock: lockHash[:],
+	}
+
+	transferTokensB, err := proto.Marshal(transferTokens)
+	if err != nil {
+		t.Error(err)
+	}
+
+	signedTransferTokens := privKeySlice[isaacIndex].Sign(transferTokensB)
+	transferTokensHash := sha256.Sum256(signedTransferTokens)
+
+	transferInvs := []*tokenstrike.Inv{
+		{
+			Parent:     blockHash[:],
+			Type:       tokenstrike.TYPE_TX,
+			EntityHash: transferTokensHash[:],
+		},
+	}
+
+	resp, err = IsaacTokenStrikeServer.Inv(context.TODO(), &tokenstrike.InvReq{
+		Invs: transferInvs,
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	if resp.Needed != nil {
+		for _, need := range resp.Needed {
+			if need {
+				DataReq := &tokenstrike.Data{
+					Data: &tokenstrike.Data_Transfer{Transfer: transferTokens},
+				}
+
+				//send selected lock and NOW skip check of warning
+				_, err := IsaacTokenStrikeServer.PostData(context.TODO(), DataReq)
+				if err != nil {
+					t.Error(err)
+				}
+			}
+		}
+	}
+
+	err = state.TransferTokens(
+		addressSlice[aliceIndex].String(),
+		addressSlice[christyIndex].String(),
+	)
+	if err != nil {
+		t.Error(err)
+	}
+
+	stateHash, err := state.GetHash()
+	if err != nil {
+		t.Error(err)
+	}
+
+	transferTokensBlock := &DB.Block{
+		PrevBlock: hex.EncodeToString(blockIsaacHash[:]),
+		Justifications: []*DB.Justification{
+			{
+				Content: &DB.Justification_Transfer{
+					Transfer: &justifications.TranferToken{
+						HtlcSecret: hex.EncodeToString(htlcSL[:]),
+						Lock:       hex.EncodeToString(lockHash[:]),
+					},
+				},
+			},
+		},
+		Creation:       time.Now().Unix(),
+		State:          hex.EncodeToString(stateHash),
+		PktBlockHash:   string(activePktChain.BlockHashAtHeight(activePktChain.CurrentHeight())),
+		PktBlockHeight: activePktChain.CurrentHeight(),
+		Height:         2,
+	}
+
+	if err := transferTokensBlock.Sing(privKeySlice[isaacIndex]); err != nil {
+		t.Error(err)
+	}
+
 }

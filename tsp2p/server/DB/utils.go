@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"github.com/golang/protobuf/proto"
 	"token-strike/internal/types"
+	"token-strike/tsp2p/server/lock"
 )
 
 // --------------- Block -------------------
@@ -30,6 +31,33 @@ func (m Block) GetHash() ([]byte, error) {
 
 // --------------- State -------------------
 
+func (m *State) TransferTokens(sender, recipient string) error {
+	transferLock := m.GetLock(sender, recipient)
+
+	if transferLock == nil {
+
+		sendOwner := m.GetOwner(sender)
+		if sendOwner == nil {
+			return nil // TODO: add error which provide context
+		}
+
+		recipOwner := m.GetOwner(recipient)
+		if recipOwner == nil {
+			recipOwner = &Owner{
+				HolderWallet: recipient,
+				Count:        0,
+			}
+		}
+
+		sendOwner.Count = sendOwner.Count - transferLock.Count
+		recipOwner.Count = recipOwner.Count + transferLock.Count
+
+		return m.RemoveLock(transferLock)
+	}
+
+	return nil // TODO: add error which provide context
+}
+
 func (m State) GetHash() ([]byte, error) {
 	stateBytes, err := proto.Marshal(&m)
 	if err != nil {
@@ -37,4 +65,37 @@ func (m State) GetHash() ([]byte, error) {
 	}
 	res := sha256.Sum256(stateBytes)
 	return res[:], nil
+}
+
+func (m State) OwnerExist(addr string) bool {
+	for _, owner := range m.Owners {
+		if owner.HolderWallet == addr {
+			return true
+		}
+	}
+	return false
+}
+
+func (m State) GetOwner(addr string) *Owner {
+	for _, owner := range m.Owners {
+		if owner.HolderWallet == addr {
+			return owner
+		}
+	}
+	return nil
+}
+
+func (m *State) RemoveLock(lock *lock.Lock) error {
+	// TODO: implement me
+	return nil
+}
+
+func (m State) GetLock(sender, recipient string) *lock.Lock {
+	for _, lock := range m.Locks {
+		if lock.Sender == sender &&
+			lock.Recipient == recipient {
+			return lock
+		}
+	}
+	return nil
 }
