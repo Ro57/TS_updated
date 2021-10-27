@@ -8,6 +8,11 @@ import (
 	"token-strike/tsp2p/server/tokenstrike"
 )
 
+const (
+	NeedData     = true
+	DontNeedData = false
+)
+
 type TokenStrikeMock struct {
 	bboltDB       database.DBRepository
 	issuer        types.Address
