@@ -4,45 +4,91 @@ package tokenstrike;
 
 option go_package = "token-strike/tsp2p/server/tokenstrike";
 
-import "protos/lock/lock.proto";
 import "protos/DB/tokendb.proto";
+import "protos/lock/lock.proto";
 
+// TokenStrike responsible for sending data from the replication server
 service TokenStrike {
-  rpc Inv(InvReq) returns (InvResp);
-  rpc PostData(Data) returns (PostDataResp);
+    // Inv — send meta information to token strike
+    rpc Inv(InvReq) returns (InvResp);
+
+    // PostData — send full data to replication
+    rpc PostData(Data) returns (PostDataResp);
+  
+    // GetTokenStatus — response with information about token
+    rpc GetTokenStatus(TokenStatusReq) returns (TokenStatus);
 }
 
+// InvReq — meta information about data 
 message InvReq {
-  repeated Inv invs = 1;
+    // invs — collection of meta information with type, tokenID and hash of data
+    repeated Inv invs = 1;
 }
 
 // Inv contains info about data that need replicates to other replicators
 message Inv {
-  /// For block or lock, the "parent" is the token id (hash block 0)
-  /// For new token notifications, the parent is the issuer
-  bytes parent = 1;
-  uint32 type = 2;
-  bytes entity_hash = 3;
+    // parent for block or lock, is the token id (hash block 0)
+    // for new token notifications, the parent is the issuer
+    bytes parent = 1;
+    
+    // type — indicates what type of data will be sent
+    uint32 type = 2;
+
+    // entity_hash — hash of data
+    bytes entity_hash = 3;
 }
 
+// InvResp — request with information about needed data
 message InvResp {
-  repeated bool needed = 1;
+    // needed — reflects the need for data
+    repeated bool needed = 1;
 }
 
-// PostData
-message PostDataResp {
-  repeated string warning = 2;
-}
+
+// Data — content needed to send
 message Data {
-  oneof data {
-    lock.Lock lock = 1;
-    tokendb.Block block = 2;
-    TransferTokens transfer = 3;
-    /// will add more later
-  }
+    oneof data {
+        // lock if inv type was be lock
+        lock.Lock lock = 1;
+
+        // block if inv type was be block
+        tokendb.Block block = 2;
+
+        // transfer if inv type was be tx
+        TransferTokens transfer = 3;
+        /// will add more later
+    }
 }
 
+// PostDataResp — contains information about warking with data
+message PostDataResp {
+    //  warning — collection of warnings each for own Inv
+    repeated string warning = 1;
+}
+
+// TransferTokens — information about transaction
 message TransferTokens {
-  bytes htlc = 1;
-  bytes lock = 2;
+    // htlc — contract from lnd network
+    bytes htlc = 1;
+    // lock id
+    bytes lock = 2;
+}
+
+// TokenStatusReq — status of which token is needed
+message TokenStatusReq {
+    // tokenid — generated from block0
+    string tokenid  = 1;
+}
+
+// TokenStatus — information about token
+message TokenStatus {
+    // current_height — pkt height
+    uint32 current_height = 1;
+
+    // current_hash —  pkt proof
+    string current_hash = 2;
+    // dblock0 — first block of chain
+    tokendb.Block dblock0 = 3;
+    // state0 — state of first block
+    tokendb.State state0 = 4;
 }

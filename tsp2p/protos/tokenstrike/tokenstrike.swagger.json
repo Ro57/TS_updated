@@ -201,21 +201,94 @@
       },
       "title": "Justification is a helper to use it in block"
     },
+    "tokendbOwner": {
+      "type": "object",
+      "properties": {
+        "holder_wallet": {
+          "type": "string",
+          "title": "holder_wallet — hash of wallet address of holder"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "count — number of tokens held on wallet"
+        }
+      },
+      "title": "Owner contains information about the holders' wallets and their balances"
+    },
+    "tokendbState": {
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/definitions/tokendbToken",
+          "title": "token — metadata about token"
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/tokendbOwner"
+          },
+          "title": "owners — a set of structures with addresses and their balances"
+        },
+        "locks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/lockLock"
+          },
+          "title": "locks — set of lock structures"
+        }
+      },
+      "title": "State is a current state of blockchain"
+    },
+    "tokendbToken": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "count — number of issued tokens;"
+        },
+        "expiration": {
+          "type": "integer",
+          "format": "int32",
+          "title": "expiration — number of PKT block after which the token expires"
+        },
+        "creation": {
+          "type": "string",
+          "format": "int64",
+          "title": "creation — date of token creation in unix time format"
+        },
+        "issuer_pubkey": {
+          "type": "string",
+          "title": "issuer_pubkey — public key of issuer used for signing"
+        },
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "urls — set of urls for access to blockchain"
+        }
+      },
+      "title": "Token contain information about token"
+    },
     "tokenstrikeInv": {
       "type": "object",
       "properties": {
         "parent": {
           "type": "string",
           "format": "byte",
-          "title": "/ For block or lock, the \"parent\" is the token id (hash block 0)\n/ For new token notifications, the parent is the issuer"
+          "title": "parent for block or lock, is the token id (hash block 0)\nfor new token notifications, the parent is the issuer"
         },
         "type": {
           "type": "integer",
-          "format": "int64"
+          "format": "int64",
+          "title": "type — indicates what type of data will be sent"
         },
         "entity_hash": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "entity_hash — hash of data"
         }
       },
       "title": "Inv contains info about data that need replicates to other replicators"
@@ -228,9 +301,11 @@
           "items": {
             "type": "boolean",
             "format": "boolean"
-          }
+          },
+          "title": "needed — reflects the need for data"
         }
-      }
+      },
+      "title": "InvResp — request with information about needed data"
     },
     "tokenstrikePostDataResp": {
       "type": "object",
@@ -239,23 +314,50 @@
           "type": "array",
           "items": {
             "type": "string"
-          }
+          },
+          "title": "warning — collection of warnings each for own Inv"
         }
       },
-      "title": "PostData"
+      "title": "PostDataResp — contains information about warking with data"
+    },
+    "tokenstrikeTokenStatus": {
+      "type": "object",
+      "properties": {
+        "current_height": {
+          "type": "integer",
+          "format": "int64",
+          "title": "current_height — pkt height"
+        },
+        "current_hash": {
+          "type": "string",
+          "title": "current_hash —  pkt proof"
+        },
+        "dblock0": {
+          "$ref": "#/definitions/tokendbBlock",
+          "title": "dblock0 — first block of chain"
+        },
+        "state0": {
+          "$ref": "#/definitions/tokendbState",
+          "title": "state0 — state of first block"
+        }
+      },
+      "title": "TokenStatus — information about token"
     },
     "tokenstrikeTransferTokens": {
       "type": "object",
       "properties": {
         "htlc": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "htlc — contract from lnd network"
         },
         "lock": {
           "type": "string",
-          "format": "byte"
+          "format": "byte",
+          "title": "lock id"
         }
-      }
+      },
+      "title": "TransferTokens — information about transaction"
     }
   }
 }
