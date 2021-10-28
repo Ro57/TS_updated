@@ -85,7 +85,7 @@ message TokenStatus {
     // current_height — pkt height
     uint32 current_height = 1;
 
-    // current_hash —  pkt proof
+    // current_hash —  token id
     string current_hash = 2;
     // dblock0 — first block of chain
     tokendb.Block dblock0 = 3;
