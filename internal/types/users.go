@@ -1,5 +1,7 @@
 package types
 
+import "token-strike/tsp2p/server/DB"
+
 type OwnerCollection map[string]uint64
 
 type Wallet interface {
@@ -9,5 +11,5 @@ type Wallet interface {
 }
 
 type Issuer interface {
-	issueToken(owners OwnerCollection, expiration int32) string
+	IssueToken(owners []*DB.Owner, expiration int32) (string, error)
 }
