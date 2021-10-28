@@ -3,8 +3,9 @@ package lock
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"github.com/golang/protobuf/proto"
 	"token-strike/internal/types"
+
+	"github.com/golang/protobuf/proto"
 )
 
 func (m *Lock) Sing(key types.PrivateKey) error {
