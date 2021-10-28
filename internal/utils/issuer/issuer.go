@@ -45,7 +45,7 @@ func (s *SimpleIssuer) IssueToken(owners []*DB.Owner, expiration int32) (string,
 		Count:        10,
 		Expiration:   expiration,
 		Creation:     time.Now().Unix(),
-		IssuerPubkey: "",
+		IssuerPubkey: s.address.String(),
 		Urls: []string{
 			"http://localhost:3333/token1",
 		},
