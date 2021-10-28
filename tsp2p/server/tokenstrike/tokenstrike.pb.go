@@ -26,7 +26,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+// InvReq — meta information about data
 type InvReq struct {
+	// invs — collection of meta information with type, tokenID and hash of data
 	Invs                 []*Inv   `protobuf:"bytes,1,rep,name=invs,proto3" json:"invs,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -67,10 +69,12 @@ func (m *InvReq) GetInvs() []*Inv {
 
 // Inv contains info about data that need replicates to other replicators
 type Inv struct {
-	/// For block or lock, the "parent" is the token id (hash block 0)
-	/// For new token notifications, the parent is the issuer
-	Parent               []byte   `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
-	Type                 uint32   `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
+	// parent for block or lock, is the token id (hash block 0)
+	// for new token notifications, the parent is the issuer
+	Parent []byte `protobuf:"bytes,1,opt,name=parent,proto3" json:"parent,omitempty"`
+	// type — indicates what type of data will be sent
+	Type uint32 `protobuf:"varint,2,opt,name=type,proto3" json:"type,omitempty"`
+	// entity_hash — hash of data
 	EntityHash           []byte   `protobuf:"bytes,3,opt,name=entity_hash,json=entityHash,proto3" json:"entity_hash,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -123,7 +127,9 @@ func (m *Inv) GetEntityHash() []byte {
 	return nil
 }
 
+// InvResp — request with information about needed data
 type InvResp struct {
+	// needed — reflects the need for data
 	Needed               []bool   `protobuf:"varint,1,rep,packed,name=needed,proto3" json:"needed,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -162,46 +168,7 @@ func (m *InvResp) GetNeeded() []bool {
 	return nil
 }
 
-// PostData
-type PostDataResp struct {
-	Warning              []string `protobuf:"bytes,2,rep,name=warning,proto3" json:"warning,omitempty"`
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *PostDataResp) Reset()         { *m = PostDataResp{} }
-func (m *PostDataResp) String() string { return proto.CompactTextString(m) }
-func (*PostDataResp) ProtoMessage()    {}
-func (*PostDataResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da023b1b27b350a, []int{3}
-}
-
-func (m *PostDataResp) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_PostDataResp.Unmarshal(m, b)
-}
-func (m *PostDataResp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_PostDataResp.Marshal(b, m, deterministic)
-}
-func (m *PostDataResp) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_PostDataResp.Merge(m, src)
-}
-func (m *PostDataResp) XXX_Size() int {
-	return xxx_messageInfo_PostDataResp.Size(m)
-}
-func (m *PostDataResp) XXX_DiscardUnknown() {
-	xxx_messageInfo_PostDataResp.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_PostDataResp proto.InternalMessageInfo
-
-func (m *PostDataResp) GetWarning() []string {
-	if m != nil {
-		return m.Warning
-	}
-	return nil
-}
-
+// Data — content needed to send
 type Data struct {
 	// Types that are valid to be assigned to Data:
 	//	*Data_Lock
@@ -217,7 +184,7 @@ func (m *Data) Reset()         { *m = Data{} }
 func (m *Data) String() string { return proto.CompactTextString(m) }
 func (*Data) ProtoMessage()    {}
 func (*Data) Descriptor() ([]byte, []int) {
-	return fileDescriptor_7da023b1b27b350a, []int{4}
+	return fileDescriptor_7da023b1b27b350a, []int{3}
 }
 
 func (m *Data) XXX_Unmarshal(b []byte) error {
@@ -297,8 +264,52 @@ func (*Data) XXX_OneofWrappers() []interface{} {
 	}
 }
 
+// PostDataResp — contains information about warking with data
+type PostDataResp struct {
+	//  warning — collection of warnings each for own Inv
+	Warning              []string `protobuf:"bytes,1,rep,name=warning,proto3" json:"warning,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PostDataResp) Reset()         { *m = PostDataResp{} }
+func (m *PostDataResp) String() string { return proto.CompactTextString(m) }
+func (*PostDataResp) ProtoMessage()    {}
+func (*PostDataResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7da023b1b27b350a, []int{4}
+}
+
+func (m *PostDataResp) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PostDataResp.Unmarshal(m, b)
+}
+func (m *PostDataResp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PostDataResp.Marshal(b, m, deterministic)
+}
+func (m *PostDataResp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PostDataResp.Merge(m, src)
+}
+func (m *PostDataResp) XXX_Size() int {
+	return xxx_messageInfo_PostDataResp.Size(m)
+}
+func (m *PostDataResp) XXX_DiscardUnknown() {
+	xxx_messageInfo_PostDataResp.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PostDataResp proto.InternalMessageInfo
+
+func (m *PostDataResp) GetWarning() []string {
+	if m != nil {
+		return m.Warning
+	}
+	return nil
+}
+
+// TransferTokens — information about transaction
 type TransferTokens struct {
-	Htlc                 []byte   `protobuf:"bytes,1,opt,name=htlc,proto3" json:"htlc,omitempty"`
+	// htlc — contract from lnd network
+	Htlc []byte `protobuf:"bytes,1,opt,name=htlc,proto3" json:"htlc,omitempty"`
+	// lock id
 	Lock                 []byte   `protobuf:"bytes,2,opt,name=lock,proto3" json:"lock,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -344,13 +355,124 @@ func (m *TransferTokens) GetLock() []byte {
 	return nil
 }
 
+// TokenStatusReq — status of which token is needed
+type TokenStatusReq struct {
+	// tokenid — generated from block0
+	Tokenid              string   `protobuf:"bytes,1,opt,name=tokenid,proto3" json:"tokenid,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *TokenStatusReq) Reset()         { *m = TokenStatusReq{} }
+func (m *TokenStatusReq) String() string { return proto.CompactTextString(m) }
+func (*TokenStatusReq) ProtoMessage()    {}
+func (*TokenStatusReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7da023b1b27b350a, []int{6}
+}
+
+func (m *TokenStatusReq) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TokenStatusReq.Unmarshal(m, b)
+}
+func (m *TokenStatusReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TokenStatusReq.Marshal(b, m, deterministic)
+}
+func (m *TokenStatusReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TokenStatusReq.Merge(m, src)
+}
+func (m *TokenStatusReq) XXX_Size() int {
+	return xxx_messageInfo_TokenStatusReq.Size(m)
+}
+func (m *TokenStatusReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_TokenStatusReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TokenStatusReq proto.InternalMessageInfo
+
+func (m *TokenStatusReq) GetTokenid() string {
+	if m != nil {
+		return m.Tokenid
+	}
+	return ""
+}
+
+// TokenStatus — information about token
+type TokenStatus struct {
+	// current_height — pkt height
+	CurrentHeight uint32 `protobuf:"varint,1,opt,name=current_height,json=currentHeight,proto3" json:"current_height,omitempty"`
+	// current_hash —  pkt proof
+	CurrentHash string `protobuf:"bytes,2,opt,name=current_hash,json=currentHash,proto3" json:"current_hash,omitempty"`
+	// dblock0 — first block of chain
+	Dblock0 *DB.Block `protobuf:"bytes,3,opt,name=dblock0,proto3" json:"dblock0,omitempty"`
+	// state0 — state of first block
+	State0               *DB.State `protobuf:"bytes,4,opt,name=state0,proto3" json:"state0,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
+}
+
+func (m *TokenStatus) Reset()         { *m = TokenStatus{} }
+func (m *TokenStatus) String() string { return proto.CompactTextString(m) }
+func (*TokenStatus) ProtoMessage()    {}
+func (*TokenStatus) Descriptor() ([]byte, []int) {
+	return fileDescriptor_7da023b1b27b350a, []int{7}
+}
+
+func (m *TokenStatus) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_TokenStatus.Unmarshal(m, b)
+}
+func (m *TokenStatus) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_TokenStatus.Marshal(b, m, deterministic)
+}
+func (m *TokenStatus) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_TokenStatus.Merge(m, src)
+}
+func (m *TokenStatus) XXX_Size() int {
+	return xxx_messageInfo_TokenStatus.Size(m)
+}
+func (m *TokenStatus) XXX_DiscardUnknown() {
+	xxx_messageInfo_TokenStatus.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_TokenStatus proto.InternalMessageInfo
+
+func (m *TokenStatus) GetCurrentHeight() uint32 {
+	if m != nil {
+		return m.CurrentHeight
+	}
+	return 0
+}
+
+func (m *TokenStatus) GetCurrentHash() string {
+	if m != nil {
+		return m.CurrentHash
+	}
+	return ""
+}
+
+func (m *TokenStatus) GetDblock0() *DB.Block {
+	if m != nil {
+		return m.Dblock0
+	}
+	return nil
+}
+
+func (m *TokenStatus) GetState0() *DB.State {
+	if m != nil {
+		return m.State0
+	}
+	return nil
+}
+
 func init() {
 	proto.RegisterType((*InvReq)(nil), "tokenstrike.InvReq")
 	proto.RegisterType((*Inv)(nil), "tokenstrike.Inv")
 	proto.RegisterType((*InvResp)(nil), "tokenstrike.InvResp")
-	proto.RegisterType((*PostDataResp)(nil), "tokenstrike.PostDataResp")
 	proto.RegisterType((*Data)(nil), "tokenstrike.Data")
+	proto.RegisterType((*PostDataResp)(nil), "tokenstrike.PostDataResp")
 	proto.RegisterType((*TransferTokens)(nil), "tokenstrike.TransferTokens")
+	proto.RegisterType((*TokenStatusReq)(nil), "tokenstrike.TokenStatusReq")
+	proto.RegisterType((*TokenStatus)(nil), "tokenstrike.TokenStatus")
 }
 
 func init() {
@@ -358,32 +480,39 @@ func init() {
 }
 
 var fileDescriptor_7da023b1b27b350a = []byte{
-	// 389 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x64, 0x52, 0x41, 0xaf, 0x93, 0x40,
-	0x10, 0x7e, 0x14, 0xe4, 0xd5, 0xa1, 0xbe, 0xe8, 0x6a, 0x9e, 0x88, 0x07, 0x91, 0x3c, 0x95, 0x8b,
-	0xd4, 0xe0, 0xa5, 0x5e, 0x49, 0x0f, 0x6d, 0xe2, 0xc1, 0xac, 0x3d, 0x79, 0x31, 0xdb, 0xb2, 0x0a,
-	0xa1, 0x59, 0xe8, 0xee, 0x06, 0xd3, 0xdf, 0xe1, 0x1f, 0x7e, 0x61, 0x16, 0x1a, 0x48, 0x2f, 0x64,
-	0xe6, 0xfb, 0xbe, 0xd9, 0xf9, 0xf2, 0x31, 0xf0, 0xd0, 0xc8, 0x5a, 0xd7, 0x6a, 0xa9, 0xeb, 0x8a,
-	0x0b, 0xa5, 0x65, 0x59, 0xf1, 0x71, 0x9d, 0x20, 0x4d, 0xbc, 0x11, 0x14, 0xdc, 0xf7, 0x23, 0xc7,
-	0xfa, 0x50, 0xe1, 0xc7, 0x88, 0x82, 0xd7, 0x3d, 0xbe, 0xce, 0xcc, 0x0b, 0xf9, 0xde, 0x10, 0x51,
-	0x02, 0xee, 0x56, 0xb4, 0x94, 0x9f, 0xc8, 0x03, 0x38, 0xa5, 0x68, 0x95, 0x6f, 0x85, 0x76, 0xec,
-	0xa5, 0xcf, 0x93, 0xf1, 0xa6, 0x4e, 0x82, 0x6c, 0x44, 0xc1, 0xde, 0x8a, 0x96, 0xdc, 0x83, 0xdb,
-	0x30, 0xc9, 0x85, 0xf6, 0xad, 0xd0, 0x8a, 0x17, 0xb4, 0xef, 0x08, 0x01, 0x47, 0x9f, 0x1b, 0xee,
-	0xcf, 0x42, 0x2b, 0x7e, 0x46, 0xb1, 0x26, 0xef, 0xc0, 0xe3, 0x42, 0x97, 0xfa, 0xfc, 0xbb, 0x60,
-	0xaa, 0xf0, 0x6d, 0x1c, 0x00, 0x03, 0x6d, 0x98, 0x2a, 0xa2, 0xf7, 0x70, 0x8b, 0x1e, 0x54, 0xd3,
-	0xbd, 0x2b, 0x38, 0xcf, 0x79, 0x8e, 0x36, 0xe6, 0xb4, 0xef, 0xa2, 0x18, 0x16, 0x3f, 0x6a, 0xa5,
-	0xd7, 0x4c, 0x33, 0xd4, 0xf9, 0x70, 0xfb, 0x8f, 0x49, 0x51, 0x8a, 0xbf, 0xfe, 0x2c, 0xb4, 0xe3,
-	0xa7, 0x74, 0x68, 0xa3, 0xff, 0x16, 0x38, 0x9d, 0x8c, 0x84, 0xe0, 0x74, 0x01, 0xa0, 0x41, 0x2f,
-	0x85, 0x04, 0xd3, 0xf8, 0x5e, 0x1f, 0xaa, 0xcd, 0x0d, 0x45, 0x86, 0x7c, 0x84, 0x27, 0x7b, 0x94,
-	0xcc, 0x50, 0x72, 0x97, 0x0c, 0xd1, 0x64, 0x47, 0x23, 0x33, 0x34, 0xf9, 0x06, 0x73, 0x2d, 0x99,
-	0x50, 0x7f, 0xb8, 0x44, 0xf7, 0x5e, 0xfa, 0x76, 0x92, 0xce, 0xae, 0x27, 0x77, 0x88, 0x6d, 0x6e,
-	0xe8, 0x45, 0x9e, 0xb9, 0xe0, 0xe4, 0x4c, 0xb3, 0x68, 0x05, 0x77, 0x53, 0x55, 0x97, 0x54, 0xa1,
-	0x8f, 0x87, 0x3e, 0x3f, 0xac, 0x3b, 0xec, 0xe2, 0x67, 0x61, 0x4c, 0xa6, 0x67, 0xf0, 0x70, 0xe2,
-	0x27, 0xee, 0x22, 0x5f, 0x4c, 0xfe, 0x2f, 0xaf, 0x7e, 0x0f, 0x3f, 0x05, 0xaf, 0xae, 0x41, 0xd5,
-	0x90, 0x15, 0xcc, 0x87, 0xe8, 0xc8, 0x8b, 0x89, 0xa2, 0x83, 0x82, 0x37, 0x13, 0x68, 0x1c, 0x72,
-	0xf6, 0xe9, 0xd7, 0x07, 0xe4, 0x3e, 0x0f, 0xb7, 0xa7, 0x9a, 0xb4, 0x59, 0x2a, 0x2e, 0x5b, 0x2e,
-	0xc7, 0x87, 0xb8, 0x77, 0xf1, 0x96, 0xbe, 0x3e, 0x06, 0x00, 0x00, 0xff, 0xff, 0xfb, 0x5f, 0x8e,
-	0x19, 0xb1, 0x02, 0x00, 0x00,
+	// 500 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x53, 0xd1, 0x6e, 0xd3, 0x30,
+	0x14, 0x5d, 0xda, 0xd0, 0x76, 0x37, 0x6d, 0x04, 0x06, 0x8d, 0x10, 0x1e, 0xe8, 0xa2, 0x6d, 0x44,
+	0x48, 0x64, 0x55, 0x78, 0x19, 0xaf, 0xd5, 0xa4, 0x75, 0x12, 0x0f, 0xc8, 0xec, 0x89, 0x97, 0xc9,
+	0x6d, 0xcc, 0x12, 0xb5, 0x72, 0xb2, 0xd8, 0x2b, 0xda, 0x77, 0xf0, 0x15, 0xfc, 0x06, 0x5f, 0x86,
+	0x7c, 0xed, 0x94, 0xa4, 0x13, 0x2f, 0x91, 0xef, 0x39, 0xe7, 0x3a, 0xc7, 0xe7, 0xda, 0x70, 0x52,
+	0xd5, 0xa5, 0x2a, 0xe5, 0xb9, 0x2a, 0xd7, 0x5c, 0x48, 0x55, 0x17, 0x6b, 0xde, 0x5e, 0x27, 0x48,
+	0x13, 0xaf, 0x05, 0x85, 0xaf, 0x6d, 0xcb, 0xe5, 0xdc, 0x28, 0xb3, 0xa5, 0x51, 0x85, 0x47, 0x96,
+	0xd8, 0x94, 0xab, 0x35, 0x7e, 0x0c, 0x1e, 0x25, 0x30, 0xb8, 0x16, 0x5b, 0xca, 0xef, 0xc9, 0x09,
+	0xb8, 0x85, 0xd8, 0xca, 0xc0, 0x99, 0xf6, 0x63, 0x2f, 0x7d, 0x9e, 0xb4, 0xff, 0xa4, 0x25, 0xc8,
+	0x46, 0x14, 0xfa, 0xd7, 0x62, 0x4b, 0x8e, 0x60, 0x50, 0xb1, 0x9a, 0x0b, 0x15, 0x38, 0x53, 0x27,
+	0x1e, 0x53, 0x5b, 0x11, 0x02, 0xae, 0x7a, 0xac, 0x78, 0xd0, 0x9b, 0x3a, 0xf1, 0x84, 0xe2, 0x9a,
+	0xbc, 0x03, 0x8f, 0x0b, 0x55, 0xa8, 0xc7, 0xdb, 0x9c, 0xc9, 0x3c, 0xe8, 0x63, 0x03, 0x18, 0x68,
+	0xc1, 0x64, 0x1e, 0x1d, 0xc3, 0x10, 0x3d, 0xc8, 0x4a, 0xef, 0x2b, 0x38, 0xcf, 0x78, 0x86, 0x36,
+	0x46, 0xd4, 0x56, 0xd1, 0x2f, 0x07, 0xdc, 0x4b, 0xa6, 0x18, 0x99, 0x82, 0xab, 0xdd, 0xe3, 0x6f,
+	0xbd, 0x14, 0x12, 0x3c, 0xca, 0x97, 0x72, 0xb5, 0x5e, 0x1c, 0x50, 0x64, 0xc8, 0x19, 0x3c, 0x5b,
+	0xa2, 0xa4, 0x87, 0x12, 0x3f, 0x69, 0x82, 0x98, 0x6f, 0x8c, 0xcc, 0xd0, 0xe4, 0x33, 0x8c, 0x54,
+	0xcd, 0x84, 0xfc, 0xc1, 0x6b, 0xf4, 0xe4, 0xa5, 0x6f, 0x3b, 0x67, 0xbe, 0xb1, 0xe4, 0x0d, 0x62,
+	0x8b, 0x03, 0xba, 0x93, 0xcf, 0x07, 0xe0, 0x66, 0x4c, 0xb1, 0x28, 0x86, 0xf1, 0xd7, 0x52, 0x2a,
+	0x6d, 0x0c, 0xdd, 0x07, 0x30, 0xfc, 0xc9, 0x6a, 0x51, 0x88, 0x3b, 0xb4, 0x7f, 0x48, 0x9b, 0x32,
+	0xba, 0x00, 0xbf, 0xbb, 0x9f, 0x4e, 0x2a, 0x57, 0x9b, 0x95, 0xcd, 0x0f, 0xd7, 0x1a, 0xdb, 0x39,
+	0x1f, 0x9b, 0xe3, 0x44, 0x1f, 0xc0, 0xc7, 0x8e, 0x6f, 0x8a, 0xa9, 0x07, 0xa9, 0x07, 0x15, 0xc0,
+	0x10, 0x7d, 0x16, 0x19, 0x36, 0x1f, 0xd2, 0xa6, 0x8c, 0x7e, 0x3b, 0xe0, 0xb5, 0xc4, 0xe4, 0x14,
+	0xfc, 0xd5, 0x43, 0xad, 0x07, 0x73, 0x9b, 0xf3, 0xe2, 0x2e, 0x37, 0xd3, 0x9a, 0xd0, 0x89, 0x45,
+	0x17, 0x08, 0x92, 0x63, 0x18, 0xef, 0x64, 0x7a, 0x42, 0x3d, 0xdc, 0xd5, 0x6b, 0x44, 0x4c, 0xe6,
+	0x24, 0x86, 0x61, 0x86, 0xb1, 0xcd, 0x6c, 0x56, 0x7b, 0xb1, 0xd2, 0x86, 0x26, 0x67, 0x30, 0x90,
+	0x8a, 0x29, 0x3e, 0x0b, 0xdc, 0x3d, 0xa1, 0x36, 0xc5, 0xa9, 0x65, 0xd3, 0x3f, 0xff, 0xbc, 0xea,
+	0xb8, 0xc9, 0xcc, 0x5c, 0xac, 0x97, 0x4f, 0xee, 0x1d, 0xbf, 0x0f, 0x5f, 0x3d, 0x05, 0x65, 0x45,
+	0x2e, 0x60, 0xd4, 0xa4, 0x4f, 0x5e, 0x74, 0x14, 0x1a, 0x0a, 0xdf, 0x74, 0xa0, 0xce, 0x9c, 0xae,
+	0xc0, 0xbf, 0xe2, 0xaa, 0x9d, 0xd4, 0xde, 0xe8, 0x3b, 0x81, 0x87, 0xc1, 0xff, 0xc8, 0xf9, 0xfb,
+	0xef, 0xa7, 0x48, 0x7d, 0x6c, 0x5e, 0xa7, 0xac, 0xd2, 0xea, 0x5c, 0xf2, 0x7a, 0xcb, 0xeb, 0xf6,
+	0x53, 0x5d, 0x0e, 0xf0, 0xb5, 0x7d, 0xfa, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x12, 0x38, 0x14, 0x79,
+	0xd3, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -398,8 +527,12 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type TokenStrikeClient interface {
+	// Inv — send meta information to token strike
 	Inv(ctx context.Context, in *InvReq, opts ...grpc.CallOption) (*InvResp, error)
+	// PostData — send full data to replication
 	PostData(ctx context.Context, in *Data, opts ...grpc.CallOption) (*PostDataResp, error)
+	// GetTokenStatus — response with information about token
+	GetTokenStatus(ctx context.Context, in *TokenStatusReq, opts ...grpc.CallOption) (*TokenStatus, error)
 }
 
 type tokenStrikeClient struct {
@@ -428,10 +561,23 @@ func (c *tokenStrikeClient) PostData(ctx context.Context, in *Data, opts ...grpc
 	return out, nil
 }
 
+func (c *tokenStrikeClient) GetTokenStatus(ctx context.Context, in *TokenStatusReq, opts ...grpc.CallOption) (*TokenStatus, error) {
+	out := new(TokenStatus)
+	err := c.cc.Invoke(ctx, "/tokenstrike.TokenStrike/GetTokenStatus", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // TokenStrikeServer is the server API for TokenStrike service.
 type TokenStrikeServer interface {
+	// Inv — send meta information to token strike
 	Inv(context.Context, *InvReq) (*InvResp, error)
+	// PostData — send full data to replication
 	PostData(context.Context, *Data) (*PostDataResp, error)
+	// GetTokenStatus — response with information about token
+	GetTokenStatus(context.Context, *TokenStatusReq) (*TokenStatus, error)
 }
 
 // UnimplementedTokenStrikeServer can be embedded to have forward compatible implementations.
@@ -443,6 +589,9 @@ func (*UnimplementedTokenStrikeServer) Inv(ctx context.Context, req *InvReq) (*I
 }
 func (*UnimplementedTokenStrikeServer) PostData(ctx context.Context, req *Data) (*PostDataResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PostData not implemented")
+}
+func (*UnimplementedTokenStrikeServer) GetTokenStatus(ctx context.Context, req *TokenStatusReq) (*TokenStatus, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTokenStatus not implemented")
 }
 
 func RegisterTokenStrikeServer(s *grpc.Server, srv TokenStrikeServer) {
@@ -485,6 +634,24 @@ func _TokenStrike_PostData_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TokenStrike_GetTokenStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TokenStatusReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TokenStrikeServer).GetTokenStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/tokenstrike.TokenStrike/GetTokenStatus",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TokenStrikeServer).GetTokenStatus(ctx, req.(*TokenStatusReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _TokenStrike_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "tokenstrike.TokenStrike",
 	HandlerType: (*TokenStrikeServer)(nil),
@@ -496,6 +663,10 @@ var _TokenStrike_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PostData",
 			Handler:    _TokenStrike_PostData_Handler,
+		},
+		{
+			MethodName: "GetTokenStatus",
+			Handler:    _TokenStrike_GetTokenStatus_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
