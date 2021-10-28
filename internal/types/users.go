@@ -2,8 +2,6 @@ package types
 
 import "token-strike/tsp2p/server/DB"
 
-type OwnerCollection map[string]uint64
-
 type LockArgs interface {
 	GetTokenId() string
 	GetAmount() uint64

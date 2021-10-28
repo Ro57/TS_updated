@@ -63,7 +63,7 @@ func CreateWallet(cfg config.Config, pk privkey.SimplePrivateKey, http string, i
 		privateKey:     pk,
 		pkt:            *pkt,
 		scheme:         *scheme,
-		db:             &cfg.DB,
+		db:             cfg.DB,
 		invClient:      invClient,
 		issuerInvSlice: issuerClients,
 	}, nil
