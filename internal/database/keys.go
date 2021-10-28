@@ -1,6 +1,9 @@
 package database
 
 var (
+	GenesisStateKey = []byte("genesis_state")
+	GenesisBlockKey = []byte("genesis_block")
+
 	IssuerTokens = []byte("issuer_tokens")
 
 	InfoKey   = []byte("info")

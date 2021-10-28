@@ -26,6 +26,50 @@ type Bbolt struct {
 	db *database.TokenStrikeDB
 }
 
+func (b *Bbolt) GetTokenStatus(token string) (*DB.Block, *DB.State, error) {
+
+	var (
+		genesisBlock = &DB.Block{}
+		genesisState = &DB.State{}
+	)
+
+	err := b.db.View(func(tx *bbolt.Tx) error {
+		rootBucket := tx.Bucket(database.TokensKey)
+		if rootBucket == nil {
+			return stdErrors.New("tokens do not exist")
+		}
+
+		tokenBucket := rootBucket.Bucket([]byte(token))
+		if tokenBucket == nil {
+			return errors.TokenNotFoundErr
+		}
+
+		blockData := tokenBucket.Get(database.GenesisBlockKey)
+		if blockData == nil {
+			return errors.InfoNotFoundErr
+		}
+
+		err := proto.Unmarshal(blockData, genesisBlock)
+		if err != nil {
+			return err
+		}
+
+		stateData := tokenBucket.Get(database.GenesisBlockKey)
+		if stateData == nil {
+			return errors.InfoNotFoundErr
+		}
+
+		err = proto.Unmarshal(stateData, genesisState)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return genesisBlock, genesisState, err
+}
+
 func (b *Bbolt) GetTokenList() ([]*replicator.Token, error) {
 	var resultList []*replicator.Token
 
@@ -504,6 +548,11 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 			if errPut != nil {
 				return errPut
 			}
+
+			errPut = tokenBucket.Put(database.GenesisStateKey, marshaledState)
+			if errPut != nil {
+				return errPut
+			}
 		}
 
 		err = tokenBucket.Put(database.RootHashKey, []byte(""))
@@ -522,6 +571,11 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 		blockSignatureBytes := []byte(block.GetSignature())
 
 		err = tokenBucket.Put(database.RootHashKey, blockSignatureBytes)
+		if err != nil {
+			return err
+		}
+
+		err = tokenBucket.Put(database.GenesisBlockKey, blockSignatureBytes)
 		if err != nil {
 			return err
 		}

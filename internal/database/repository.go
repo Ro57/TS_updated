@@ -27,6 +27,7 @@ type GetRepository interface {
 	GetTokenList() ([]*replicator.Token, error)
 	GetToken(name string) (replicator.Token, error)
 	GetIssuerTokens() (replicator.IssuerToken, error)
+	GetTokenStatus(token string) (*DB.Block, *DB.State, error)
 	GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error)
 	GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBlock, error)
 }
