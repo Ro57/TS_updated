@@ -4,10 +4,17 @@ import "token-strike/tsp2p/server/DB"
 
 type OwnerCollection map[string]uint64
 
+type LockArgs interface {
+	GetTokenId() string
+	GetAmount() uint64
+	GetRecipient() string
+	GetSecretHash() string
+}
+
 type Wallet interface {
-	DiscoverToken(tokenID string, issuerUrlHints []string)
-	LockTokens(tokenId string, amount uint64, recipient string, secretHash string) (string, error)
-	SendTokens(tokenId string, lockId string, secretHex string) (string, error)
+	DiscoverToken(tokenID string) error
+	LockTokens(args LockArgs) ([]byte, error)
+	SendTokens(tokenId string, lockId []byte, secretHex []byte) ([]byte, error)
 }
 
 type Issuer interface {
