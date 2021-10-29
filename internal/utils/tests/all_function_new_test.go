@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"testing"
+	address2 "token-strike/internal/types/address"
 
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
@@ -32,8 +33,9 @@ var (
 
 // creating additional variables
 var (
-	http                        = "0.0.0.0:3333"
-	activePktChain pkt.PktChain = &pktchain.SimplePktChain{}
+	http                                       = "0.0.0.0:3333"
+	activePktChain      pkt.PktChain           = &pktchain.SimplePktChain{}
+	activeAddressScheme address2.AddressScheme = &address.SimpleAddressScheme{}
 )
 
 func TestAllFunctionsNew(t *testing.T) {
@@ -54,8 +56,9 @@ func TestAllFunctionsNew(t *testing.T) {
 	}()
 
 	cfg := &config.Config{
-		DB:    tokendb,
-		Chain: activePktChain,
+		DB:     tokendb,
+		Chain:  activePktChain,
+		Scheme: activeAddressScheme,
 	}
 
 	issuer, err := issuer.CreateIssuer(cfg, isaacPrivateKey, http)
