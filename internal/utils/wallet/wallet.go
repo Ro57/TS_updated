@@ -11,6 +11,7 @@ import (
 	"token-strike/internal/utils/pktchain"
 	"token-strike/tsp2p/server/tokenstrike"
 
+	empty "github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 )
 
@@ -22,6 +23,7 @@ type SimpleWallet struct {
 	db             database.DBRepository
 	invClient      tokenstrike.TokenStrikeClient
 	issuerInvSlice []tokenstrike.TokenStrikeClient
+	subChannel     tokenstrike.TokenStrike_SubscribeClient
 }
 
 var _ users.Wallet = &SimpleWallet{}
@@ -41,6 +43,11 @@ func CreateWallet(cfg config.Config, pk address2.PrivateKey, http string, issuer
 	}
 
 	invClient := tokenstrike.NewTokenStrikeClient(conn)
+
+	subChannel, err := invClient.Subscribe(context.TODO(), &empty.Empty{})
+	if err != nil {
+		return nil, err
+	}
 	walletAddress := address.NewSimpleAddress(pk.GetPublicKey())
 
 	pkt, ok := cfg.Chain.(*pktchain.SimplePktChain)
@@ -65,6 +72,7 @@ func CreateWallet(cfg config.Config, pk address2.PrivateKey, http string, issuer
 		scheme:         *scheme,
 		db:             cfg.DB,
 		invClient:      invClient,
+		subChannel:     subChannel,
 		issuerInvSlice: issuerClients,
 	}, nil
 
