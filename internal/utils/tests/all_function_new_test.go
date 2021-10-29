@@ -1,6 +1,8 @@
 package utils_test
 
 import (
+	"encoding/hex"
+	"fmt"
 	"math"
 	"testing"
 	"token-strike/internal/database"
@@ -10,6 +12,7 @@ import (
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/issuer"
 	"token-strike/internal/utils/pktchain"
+	"token-strike/internal/utils/wallet"
 	"token-strike/tsp2p/server/DB"
 )
 
@@ -50,7 +53,7 @@ func TestAllFunctionsNew(t *testing.T) {
 		t.Error(err)
 	}
 
-	issuer.IssueToken(
+	tokenID, err := issuer.IssueToken(
 		[]*DB.Owner{
 			{
 				HolderWallet: aliceAddress.String(),
@@ -63,7 +66,31 @@ func TestAllFunctionsNew(t *testing.T) {
 		},
 		math.MaxInt32,
 	)
+	if err != nil {
+		t.Error(err)
+	}
 
+	alice, err := wallet.CreateWallet(*cfg, alicePrivateKey, http, []string{""})
+	if err != nil {
+		t.Error(err)
+	}
+
+	lockID, err := alice.LockTokens(config.LockArgs{
+		TokenId:    tokenID,
+		Amount:     3,
+		Recipient:  bobAddress.String(),
+		SecretHash: "",
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	transferHash, err := alice.SendTokens(tokenID, lockID, "")
+	if err != nil {
+		t.Error(err)
+	}
+
+	fmt.Println(hex.EncodeToString(transferHash))
 }
 
 func closeDB(db *database.TokenStrikeDB, t *testing.T) {
