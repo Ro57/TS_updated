@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"testing"
+	"time"
 	address2 "token-strike/internal/types/address"
 
 	"token-strike/internal/database"
@@ -66,6 +67,8 @@ func TestAllFunctionsNew(t *testing.T) {
 			t.Error(err)
 		}
 	}()
+
+	time.Sleep(1 * time.Second)
 
 	cfg := &config.Config{
 		DB:     tokendb,

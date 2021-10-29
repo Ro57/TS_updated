@@ -39,12 +39,11 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 	default:
 		return nil, errors.New("unknown data type")
 	}
-
 	if err != nil {
 		return nil, err
 	}
 
-	return resp, nil
+	return resp, t.sendDataToSubscribers(req)
 }
 
 //TODO: place here checking for ret error with warnings

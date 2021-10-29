@@ -24,6 +24,7 @@ type TokenStrikeMock struct {
 	pktChain      pktchain.SimplePktChain
 	addressScheme address.SimpleAddressScheme
 	invCache      map[string]tokenstrike.Inv
+	peers         []tokenstrike.TokenStrike_SubscribeServer
 }
 
 var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
