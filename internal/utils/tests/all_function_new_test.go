@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"testing"
+
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 	"token-strike/internal/types/pkt"
@@ -12,6 +13,7 @@ import (
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/issuer"
 	"token-strike/internal/utils/pktchain"
+	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/internal/utils/wallet"
 	"token-strike/tsp2p/server/DB"
 )
@@ -19,6 +21,7 @@ import (
 // creating keys
 var (
 	isaacPrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 0))
+	isaacAddress    = address.NewSimpleAddress(isaacPrivateKey.GetPublicKey())
 
 	alicePrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
 	aliceAddress    = address.NewSimpleAddress(alicePrivateKey.GetPublicKey())
@@ -29,7 +32,7 @@ var (
 
 // creating additional variables
 var (
-	http                        = "tcp://0.0.0.0:3333"
+	http                        = "0.0.0.0:3333"
 	activePktChain pkt.PktChain = &pktchain.SimplePktChain{}
 )
 
@@ -42,6 +45,13 @@ func TestAllFunctionsNew(t *testing.T) {
 	defer closeDB(db, t)
 
 	tokendb := repository.NewBbolt(db)
+
+	go func() {
+		err = tokenstrikemock.NewServer(tokendb, isaacAddress, http)
+		if err != nil {
+			t.Error(err)
+		}
+	}()
 
 	cfg := &config.Config{
 		DB:    tokendb,
