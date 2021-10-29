@@ -26,15 +26,18 @@ var (
 	alicePrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
 	aliceAddress    = address.NewSimpleAddress(alicePrivateKey.GetPublicKey())
 
-	bobPrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
-	bobAddress    = address.NewSimpleAddress(bobPrivateKey.GetPublicKey())
+	bobPrivateKey               = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
+	bobAddress                  = address.NewSimpleAddress(bobPrivateKey.GetPublicKey())
+	activePktChain pkt.PktChain = &pktchain.SimplePktChain{}
+)
+
+const (
+	httpIsaac = "0.0.0.0:3333"
+	httpAlice = "0.0.0.0:3334"
 )
 
 // creating additional variables
-var (
-	http                        = "0.0.0.0:3333"
-	activePktChain pkt.PktChain = &pktchain.SimplePktChain{}
-)
+var ()
 
 func TestAllFunctionsNew(t *testing.T) {
 	// initialization the database
@@ -47,18 +50,31 @@ func TestAllFunctionsNew(t *testing.T) {
 	tokendb := repository.NewBbolt(db)
 
 	go func() {
-		err = tokenstrikemock.NewServer(tokendb, isaacAddress, http)
+		err = tokenstrikemock.NewServer(tokendb, isaacAddress, httpIsaac)
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
+	go func() {
+		err = tokenstrikemock.NewServer(tokendb, isaacAddress, httpAlice)
 		if err != nil {
 			t.Error(err)
 		}
 	}()
 
 	cfg := &config.Config{
-		DB:    tokendb,
-		Chain: activePktChain,
+		Scheme: &address.SimpleAddressScheme{},
+		DB:     tokendb,
+		Chain:  activePktChain,
 	}
 
-	issuer, err := issuer.CreateIssuer(cfg, isaacPrivateKey, http)
+	issuer, err := issuer.CreateIssuer(cfg, isaacPrivateKey, httpIsaac)
+	if err != nil {
+		t.Error(err)
+	}
+
+	alice, err := wallet.CreateWallet(*cfg, alicePrivateKey, httpAlice, []string{httpIsaac})
 	if err != nil {
 		t.Error(err)
 	}
@@ -76,11 +92,6 @@ func TestAllFunctionsNew(t *testing.T) {
 		},
 		math.MaxInt32,
 	)
-	if err != nil {
-		t.Error(err)
-	}
-
-	alice, err := wallet.CreateWallet(*cfg, alicePrivateKey, http, []string{""})
 	if err != nil {
 		t.Error(err)
 	}
