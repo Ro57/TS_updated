@@ -311,6 +311,9 @@
         "transfer": {
           "$ref": "#/definitions/tokenstrikeTransferTokens",
           "title": "transfer if inv type was be tx"
+        },
+        "token": {
+          "type": "string"
         }
       },
       "title": "Data — content needed to send"
