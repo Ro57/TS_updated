@@ -135,6 +135,31 @@
         }
       }
     },
+    "runtimeStreamError": {
+      "type": "object",
+      "properties": {
+        "grpc_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "http_code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "http_status": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
     "tokendbBlock": {
       "type": "object",
       "properties": {
@@ -272,6 +297,24 @@
       },
       "title": "Token contain information about token"
     },
+    "tokenstrikeData": {
+      "type": "object",
+      "properties": {
+        "lock": {
+          "$ref": "#/definitions/lockLock",
+          "title": "lock if inv type was be lock"
+        },
+        "block": {
+          "$ref": "#/definitions/tokendbBlock",
+          "title": "block if inv type was be block"
+        },
+        "transfer": {
+          "$ref": "#/definitions/tokenstrikeTransferTokens",
+          "title": "transfer if inv type was be tx"
+        }
+      },
+      "title": "Data — content needed to send"
+    },
     "tokenstrikeInv": {
       "type": "object",
       "properties": {
@@ -330,7 +373,7 @@
         },
         "current_hash": {
           "type": "string",
-          "title": "current_hash —  pkt proof"
+          "title": "current_hash —  token id"
         },
         "dblock0": {
           "$ref": "#/definitions/tokendbBlock",
