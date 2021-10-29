@@ -100,8 +100,7 @@ func (s SimpleWallet) selectEvent(events tokenstrike.TokenStrike_SubscribeClient
 
 		switch d := data.Data.(type) {
 		case *tokenstrike.Data_Block:
-			// TODO: set token name to save
-			s.db.SaveBlock("", d.Block)
+			s.db.SaveBlock(data.Token, d.Block)
 		}
 	}
 }

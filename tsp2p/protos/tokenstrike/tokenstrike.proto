@@ -62,6 +62,7 @@ message Data {
         TransferTokens transfer = 3;
         /// will add more later
     }
+    string token = 4;
 }
 
 // PostDataResp — contains information about warking with data
