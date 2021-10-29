@@ -1,4 +1,4 @@
-package types
+package pkt
 
 // AnnProof — lock expiration time in PKT blocks
 type AnnProof struct {

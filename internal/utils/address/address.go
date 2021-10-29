@@ -3,15 +3,14 @@ package address
 import (
 	ed "crypto/ed25519"
 	"encoding/hex"
-
-	"token-strike/internal/types"
+	"token-strike/internal/types/address"
 )
 
 type SimpleAddress struct {
 	publicKey ed.PublicKey
 }
 
-var _ types.Address = &SimpleAddress{}
+var _ address.Address = &SimpleAddress{}
 
 func NewSimpleAddress(pb ed.PublicKey) SimpleAddress {
 	return SimpleAddress{publicKey: pb}

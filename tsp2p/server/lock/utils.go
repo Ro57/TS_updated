@@ -3,12 +3,12 @@ package lock
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"token-strike/internal/types"
+	"token-strike/internal/types/address"
 
 	"github.com/golang/protobuf/proto"
 )
 
-func (m *Lock) Sing(key types.PrivateKey) error {
+func (m *Lock) Sing(key address.PrivateKey) error {
 	bytes, err := proto.Marshal(m)
 	if err != nil {
 		return err

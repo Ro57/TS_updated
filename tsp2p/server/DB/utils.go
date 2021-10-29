@@ -3,8 +3,8 @@ package DB
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"token-strike/internal/types/address"
 
-	"token-strike/internal/types"
 	"token-strike/tsp2p/server/lock"
 
 	"github.com/golang/protobuf/proto"
@@ -13,7 +13,7 @@ import (
 // --------------- Block -------------------
 
 // Sing signed block received private key and stored signature
-func (m *Block) Sing(key types.PrivateKey) error {
+func (m *Block) Sing(key address.PrivateKey) error {
 	bytes, err := proto.Marshal(m)
 	if err != nil {
 		return err

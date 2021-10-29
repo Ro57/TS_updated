@@ -3,7 +3,7 @@ package utils_test
 import (
 	"math/rand"
 	"time"
-	"token-strike/internal/types"
+	address2 "token-strike/internal/types/address"
 	"token-strike/internal/utils/address"
 )
 
@@ -39,7 +39,7 @@ func (suite *TestSuite) TestCheckSig() {
 	}
 	tests := []struct {
 		name    string
-		address types.Address
+		address address2.Address
 		args    args
 		want    bool
 	}{

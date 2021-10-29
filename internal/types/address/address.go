@@ -1,4 +1,4 @@
-package types
+package address
 
 type AddressScheme interface {
 	GenerateKey(seed [32]byte) PrivateKey

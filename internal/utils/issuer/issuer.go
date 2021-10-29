@@ -4,8 +4,9 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"time"
+	address2 "token-strike/internal/types/address"
+	"token-strike/internal/types/users"
 
-	"token-strike/internal/types"
 	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/config"
 	"token-strike/tsp2p/server/DB"
@@ -19,13 +20,13 @@ type SimpleIssuer struct {
 	config    *config.Config
 	invServer tokenstrike.TokenStrikeClient
 
-	private types.PrivateKey
-	address types.Address
+	private address2.PrivateKey
+	address address2.Address
 }
 
-var _ types.Issuer = &SimpleIssuer{}
+var _ users.Issuer = &SimpleIssuer{}
 
-func CreateIssuer(cfg *config.Config, pk types.PrivateKey, target string) (types.Issuer, error) {
+func CreateIssuer(cfg *config.Config, pk address2.PrivateKey, target string) (users.Issuer, error) {
 	grpcConn, err := grpc.Dial(target)
 	if err != nil {
 		return nil, err
