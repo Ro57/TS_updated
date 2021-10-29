@@ -2,7 +2,7 @@ package tokenstrikemock
 
 import (
 	"token-strike/internal/database"
-	"token-strike/internal/types"
+	address2 "token-strike/internal/types/address"
 	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/pktchain"
 	"token-strike/tsp2p/server/tokenstrike"
@@ -15,7 +15,7 @@ const (
 
 type TokenStrikeMock struct {
 	bboltDB       database.DBRepository
-	issuer        types.Address
+	issuer        address2.Address
 	pktChain      pktchain.SimplePktChain
 	addressScheme address.SimpleAddressScheme
 	invCache      map[string]tokenstrike.Inv
@@ -23,7 +23,7 @@ type TokenStrikeMock struct {
 
 var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
 
-func New(db database.DBRepository, issuer types.Address) *TokenStrikeMock {
+func New(db database.DBRepository, issuer address2.Address) *TokenStrikeMock {
 	return &TokenStrikeMock{
 		bboltDB:       db,
 		issuer:        issuer,

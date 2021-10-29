@@ -2,13 +2,13 @@ package wallet
 
 import (
 	"crypto/sha256"
-	"token-strike/internal/types"
+	"token-strike/internal/types/users"
 	"token-strike/tsp2p/server/lock"
 
 	"github.com/golang/protobuf/proto"
 )
 
-func (s SimpleWallet) LockTokens(args types.LockArgs) ([]byte, error) {
+func (s SimpleWallet) LockTokens(args users.LockArgs) ([]byte, error) {
 	//populate lock with special data todo check the addresses
 	lockEl := &lock.Lock{
 		Count:          3,

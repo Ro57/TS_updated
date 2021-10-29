@@ -3,10 +3,9 @@ package utils_test
 import (
 	"math"
 	"testing"
-
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
-	"token-strike/internal/types"
+	"token-strike/internal/types/pkt"
 	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/issuer"
@@ -27,7 +26,8 @@ var (
 
 // creating additional variables
 var (
-	activePktChain types.PktChain = &pktchain.SimplePktChain{}
+	http                        = "tcp://0.0.0.0:3333"
+	activePktChain pkt.PktChain = &pktchain.SimplePktChain{}
 )
 
 func TestAllFunctionsNew(t *testing.T) {
@@ -41,10 +41,11 @@ func TestAllFunctionsNew(t *testing.T) {
 	tokendb := repository.NewBbolt(db)
 
 	cfg := &config.Config{
-		DB: tokendb,
+		DB:    tokendb,
+		Chain: activePktChain,
 	}
 
-	issuer, err := issuer.CreateIssuer(cfg, isaacPrivateKey, "tcp://0.0.0.0:3333")
+	issuer, err := issuer.CreateIssuer(cfg, isaacPrivateKey, http)
 	if err != nil {
 		t.Error(err)
 	}

@@ -5,16 +5,16 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"token-strike/internal/types/address"
 
-	"token-strike/internal/types"
 	"token-strike/internal/utils/privkey"
 )
 
 type SimpleAddressScheme struct{}
 
-var _ types.AddressScheme = &SimpleAddressScheme{}
+var _ address.AddressScheme = &SimpleAddressScheme{}
 
-func (s SimpleAddressScheme) ParseAddr(ps string) (types.Address, error) {
+func (s SimpleAddressScheme) ParseAddr(ps string) (address.Address, error) {
 
 	bytePS, err := hex.DecodeString(ps)
 	if err != nil {
@@ -30,7 +30,7 @@ func (s SimpleAddressScheme) ParseAddr(ps string) (types.Address, error) {
 	return address, nil
 
 }
-func (s *SimpleAddressScheme) GenerateKey(randomSeed [32]byte) types.PrivateKey {
+func (s *SimpleAddressScheme) GenerateKey(randomSeed [32]byte) address.PrivateKey {
 	key := ed.NewKeyFromSeed(randomSeed[:])
 	return privkey.SimplePrivateKey{Key: key}
 }

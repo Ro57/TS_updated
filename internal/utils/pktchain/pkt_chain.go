@@ -4,13 +4,13 @@ import (
 	"crypto/sha256"
 	"math/rand"
 	"time"
-	"token-strike/internal/types"
+	"token-strike/internal/types/pkt"
 )
 
 type SimplePktChain struct {
 }
 
-var _ types.PktChain = (*SimplePktChain)(nil)
+var _ pkt.PktChain = (*SimplePktChain)(nil)
 
 func (p SimplePktChain) BlockHashAtHeight(i int32) []byte {
 	var result []byte
@@ -27,18 +27,18 @@ func (p SimplePktChain) CurrentHeight() int32 {
 	return int32(height)
 }
 
-func (p *SimplePktChain) VerifyProof(annProof types.AnnProof) int32 {
+func (p *SimplePktChain) VerifyProof(annProof pkt.AnnProof) int32 {
 	return annProof.Num
 }
 
-func (p *SimplePktChain) AnnounceData(data []byte) chan types.AnnProof {
-	annProof := make(chan types.AnnProof)
+func (p *SimplePktChain) AnnounceData(data []byte) chan pkt.AnnProof {
+	annProof := make(chan pkt.AnnProof)
 
 	// payload simulations
 	go func() {
 		n := randomSleep(500, 2000)
 		time.Sleep(time.Duration(n) * time.Millisecond)
-		annProof <- types.AnnProof{
+		annProof <- pkt.AnnProof{
 			Num: p.CurrentHeight(),
 		}
 	}()

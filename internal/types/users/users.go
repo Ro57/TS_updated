@@ -1,4 +1,4 @@
-package types
+package users
 
 import "token-strike/tsp2p/server/DB"
 

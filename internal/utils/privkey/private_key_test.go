@@ -3,7 +3,7 @@ package privkey
 import (
 	"crypto/ed25519"
 	"testing"
-	"token-strike/internal/types"
+	"token-strike/internal/types/address"
 )
 
 func TestSimplePrivateKey_Equal(t *testing.T) {
@@ -11,7 +11,7 @@ func TestSimplePrivateKey_Equal(t *testing.T) {
 	seed2 := randomSeed(123213)
 
 	type args struct {
-		private types.PrivateKey
+		private address.PrivateKey
 	}
 	tests := []struct {
 		name string

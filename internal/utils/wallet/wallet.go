@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"token-strike/internal/database"
-	"token-strike/internal/types"
+	address2 "token-strike/internal/types/address"
+	"token-strike/internal/types/users"
 	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/pktchain"
-	"token-strike/internal/utils/privkey"
 	"token-strike/tsp2p/server/tokenstrike"
 
 	"google.golang.org/grpc"
@@ -16,7 +16,7 @@ import (
 
 type SimpleWallet struct {
 	address        address.SimpleAddress
-	privateKey     privkey.SimplePrivateKey
+	privateKey     address2.PrivateKey
 	pkt            pktchain.SimplePktChain
 	scheme         address.SimpleAddressScheme
 	db             database.DBRepository
@@ -24,9 +24,9 @@ type SimpleWallet struct {
 	issuerInvSlice []tokenstrike.TokenStrikeClient
 }
 
-var _ types.Wallet = &SimpleWallet{}
+var _ users.Wallet = &SimpleWallet{}
 
-func CreateWallet(cfg config.Config, pk privkey.SimplePrivateKey, http string, issuerUrlHints []string) (*SimpleWallet, error) {
+func CreateWallet(cfg config.Config, pk address2.PrivateKey, http string, issuerUrlHints []string) (*SimpleWallet, error) {
 	if issuerUrlHints == nil {
 		return nil, errors.New("issuer url collection empty")
 	}

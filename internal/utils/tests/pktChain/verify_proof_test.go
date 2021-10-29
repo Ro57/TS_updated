@@ -1,6 +1,8 @@
 package utils_test
 
-import "token-strike/internal/types"
+import (
+	"token-strike/internal/types/pkt"
+)
 
 func (suite *TestSuite) TestVerifyProof() {
 
@@ -8,7 +10,7 @@ func (suite *TestSuite) TestVerifyProof() {
 	ann := <-annChan
 
 	type args struct {
-		ann types.AnnProof
+		ann pkt.AnnProof
 	}
 	tests := []struct {
 		name    string

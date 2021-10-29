@@ -10,7 +10,8 @@ import (
 	"time"
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
-	"token-strike/internal/types"
+	address2 "token-strike/internal/types/address"
+	"token-strike/internal/types/pkt"
 	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/pktchain"
 	"token-strike/internal/utils/tokenstrikemock"
@@ -40,11 +41,11 @@ func randomSeed(l, offset int) [32]byte {
 }
 
 func TestAllFunctions(t *testing.T) {
-	var activeAddressScheme types.AddressScheme = &address.SimpleAddressScheme{}
-	var activePktChain types.PktChain = &pktchain.SimplePktChain{}
+	var activeAddressScheme address2.AddressScheme = &address.SimpleAddressScheme{}
+	var activePktChain pkt.PktChain = &pktchain.SimplePktChain{}
 	seedSlice := [][32]byte{randomSeed(32, 0), randomSeed(32, 32), randomSeed(32, 64), randomSeed(32, 96)}
-	privKeySlice := []types.PrivateKey{}
-	addressSlice := []types.Address{}
+	privKeySlice := []address2.PrivateKey{}
+	addressSlice := []address2.Address{}
 
 	db, err := database.Connect("./test.db")
 	if err != nil {
