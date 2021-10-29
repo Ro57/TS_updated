@@ -334,6 +334,14 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 			return err
 		}
 
+		for _, justification := range block.GetJustifications() {
+			err = b.ApplyJustification(name, justification)
+			if err != nil {
+				return err
+			}
+
+		}
+
 		return chainBucket.Put(blockSignatureBytes, blockBytes)
 	})
 }

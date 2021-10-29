@@ -9,7 +9,7 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
-func (s SimpleWallet) SendTokens(tokenId string, lockId []byte, secretHex []byte) ([]byte, error) {
+func (s *SimpleWallet) SendTokens(tokenId string, lockId []byte, secretHex []byte) ([]byte, error) {
 	transferTokens := &tokenstrike.TransferTokens{
 		Htlc: secretHex[:],
 		Lock: lockId[:],
