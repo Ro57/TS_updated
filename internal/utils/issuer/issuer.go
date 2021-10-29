@@ -27,7 +27,7 @@ type SimpleIssuer struct {
 var _ users.Issuer = &SimpleIssuer{}
 
 func CreateIssuer(cfg *config.Config, pk address2.PrivateKey, target string) (users.Issuer, error) {
-	grpcConn, err := grpc.Dial(target)
+	grpcConn, err := grpc.Dial(target, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
