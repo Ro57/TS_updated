@@ -7,7 +7,6 @@ import (
 	"testing"
 	address2 "token-strike/internal/types/address"
 
-
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 	"token-strike/internal/types/pkt"
@@ -28,9 +27,8 @@ var (
 	alicePrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
 	aliceAddress    = address.NewSimpleAddress(alicePrivateKey.GetPublicKey())
 
-	bobPrivateKey               = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
-	bobAddress                  = address.NewSimpleAddress(bobPrivateKey.GetPublicKey())
-	activePktChain pkt.PktChain = &pktchain.SimplePktChain{}
+	bobPrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
+	bobAddress    = address.NewSimpleAddress(bobPrivateKey.GetPublicKey())
 )
 
 const (
@@ -39,7 +37,11 @@ const (
 )
 
 // creating additional variables
-var ()
+var (
+	http                                       = "0.0.0.0:3333"
+	activePktChain      pkt.PktChain           = &pktchain.SimplePktChain{}
+	activeAddressScheme address2.AddressScheme = &address.SimpleAddressScheme{}
+)
 
 func TestAllFunctionsNew(t *testing.T) {
 	// initialization the database
@@ -66,9 +68,9 @@ func TestAllFunctionsNew(t *testing.T) {
 	}()
 
 	cfg := &config.Config{
-		Scheme: &address.SimpleAddressScheme{},
 		DB:     tokendb,
 		Chain:  activePktChain,
+		Scheme: activeAddressScheme,
 	}
 
 	issuer, err := issuer.CreateIssuer(cfg, isaacPrivateKey, httpIsaac)
