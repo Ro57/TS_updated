@@ -18,6 +18,7 @@ func (s SimpleWallet) DiscoverToken(tokenID string) error {
 	if err != nil {
 		return err
 	}
+
 	if tokenStatus == nil {
 		return errors.New("token not found")
 	}
