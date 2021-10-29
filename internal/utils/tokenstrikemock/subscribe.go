@@ -15,14 +15,24 @@ func (t *TokenStrikeMock) Subscribe(empty *empty.Empty, server tokenstrike.Token
 }
 
 func (t *TokenStrikeMock) sendDataToSubscribers(msg *tokenstrike.Data) error {
-	var genError error
+	var genError = []error{}
 
 	for i, peer := range t.peers {
 		err := peer.Send(msg)
 		if err != nil {
-			genError = fmt.Errorf("%v : %s /n %s", i, err, genError)
+			genError = append(genError, fmt.Errorf("%v : %v /n", i, err))
 		}
 	}
 
-	return genError
+	if len(genError) > 0 {
+		err := genError[0]
+
+		for i, e := range genError[1:] {
+			err = fmt.Errorf("%v/n %v : %v", err, i, e)
+		}
+
+		return err
+	}
+
+	return nil
 }

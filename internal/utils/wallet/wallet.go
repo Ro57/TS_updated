@@ -14,7 +14,6 @@ import (
 
 	empty "github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 type SimpleWallet struct {
@@ -23,7 +22,6 @@ type SimpleWallet struct {
 	pkt            pktchain.SimplePktChain
 	scheme         address.SimpleAddressScheme
 	db             database.DBRepository
-	invEvents      tokenstrike.TokenStrike_SubscribeClient
 	invClient      tokenstrike.TokenStrikeClient
 	issuerInvSlice []tokenstrike.TokenStrikeClient
 	subChannel     tokenstrike.TokenStrike_SubscribeClient
@@ -53,11 +51,6 @@ func CreateWallet(cfg config.Config, pk address2.PrivateKey, http string, issuer
 	}
 	walletAddress := address.NewSimpleAddress(pk.GetPublicKey())
 
-	events, err := invClient.Subscribe(context.Background(), &emptypb.Empty{})
-	if err != nil {
-		return nil, err
-	}
-
 	pkt, ok := cfg.Chain.(*pktchain.SimplePktChain)
 	if !ok {
 		return nil, errors.New("pkt type incorrect")
@@ -73,23 +66,25 @@ func CreateWallet(cfg config.Config, pk address2.PrivateKey, http string, issuer
 		return nil, err
 	}
 
-	return &SimpleWallet{
+	wallet := &SimpleWallet{
 		address:        walletAddress,
 		privateKey:     pk,
 		pkt:            *pkt,
 		scheme:         *scheme,
 		db:             cfg.DB,
-		invEvents:      events,
 		invClient:      invClient,
 		subChannel:     subChannel,
 		issuerInvSlice: issuerClients,
-	}, nil
+	}
 
+	go wallet.eventsHandler()
+
+	return wallet, nil
 }
 
-func (s SimpleWallet) selectEvent(events tokenstrike.TokenStrike_SubscribeClient) error {
+func (s *SimpleWallet) eventsHandler() error {
 	for {
-		data, err := events.Recv()
+		data, err := s.subChannel.Recv()
 		if err == io.EOF {
 			return nil
 		}
