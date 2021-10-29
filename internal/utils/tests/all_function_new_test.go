@@ -85,7 +85,7 @@ func TestAllFunctionsNew(t *testing.T) {
 		t.Error(err)
 	}
 
-	transferHash, err := alice.SendTokens(tokenID, lockID, "")
+	transferHash, err := alice.SendTokens(tokenID, lockID, []byte(""))
 	if err != nil {
 		t.Error(err)
 	}
