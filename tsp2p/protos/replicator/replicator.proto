@@ -30,8 +30,6 @@ service Replicator {
 
     rpc GetIssuerTokens(GetIssuerTokensRequest) returns (GetIssuerTokensResponse);
 
-
-
     // GetTokenList — return list of issued token with infomation about
     // expiration time and fix price.
     rpc GetTokenList(GetTokenListRequest)

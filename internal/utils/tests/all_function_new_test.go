@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 	"testing"
-	"time"
 	address2 "token-strike/internal/types/address"
 
 	"token-strike/internal/database"
@@ -39,7 +38,6 @@ const (
 
 // creating additional variables
 var (
-	http                                       = "0.0.0.0:3333"
 	activePktChain      pkt.PktChain           = &pktchain.SimplePktChain{}
 	activeAddressScheme address2.AddressScheme = &address.SimpleAddressScheme{}
 )
@@ -67,8 +65,6 @@ func TestAllFunctionsNew(t *testing.T) {
 			t.Error(err)
 		}
 	}()
-
-	time.Sleep(1 * time.Second)
 
 	cfg := &config.Config{
 		DB:     tokendb,
