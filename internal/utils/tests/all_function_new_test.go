@@ -1,10 +1,13 @@
 package utils_test
 
 import (
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"math"
+	"math/rand"
 	"testing"
+	"time"
 	address2 "token-strike/internal/types/address"
 
 	"token-strike/internal/database"
@@ -51,6 +54,12 @@ func TestAllFunctionsNew(t *testing.T) {
 	defer closeDB(db, t)
 
 	tokendb := repository.NewBbolt(db)
+
+	randomSecret := make([]byte, 32)
+	rand.Seed(time.Now().UnixNano())
+	rand.Read(randomSecret)
+	htlcFL := sha256.Sum256(randomSecret)
+	htlcSL := sha256.Sum256(htlcFL[:])
 
 	go func() {
 		err = tokenstrikemock.NewServer(tokendb, isaacAddress, httpIsaac)
@@ -103,13 +112,13 @@ func TestAllFunctionsNew(t *testing.T) {
 		TokenId:    tokenID,
 		Amount:     3,
 		Recipient:  bobAddress.String(),
-		SecretHash: "",
+		SecretHash: hex.EncodeToString(htlcSL[:]),
 	})
 	if err != nil {
 		t.Error(err)
 	}
 
-	transferHash, err := alice.SendTokens(tokenID, lockID, []byte(""))
+	transferHash, err := alice.SendTokens(tokenID, lockID, randomSecret)
 	if err != nil {
 		t.Error(err)
 	}

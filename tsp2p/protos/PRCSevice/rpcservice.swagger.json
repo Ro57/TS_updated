@@ -1,0 +1,95 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "protos/PRCSevice/rpcservice.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {},
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "rpcserviceIssueTokenResponse": {
+      "type": "object",
+      "properties": {
+        "token_id": {
+          "type": "string",
+          "title": "token_id — hash of token struct"
+        }
+      },
+      "title": "IssueTokenResponse contain token id for access to it"
+    },
+    "rpcserviceLockTokenResponse": {
+      "type": "object",
+      "properties": {
+        "lock_id": {
+          "type": "string",
+          "title": "lock_id — hash of lock"
+        }
+      },
+      "title": "LockTokenResponse response with hash of lock"
+    },
+    "rpcserviceTransferTokensResponse": {
+      "type": "object",
+      "properties": {
+        "txid": {
+          "type": "string",
+          "format": "byte",
+          "title": "txid — hash of transaction information"
+        }
+      },
+      "title": "TransferTokensResponse — contain transaction id"
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "tokendbOwner": {
+      "type": "object",
+      "properties": {
+        "holder_wallet": {
+          "type": "string",
+          "title": "holder_wallet — hash of wallet address of holder"
+        },
+        "count": {
+          "type": "string",
+          "format": "int64",
+          "title": "count — number of tokens held on wallet"
+        }
+      },
+      "title": "Owner contains information about the holders' wallets and their balances"
+    }
+  }
+}

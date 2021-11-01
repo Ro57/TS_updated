@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package rpcservice;
+
+option go_package = "token-strike/tsp2p/server/rpcservice";
+
+import "google/protobuf/empty.proto";
+import "protos/DB/tokendb.proto";
+
+// RPCService describes the interface that will be implemented for replication,
+// wallet and issuer nodes.
+service RPCService {
+    // SendToken — send token to other holder
+    rpc SendToken(TransferTokensRequest) returns (TransferTokensResponse);
+
+    // IssueToken — Issue new token with given expiration data 
+    // sand return tokenID.
+    rpc IssueToken(IssueTokenRequest)
+        returns (IssueTokenResponse);
+
+    // LockToken — Return hash of lock token for verify htlc and information
+    // about transaction
+    rpc LockToken(LockTokenRequest)
+        returns(LockTokenResponse);
+}
+
+// TransferTokensRequest contain information about sending transaction
+message TransferTokensRequest {
+    // token — token name
+    string token = 1;
+    // lock — hash of locked tokens
+    bytes lock = 2;
+    // htlc — funds transfer contract generated in lightning network
+    bytes htlc = 3; 
+}
+
+// TransferTokensResponse — contain transaction id
+message TransferTokensResponse {
+    // txid — hash of transaction information
+    bytes txid = 1;
+}
+
+// IssueTokenRequest contains a list of owners and the number of pkt blocks 
+// before the token expires
+message IssueTokenRequest {
+    // owners - contains information about all token holders, 
+    // the number of tokens is the sum of all tokens of the owners
+    repeated tokendb.Owner owners = 1;
+    // expiration — number of PKT block after which the token expires
+    int32 expiration = 2;
+}
+
+// IssueTokenResponse contain token id for access to it
+message IssueTokenResponse {
+    // token_id — hash of token struct
+    string token_id = 1;
+}
+
+// LockTokenRequest send information about token
+message LockTokenRequest {
+    // token_id — hash of token struct
+    string token_id = 1;
+    // amount of locked token
+    uint64 amount = 2;
+    // recipient — token holder address 
+    string recipient = 3;
+    // secret_hash — hash of htlc
+    string secret_hash = 4;
+}
+
+// LockTokenResponse response with hash of lock 
+message LockTokenResponse {
+    // lock_id — hash of lock
+    string lock_id = 1;
+}
+
+
