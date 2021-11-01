@@ -1,7 +1,6 @@
 package config
 
 import (
-	"token-strike/internal/database"
 	address2 "token-strike/internal/types/address"
 	"token-strike/internal/types/pkt"
 	"token-strike/internal/utils/address"
@@ -11,7 +10,6 @@ import (
 type Config struct {
 	Scheme address2.AddressScheme
 	Chain  pkt.PktChain
-	DB     database.DBRepository
 }
 
 func DefaultSimpleConfig() Config {
