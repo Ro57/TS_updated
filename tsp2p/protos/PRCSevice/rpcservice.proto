@@ -6,6 +6,7 @@ option go_package = "token-strike/tsp2p/server/rpcservice";
 
 import "google/protobuf/empty.proto";
 import "protos/DB/tokendb.proto";
+import "protos/tokenstrike/tokenstrike.proto";
 
 // RPCService describes the interface that will be implemented for replication,
 // wallet and issuer nodes.
@@ -22,6 +23,19 @@ service RPCService {
     // about transaction
     rpc LockToken(LockTokenRequest)
         returns(LockTokenResponse);
+    
+    // AddPeer append new peer to peer slice
+    rpc AddPeer (PeerRequest) returns (google.protobuf.Empty);
+
+    // Inv — send meta information to token strike
+    rpc Inv(tokenstrike.InvReq) returns (tokenstrike.InvResp);
+
+    // PostData — send full data to replication
+    rpc PostData(tokenstrike.Data) returns (tokenstrike.PostDataResp);
+    
+    // GetTokenStatus — response with information about token
+    rpc GetTokenStatus(tokenstrike.TokenStatusReq) 
+        returns (tokenstrike.TokenStatus);
 }
 
 // TransferTokensRequest contain information about sending transaction
@@ -74,4 +88,8 @@ message LockTokenResponse {
     string lock_id = 1;
 }
 
-
+// PeerRequest contain url with host 
+message PeerRequest {
+    // url for rpc connection
+    string url = 1;
+}
