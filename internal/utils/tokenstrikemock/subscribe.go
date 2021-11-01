@@ -2,8 +2,9 @@ package tokenstrikemock
 
 import (
 	"fmt"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	"token-strike/tsp2p/server/tokenstrike"
+
+	empty "github.com/golang/protobuf/ptypes/empty"
 )
 
 func (t *TokenStrikeMock) Subscribe(empty *empty.Empty, server tokenstrike.TokenStrike_SubscribeServer) error {
@@ -11,6 +12,9 @@ func (t *TokenStrikeMock) Subscribe(empty *empty.Empty, server tokenstrike.Token
 		t.peers = []tokenstrike.TokenStrike_SubscribeServer{}
 	}
 	t.peers = append(t.peers, server)
+
+	<-server.Context().Done()
+
 	return nil
 }
 
