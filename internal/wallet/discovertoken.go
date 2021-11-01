@@ -8,7 +8,7 @@ import (
 
 const emptyIssue = "empty issue url collection"
 
-func (s SimpleWallet) DiscoverToken(tokenID string) error {
+func (s Server) DiscoverToken(tokenID string) error {
 
 	req := &tokenstrike.TokenStatusReq{
 		Tokenid: tokenID,

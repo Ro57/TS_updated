@@ -85,7 +85,7 @@ message LockTokenRequest {
 // LockTokenResponse response with hash of lock 
 message LockTokenResponse {
     // lock_id — hash of lock
-    string lock_id = 1;
+    bytes lock_id = 1;
 }
 
 // PeerRequest contain url with host 
