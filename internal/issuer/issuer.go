@@ -21,10 +21,9 @@ import (
 var _ rpcservice.RPCServiceServer = &Issuer{}
 
 type Issuer struct {
-	config     *config.Config
-	tokendb    database.DBRepository
-	invServer  *tokenstrikemock.TokenStrikeMock
-	subChannel tokenstrike.TokenStrike_SubscribeClient
+	config    *config.Config
+	tokendb   database.DBRepository
+	invServer *tokenstrikemock.TokenStrikeMock
 
 	private address2.PrivateKey
 	address address2.Address
