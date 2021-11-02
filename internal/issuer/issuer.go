@@ -5,6 +5,8 @@ import (
 	"errors"
 	"flag"
 	"net"
+	"token-strike/internal/database"
+	"token-strike/internal/database/repository"
 
 	address2 "token-strike/internal/types/address"
 	"token-strike/internal/utils/address"
@@ -21,6 +23,7 @@ var _ rpcservice.RPCServiceServer = &Issuer{}
 
 type Issuer struct {
 	config     *config.Config
+	tokendb    *repository.Bbolt
 	invServer  *tokenstrikemock.TokenStrikeMock
 	subChannel tokenstrike.TokenStrike_SubscribeClient
 
@@ -29,7 +32,7 @@ type Issuer struct {
 	peers   []string
 }
 
-func NewServer(cfg *config.Config, pk address2.PrivateKey, target string) error {
+func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address2.PrivateKey, target string) error {
 	flag.Parse()
 
 	lis, err := net.Listen("tcp", target)
@@ -39,7 +42,7 @@ func NewServer(cfg *config.Config, pk address2.PrivateKey, target string) error 
 
 	grpcServer := grpc.NewServer()
 
-	issuerImpl, err := CreateIssuer(cfg, pk)
+	issuerImpl, err := CreateIssuer(cfg, tokendb, pk)
 	if err != nil {
 		return err
 	}
@@ -48,8 +51,8 @@ func NewServer(cfg *config.Config, pk address2.PrivateKey, target string) error 
 	return grpcServer.Serve(lis)
 }
 
-func CreateIssuer(cfg *config.Config, pk address2.PrivateKey) (*Issuer, error) {
-	invServer := tokenstrikemock.New(cfg.DB, address.NewSimpleAddress(pk.GetPublicKey()))
+func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2.PrivateKey) (*Issuer, error) {
+	invServer := tokenstrikemock.New(tokendb, address.NewSimpleAddress(pk.GetPublicKey()))
 	issuer := &Issuer{
 		private:   pk,
 		address:   address.NewSimpleAddress(pk.GetPublicKey()),
