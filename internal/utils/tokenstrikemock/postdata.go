@@ -52,6 +52,20 @@ func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err 
 		return nil, err
 	}
 
+	blockBytes, err := proto.Marshal(block)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenID := t.getTokenID(blockBytes)
+
+	if block.Justifications == nil {
+		t.bboltDB.SaveBlock(tokenID, block)
+		return nil, nil
+	}
+
+	t.bboltDB.ApplyJustification(tokenID, block.Justifications[0])
+
 	return nil, nil
 }
 

@@ -24,11 +24,11 @@ func (t *TokenStrikeMock) Inv(ctx context.Context, req *tokenstrike.InvReq) (*to
 
 func (t *TokenStrikeMock) selectNeeded(inv *tokenstrike.Inv) bool {
 	entity := hex.EncodeToString(inv.EntityHash)
-	parent := hex.EncodeToString(inv.Parent)
+	// parent := hex.EncodeToString(inv.Parent)
 
-	if !t.isStoreToken(parent) {
-		return DontNeedData
-	}
+	// if !t.isStoreToken(parent) {
+	// 	return DontNeedData
+	// }
 
 	if _, ok := t.invCache[entity]; ok {
 		return DontNeedData
