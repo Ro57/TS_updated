@@ -4,7 +4,6 @@ package tokenstrike;
 
 option go_package = "token-strike/tsp2p/server/tokenstrike";
 
-import "google/protobuf/empty.proto";
 import "protos/DB/tokendb.proto";
 import "protos/lock/lock.proto";
 
@@ -19,8 +18,6 @@ service TokenStrike {
     // GetTokenStatus — response with information about token
     rpc GetTokenStatus(TokenStatusReq) returns (TokenStatus);
 
-    // Subscribe — get chan to send data from inv
-    rpc Subscribe(google.protobuf.Empty) returns (stream Data);
 }
 
 // InvReq — meta information about data 
