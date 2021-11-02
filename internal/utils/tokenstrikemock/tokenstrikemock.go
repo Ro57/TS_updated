@@ -13,6 +13,7 @@ const (
 )
 
 type TokenStrikeMock struct {
+	address       address.SimpleAddress
 	bboltDB       database.DBRepository
 	pktChain      pktchain.SimplePktChain
 	addressScheme address.SimpleAddressScheme
@@ -21,11 +22,12 @@ type TokenStrikeMock struct {
 
 var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
 
-func New(db database.DBRepository) *TokenStrikeMock {
+func New(db database.DBRepository, simpleAddress address.SimpleAddress) *TokenStrikeMock {
 	return &TokenStrikeMock{
 		bboltDB:       db,
 		pktChain:      pktchain.SimplePktChain{},
 		addressScheme: address.SimpleAddressScheme{},
 		invCache:      make(map[string]tokenstrike.Inv),
+		address:       simpleAddress,
 	}
 }
