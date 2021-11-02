@@ -113,7 +113,7 @@ func (t TokenStrikeMock) validateLockIssuer(lock lock.Lock) error {
 		return err
 	}
 
-	tokenSlice := issuerStore[t.issuer.String()]
+	tokenSlice := issuerStore[t.address.String()]
 
 	if !isContainToken(tokenID, tokenSlice) {
 		return errors.New("token not in storage")

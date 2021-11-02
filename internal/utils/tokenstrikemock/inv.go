@@ -46,7 +46,7 @@ func (t TokenStrikeMock) isStoreToken(token string) bool {
 		return false
 	}
 
-	tokenSlice := issuerTokens.GetToken(t.issuer.String())
+	tokenSlice := issuerTokens.GetToken(t.address.String())
 
 	for _, t := range tokenSlice {
 		if t == token {
