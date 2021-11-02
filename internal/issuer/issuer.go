@@ -41,7 +41,7 @@ func NewServer(cfg *config.Config, pk address2.PrivateKey, target string) error 
 
 	issuerImpl, err := CreateIssuer(cfg, pk)
 	if err != nil {
-
+		return err
 	}
 
 	rpcservice.RegisterRPCServiceServer(grpcServer, issuerImpl)
@@ -51,9 +51,9 @@ func NewServer(cfg *config.Config, pk address2.PrivateKey, target string) error 
 func CreateIssuer(cfg *config.Config, pk address2.PrivateKey) (*Issuer, error) {
 	invServer := tokenstrikemock.New(cfg.DB, address.NewSimpleAddress(pk.GetPublicKey()))
 	issuer := &Issuer{
-		private: pk,
-		address: address.NewSimpleAddress(pk.GetPublicKey()),
-
+		private:   pk,
+		address:   address.NewSimpleAddress(pk.GetPublicKey()),
+		peers:     make([]string, 0),
 		config:    cfg,
 		invServer: invServer,
 	}
