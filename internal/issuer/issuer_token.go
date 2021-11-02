@@ -116,11 +116,6 @@ func (i *Issuer) sendBlock(tokenID string, blockHash [32]byte, block *DB.Block) 
 					if err != nil {
 						genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
 					}
-
-					err = i.tokendb.ApplyJustification(tokenID, block.Justifications[0])
-					if err != nil {
-						genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
-					}
 				}
 			}
 		}
