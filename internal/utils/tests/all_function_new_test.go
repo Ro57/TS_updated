@@ -79,13 +79,15 @@ func TestAllFunctionsNew(t *testing.T) {
 			t.Error(err)
 		}
 	}()
+
 	time.Sleep(1 * time.Second)
+
 	issuer, err := issuerNew.CreateClient(httpIsaac, "asd")
 	if err != nil {
 		t.Error(err)
 	}
 
-	alice, err := wallet.CreateClient(httpAlice, "asd")
+	alice, err := wallet.CreateClient(httpAlice, httpIsaac)
 	if err != nil {
 		t.Error(err)
 	}
