@@ -49,7 +49,7 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		},
 	}
 
-	resp, err := s.issuerInvSlice[0].Inv(context.TODO(), &tokenstrike.InvReq{
+	resp, err := s.issuerInvSlice[0].Inv(context.Background(), &tokenstrike.InvReq{
 		Invs: invs,
 	})
 
@@ -69,7 +69,9 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 				if err != nil {
 					return nil, err
 				}
+				s.db.LockToken(req.TokenId, lockEl)
 			}
+
 		}
 	}
 

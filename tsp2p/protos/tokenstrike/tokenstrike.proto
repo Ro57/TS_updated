@@ -17,7 +17,6 @@ service TokenStrike {
   
     // GetTokenStatus — response with information about token
     rpc GetTokenStatus(TokenStatusReq) returns (TokenStatus);
-
 }
 
 // InvReq — meta information about data 

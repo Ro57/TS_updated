@@ -20,6 +20,7 @@ type SaveRepository interface {
 	SaveIssuerTokenDB(name string, issuer string) error
 	AssemblyBlock(name string, justifications []*DB.Justification) (*DB.Block, error)
 	IssueTokenDB(name string, offer *DB.Token, block *DB.Block, state *DB.State) error
+
 	// TODO: rework this method. Get justification array and apply all
 	ApplyJustification(tokenID string, justification *DB.Justification) error
 }

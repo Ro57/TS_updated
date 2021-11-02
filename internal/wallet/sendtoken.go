@@ -55,6 +55,8 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 				if err != nil {
 					return nil, err
 				}
+
+				s.db.TransferTokens(req.Token, hex.EncodeToString(req.Lock))
 			}
 		}
 	}
