@@ -3,6 +3,8 @@ package wallet
 import (
 	"context"
 	"errors"
+	"flag"
+	"net"
 	"token-strike/internal/database"
 	addressTypes "token-strike/internal/types/address"
 	"token-strike/internal/utils/address"
@@ -26,7 +28,26 @@ type Server struct {
 
 var _ rpcservice.RPCServiceServer = &Server{}
 
-func CreateWallet(db database.DBRepository, pk addressTypes.PrivateKey, peerUrl string, issuerUrlHints []string) (*Server, error) {
+func NewServer(db database.DBRepository, pk addressTypes.PrivateKey, target string, issuerUrlHints []string) error {
+	flag.Parse()
+
+	lis, err := net.Listen("tcp", target)
+	if err != nil {
+		return err
+	}
+
+	grpcServer := grpc.NewServer()
+
+	walletImpl, err := CreateWallet(db, target, pk, issuerUrlHints)
+	if err != nil {
+		return err
+	}
+
+	rpcservice.RegisterRPCServiceServer(grpcServer, walletImpl)
+	return grpcServer.Serve(lis)
+}
+
+func CreateWallet(db database.DBRepository, peerUrl string, pk addressTypes.PrivateKey, issuerUrlHints []string) (*Server, error) {
 	if issuerUrlHints == nil {
 		return nil, errors.New("issuer url collection empty")
 	}
@@ -68,7 +89,11 @@ func getClients(peerUrl string, issuerUrls []string) (issuerSlice []rpcservice.R
 		}
 
 		client := rpcservice.NewRPCServiceClient(conn)
-		client.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: peerUrl})
+
+		_, err = client.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: peerUrl})
+		if err != nil {
+			return nil, err
+		}
 
 		issuerSlice = append(issuerSlice, client)
 	}
