@@ -4,15 +4,16 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
 
 	"github.com/golang/protobuf/proto"
 )
 
-func (s *SimpleWallet) SendTokens(tokenId string, lockId []byte, secretHex []byte) ([]byte, error) {
+func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRequest) (*rpcservice.TransferTokensResponse, error) {
 	transferTokens := &tokenstrike.TransferTokens{
-		Htlc: secretHex[:],
-		Lock: lockId[:],
+		Htlc: req.Htlc,
+		Lock: req.Lock,
 	}
 
 	transferTokensB, err := proto.Marshal(transferTokens)
@@ -22,7 +23,7 @@ func (s *SimpleWallet) SendTokens(tokenId string, lockId []byte, secretHex []byt
 
 	transferTokensHash := sha256.Sum256(transferTokensB)
 
-	blockHash, err := hex.DecodeString(tokenId)
+	blockHash, err := hex.DecodeString(req.Token)
 	if err != nil {
 		return nil, err
 	}
@@ -58,5 +59,5 @@ func (s *SimpleWallet) SendTokens(tokenId string, lockId []byte, secretHex []byt
 		}
 	}
 
-	return transferTokensHash[:], nil
+	return &rpcservice.TransferTokensResponse{Txid: transferTokensHash[:]}, nil
 }

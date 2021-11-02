@@ -4,20 +4,20 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
-	"token-strike/internal/types/users"
 	"token-strike/tsp2p/server/lock"
+	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
 
 	"github.com/golang/protobuf/proto"
 )
 
-func (s SimpleWallet) LockTokens(args users.LockArgs) ([]byte, error) {
+func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest) (*rpcservice.LockTokenResponse, error) {
 	//populate lock with special data todo check the addresses
 	lockEl := &lock.Lock{
 		Count:          3,
-		Recipient:      args.GetRecipient(),
+		Recipient:      req.GetRecipient(),
 		Sender:         s.address.String(),
-		HtlcSecretHash: args.GetSecretHash(),
+		HtlcSecretHash: req.GetSecretHash(),
 		ProofCount:     s.pkt.CurrentHeight() + 60,
 		PktBlockHash:   s.pkt.BlockHashAtHeight(s.pkt.CurrentHeight()),
 		PktBlockHeight: uint32(s.pkt.CurrentHeight()),
@@ -36,7 +36,7 @@ func (s SimpleWallet) LockTokens(args users.LockArgs) ([]byte, error) {
 
 	lockHash := sha256.Sum256(lockSigned)
 
-	blockHash, err := hex.DecodeString(args.GetTokenId())
+	blockHash, err := hex.DecodeString(req.GetTokenId())
 	if err != nil {
 		return nil, err
 	}
@@ -73,5 +73,5 @@ func (s SimpleWallet) LockTokens(args users.LockArgs) ([]byte, error) {
 		}
 	}
 
-	return lockHash[:], nil
+	return &rpcservice.LockTokenResponse{LockId: lockHash[:]}, nil
 }

@@ -129,6 +129,7 @@
       "properties": {
         "lock_id": {
           "type": "string",
+          "format": "byte",
           "title": "lock_id — hash of lock"
         }
       },
