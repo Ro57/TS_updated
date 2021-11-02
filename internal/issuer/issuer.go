@@ -42,11 +42,6 @@ func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) 
 	}
 
 	client := rpcservice.NewRPCServiceClient(conn)
-	_, err = client.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: selfAddr})
-	if err != nil {
-		return nil, err
-	}
-
 	return client, nil
 }
 
