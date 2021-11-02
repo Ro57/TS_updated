@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -8,18 +9,17 @@ import (
 	"math/rand"
 	"testing"
 	"time"
-	address2 "token-strike/internal/types/address"
-
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
+	issuerNew "token-strike/internal/issuer"
+	address2 "token-strike/internal/types/address"
 	"token-strike/internal/types/pkt"
 	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/config"
-	"token-strike/internal/utils/issuer"
 	"token-strike/internal/utils/pktchain"
-	"token-strike/internal/utils/tokenstrikemock"
-	"token-strike/internal/utils/wallet"
+	"token-strike/internal/wallet"
 	"token-strike/tsp2p/server/DB"
+	"token-strike/tsp2p/server/rpcservice"
 )
 
 // creating keys
@@ -61,69 +61,80 @@ func TestAllFunctionsNew(t *testing.T) {
 	htlcFL := sha256.Sum256(randomSecret)
 	htlcSL := sha256.Sum256(htlcFL[:])
 
-	go func() {
-		err = tokenstrikemock.NewServer(tokendb, isaacAddress, httpIsaac)
-		if err != nil {
-			t.Error(err)
-		}
-	}()
-
-	go func() {
-		err = tokenstrikemock.NewServer(tokendb, isaacAddress, httpAlice)
-		if err != nil {
-			t.Error(err)
-		}
-	}()
-
 	cfg := &config.Config{
-		DB:     tokendb,
 		Chain:  activePktChain,
 		Scheme: activeAddressScheme,
 	}
 
-	issuer, err := issuer.CreateIssuer(cfg, isaacPrivateKey, httpIsaac)
+	go func() {
+		err = issuerNew.NewServer(cfg, tokendb, isaacPrivateKey, httpIsaac)
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+
+	go func() {
+		err = wallet.NewServer(tokendb, alicePrivateKey, httpAlice, []string{httpIsaac})
+		if err != nil {
+			t.Error(err)
+		}
+	}()
+	time.Sleep(1 * time.Second)
+	issuer, err := issuerNew.CreateClient(httpIsaac, "asd")
 	if err != nil {
 		t.Error(err)
 	}
 
-	alice, err := wallet.CreateWallet(*cfg, alicePrivateKey, httpAlice, []string{httpIsaac})
+	alice, err := wallet.CreateClient(httpAlice, "asd")
 	if err != nil {
 		t.Error(err)
 	}
 
 	tokenID, err := issuer.IssueToken(
-		[]*DB.Owner{
-			{
-				HolderWallet: aliceAddress.String(),
-				Count:        6,
+		context.Background(),
+		&rpcservice.IssueTokenRequest{
+			Owners: []*DB.Owner{
+				{
+					HolderWallet: aliceAddress.String(),
+					Count:        6,
+				},
+				{
+					HolderWallet: bobAddress.String(),
+					Count:        4,
+				},
 			},
-			{
-				HolderWallet: bobAddress.String(),
-				Count:        4,
-			},
+
+			Expiration: math.MaxInt32,
 		},
-		math.MaxInt32,
 	)
 	if err != nil {
 		t.Error(err)
 	}
 
-	lockID, err := alice.LockTokens(config.LockArgs{
-		TokenId:    tokenID,
-		Amount:     3,
-		Recipient:  bobAddress.String(),
-		SecretHash: hex.EncodeToString(htlcSL[:]),
-	})
+	lockID, err := alice.LockToken(
+		context.Background(),
+		&rpcservice.LockTokenRequest{
+			TokenId:    tokenID.TokenId,
+			Amount:     3,
+			Recipient:  bobAddress.String(),
+			SecretHash: hex.EncodeToString(htlcSL[:]),
+		})
 	if err != nil {
 		t.Error(err)
 	}
 
-	transferHash, err := alice.SendTokens(tokenID, lockID, randomSecret)
+	transferHash, err := alice.SendToken(
+		context.Background(),
+		&rpcservice.TransferTokensRequest{
+			Token: tokenID.TokenId,
+			Lock:  lockID.LockId,
+			Htlc:  randomSecret,
+		})
 	if err != nil {
 		t.Error(err)
 	}
 
-	fmt.Println(hex.EncodeToString(transferHash))
+	fmt.Println(hex.EncodeToString(transferHash.Txid))
 }
 
 func closeDB(db *database.TokenStrikeDB, t *testing.T) {

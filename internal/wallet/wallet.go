@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"net"
+
 	"token-strike/internal/database"
 	addressTypes "token-strike/internal/types/address"
 	"token-strike/internal/utils/address"
@@ -27,6 +28,25 @@ type Server struct {
 }
 
 var _ rpcservice.RPCServiceServer = &Server{}
+
+func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) {
+	conn, err := grpc.DialContext(
+		context.TODO(),
+		target,
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client := rpcservice.NewRPCServiceClient(conn)
+	_, err = client.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: selfAddr})
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
 
 func NewServer(db database.DBRepository, pk addressTypes.PrivateKey, target string, issuerUrlHints []string) error {
 	flag.Parse()
