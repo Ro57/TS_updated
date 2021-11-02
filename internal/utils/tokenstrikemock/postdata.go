@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	tokenErrors "token-strike/internal/errors"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/tokenstrike"
@@ -60,7 +61,7 @@ func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err 
 	tokenID := t.getTokenID(blockBytes)
 
 	if block.Justifications == nil {
-		t.bboltDB.SaveBlock(tokenID, block)
+
 		return nil, nil
 	}
 
@@ -342,7 +343,7 @@ func getLock(lockHash []byte, lockSlice []*lock.Lock) (*lock.Lock, error) {
 		}
 	}
 
-	return nil, errors.New("lock not found")
+	return nil, tokenErrors.LockNotFoundErr
 }
 
 func isLockExist(lockHash []byte, lockSlice []*lock.Lock) bool {

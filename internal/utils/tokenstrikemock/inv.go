@@ -26,6 +26,7 @@ func (t *TokenStrikeMock) selectNeeded(inv *tokenstrike.Inv) bool {
 	entity := hex.EncodeToString(inv.EntityHash)
 	// parent := hex.EncodeToString(inv.Parent)
 
+	// TODO: check only for issuer
 	// if !t.isStoreToken(parent) {
 	// 	return DontNeedData
 	// }
