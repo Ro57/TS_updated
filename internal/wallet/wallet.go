@@ -3,7 +3,6 @@ package wallet
 import (
 	"context"
 	"errors"
-	"flag"
 	"net"
 
 	"token-strike/internal/database"
@@ -40,17 +39,10 @@ func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) 
 	}
 
 	client := rpcservice.NewRPCServiceClient(conn)
-	_, err = client.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: selfAddr})
-	if err != nil {
-		return nil, err
-	}
-
 	return client, nil
 }
 
 func NewServer(db database.DBRepository, pk addressTypes.PrivateKey, target string, issuerUrlHints []string) error {
-	flag.Parse()
-
 	lis, err := net.Listen("tcp", target)
 	if err != nil {
 		return err

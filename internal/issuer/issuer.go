@@ -3,7 +3,6 @@ package issuer
 import (
 	"context"
 	"errors"
-	"flag"
 	"net"
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
@@ -23,7 +22,7 @@ var _ rpcservice.RPCServiceServer = &Issuer{}
 
 type Issuer struct {
 	config     *config.Config
-	tokendb    *repository.Bbolt
+	tokendb    database.DBRepository
 	invServer  *tokenstrikemock.TokenStrikeMock
 	subChannel tokenstrike.TokenStrike_SubscribeClient
 
@@ -52,8 +51,6 @@ func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) 
 }
 
 func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address2.PrivateKey, target string) error {
-	flag.Parse()
-
 	lis, err := net.Listen("tcp", target)
 	if err != nil {
 		return err
@@ -78,6 +75,7 @@ func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2
 		peers:     make([]string, 0),
 		config:    cfg,
 		invServer: invServer,
+		tokendb:   tokendb,
 	}
 
 	return issuer, nil
@@ -85,16 +83,16 @@ func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2
 func (i *Issuer) AddPeer(ctx context.Context, request *rpcservice.PeerRequest) (*empty.Empty, error) {
 	if request.Url != "" {
 		i.peers = append(i.peers, request.Url)
-		return nil, nil
+		return &empty.Empty{}, nil
 	}
-	return nil, errors.New("url cannot is empty")
+	return &empty.Empty{}, errors.New("url cannot is empty")
 }
 
 func (i *Issuer) SendToken(ctx context.Context, req *rpcservice.TransferTokensRequest) (*rpcservice.TransferTokensResponse, error) {
-	panic("implement me")
+	return &rpcservice.TransferTokensResponse{}, nil
 }
 func (i *Issuer) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest) (*rpcservice.LockTokenResponse, error) {
-	panic("implement me")
+	return &rpcservice.LockTokenResponse{}, nil
 }
 func (i *Issuer) PostData(ctx context.Context, req *tokenstrike.Data) (*tokenstrike.PostDataResp, error) {
 	return i.invServer.PostData(ctx, req)

@@ -10,5 +10,5 @@ import (
 
 // AddPeer append new peer to peer slice
 func (s Server) IssueToken(context.Context, *rpcservice.IssueTokenRequest) (*rpcservice.IssueTokenResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "not implement now")
+	return &rpcservice.IssueTokenResponse{}, status.Error(codes.Unimplemented, "not implement now")
 }
