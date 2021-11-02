@@ -50,7 +50,7 @@ func CreateWallet(db database.DBRepository, pk addressTypes.PrivateKey, peerUrl 
 		scheme:         *scheme,
 		db:             db,
 		issuerInvSlice: issuerClients,
-		inv:            tokenstrikemock.New(db),
+		inv:            tokenstrikemock.New(db, walletAddress),
 	}
 
 	return wallet, nil
