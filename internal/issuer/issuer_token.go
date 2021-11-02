@@ -55,12 +55,12 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 	blockHash := sha256.Sum256(blockSigned)
 	tokenID := hex.EncodeToString(blockHash[:])
 
-	err = i.config.DB.SaveIssuerTokenDB(tokenID, i.address.String())
+	err = i.tokendb.SaveIssuerTokenDB(tokenID, i.address.String())
 	if err != nil {
 		return nil, err
 	}
 
 	return &rpcservice.IssueTokenResponse{
 		TokenId: tokenID,
-	}, i.config.DB.IssueTokenDB(tokenID, token, block, state)
+	}, i.tokendb.IssueTokenDB(tokenID, token, block, state)
 }
