@@ -32,6 +32,25 @@ type Issuer struct {
 	peers   []string
 }
 
+func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) {
+	conn, err := grpc.DialContext(
+		context.TODO(),
+		target,
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	client := rpcservice.NewRPCServiceClient(conn)
+	_, err = client.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: selfAddr})
+	if err != nil {
+		return nil, err
+	}
+
+	return client, nil
+}
+
 func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address2.PrivateKey, target string) error {
 	flag.Parse()
 

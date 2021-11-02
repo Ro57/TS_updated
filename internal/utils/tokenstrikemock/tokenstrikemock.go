@@ -20,7 +20,7 @@ type TokenStrikeMock struct {
 	invCache      map[string]tokenstrike.Inv
 }
 
-var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
+//var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
 
 func New(db database.DBRepository, simpleAddress address.SimpleAddress) *TokenStrikeMock {
 	return &TokenStrikeMock{
