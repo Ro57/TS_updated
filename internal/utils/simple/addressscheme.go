@@ -30,5 +30,5 @@ func (s SimpleAddressScheme) ParseAddr(ps string) (address.Address, error) {
 }
 func (s *SimpleAddressScheme) GenerateKey(randomSeed [32]byte) address.PrivateKey {
 	key := ed.NewKeyFromSeed(randomSeed[:])
-	return SimplePrivateKey{Key: key}
+	return SimplePrivateKey{key: key}
 }

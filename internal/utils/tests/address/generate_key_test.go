@@ -108,7 +108,7 @@ func (suite *TestSuite) TestGenerateKey() {
 		suite.Run(tt.name, func() {
 			for i, a := range tt.args {
 				key := suite.addressScheme.GenerateKey(a.seed)
-				wantKey := simple.SimplePrivateKey{Key: tt.wantKeys[i]}
+				wantKey := simple.NewSimplePrivateKey(tt.wantKeys[i])
 
 				tt.want(key.Equal(wantKey), "error in test %v (private) want %v but got %v", tt.name, wantKey, key)
 

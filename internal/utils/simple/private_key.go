@@ -7,15 +7,19 @@ import (
 	"token-strike/internal/types/address"
 )
 
+func NewSimplePrivateKey(key ed.PrivateKey) SimplePrivateKey {
+	return SimplePrivateKey{key: key}
+}
+
 type SimplePrivateKey struct {
-	Key ed.PrivateKey
+	key ed.PrivateKey
 }
 
 var _ address.PrivateKey = &SimplePrivateKey{}
 
 func (p SimplePrivateKey) GetPublicKey() []byte {
 	publicKey := make([]byte, ed.PublicKeySize)
-	copy(publicKey, p.Key[32:])
+	copy(publicKey, p.key[32:])
 	return publicKey
 }
 
@@ -24,17 +28,17 @@ func (p SimplePrivateKey) Equal(private address.PrivateKey) bool {
 	if !ok {
 		return false
 	}
-	return bytes.Equal(simple.Key, p.Key)
+	return bytes.Equal(simple.key, p.key)
 }
 
 func (p SimplePrivateKey) Sign(data []byte) []byte {
-	return ed.Sign(p.Key, data)
+	return ed.Sign(p.key, data)
 }
 
 func (p SimplePrivateKey) Address() address.Address {
 	publicKey := make([]byte, ed.PublicKeySize)
 
-	copy(publicKey, p.Key[32:])
+	copy(publicKey, p.key[32:])
 
 	return newSimpleAddress(publicKey)
 }
