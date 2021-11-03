@@ -1,11 +1,10 @@
-package privkey
+package simple
 
 import (
 	"bytes"
 	ed "crypto/ed25519"
 
 	"token-strike/internal/types/address"
-	simpleAddress "token-strike/internal/utils/address"
 )
 
 type SimplePrivateKey struct {
@@ -37,5 +36,5 @@ func (p SimplePrivateKey) Address() address.Address {
 
 	copy(publicKey, p.Key[32:])
 
-	return simpleAddress.NewSimpleAddress(publicKey)
+	return NewSimpleAddress(publicKey)
 }

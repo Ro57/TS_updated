@@ -1,4 +1,4 @@
-package address
+package simple
 
 import (
 	ed "crypto/ed25519"

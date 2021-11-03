@@ -3,8 +3,8 @@ package config
 import (
 	"token-strike/internal/types/address"
 	"token-strike/internal/types/pkt"
-	addressScheme "token-strike/internal/utils/address_scheme"
 	"token-strike/internal/utils/pktchain"
+	addressScheme "token-strike/internal/utils/simple"
 )
 
 type Config struct {

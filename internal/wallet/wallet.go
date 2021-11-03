@@ -4,11 +4,10 @@ import (
 	"context"
 	"errors"
 	"net"
+	addressScheme "token-strike/internal/utils/simple"
 
 	"token-strike/internal/database"
 	addressTypes "token-strike/internal/types/address"
-	"token-strike/internal/utils/address"
-	addressScheme "token-strike/internal/utils/address_scheme"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/pktchain"
 	"token-strike/internal/utils/tokenstrikemock"
@@ -18,7 +17,7 @@ import (
 )
 
 type Server struct {
-	address        address.SimpleAddress
+	address        addressScheme.SimpleAddress
 	privateKey     addressTypes.PrivateKey
 	pkt            pktchain.SimplePktChain
 	scheme         addressScheme.SimpleAddressScheme
@@ -67,7 +66,7 @@ func CreateWallet(db database.DBRepository, peerUrl string, pk addressTypes.Priv
 
 	cfg := config.DefaultSimpleConfig()
 
-	walletAddress := address.NewSimpleAddress(pk.GetPublicKey())
+	walletAddress := addressScheme.NewSimpleAddress(pk.GetPublicKey())
 
 	pkt := cfg.Chain.(*pktchain.SimplePktChain)
 	scheme := cfg.Scheme.(*addressScheme.SimpleAddressScheme)

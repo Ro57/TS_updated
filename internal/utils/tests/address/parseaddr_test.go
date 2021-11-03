@@ -1,13 +1,15 @@
 package utils_test
 
-import "token-strike/internal/utils/address"
+import (
+	"token-strike/internal/utils/simple"
+)
 
 func (suite *TestSuite) TestParseAddr() {
 	seed := randomSeed(aliceIndex)
 	privKey := suite.addressScheme.GenerateKey(seed)
 	msg := "Hello pkt"
 	singature := privKey.Sign([]byte(msg))
-	wantAddr := address.NewSimpleAddress(privKey.GetPublicKey())
+	wantAddr := simple.NewSimpleAddress(privKey.GetPublicKey())
 
 	parsedAddr, err := suite.addressScheme.ParseAddr(wantAddr.String())
 	suite.NoError(err, "on parse addr")

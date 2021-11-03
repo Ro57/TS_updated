@@ -2,7 +2,7 @@ package utils_test
 
 import (
 	"testing"
-	addressScheme "token-strike/internal/utils/address_scheme"
+	addressScheme "token-strike/internal/utils/simple"
 
 	"github.com/stretchr/testify/suite"
 )
