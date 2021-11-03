@@ -1,20 +1,20 @@
 package config
 
 import (
-	address2 "token-strike/internal/types/address"
+	"token-strike/internal/types/address"
 	"token-strike/internal/types/pkt"
-	"token-strike/internal/utils/address"
+	addressScheme "token-strike/internal/utils/address_scheme"
 	"token-strike/internal/utils/pktchain"
 )
 
 type Config struct {
-	Scheme address2.AddressScheme
+	Scheme address.AddressScheme
 	Chain  pkt.PktChain
 }
 
 func DefaultSimpleConfig() Config {
 	return Config{
-		Scheme: &address.SimpleAddressScheme{},
+		Scheme: &addressScheme.SimpleAddressScheme{},
 		Chain:  &pktchain.SimplePktChain{},
 	}
 }

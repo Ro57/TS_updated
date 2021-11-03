@@ -23,5 +23,3 @@ docker run \
   -e SUBSERVER_PREFIX \
   -v "$DIR/:/build" \
   lnd-protobuf-builder
-
-# 

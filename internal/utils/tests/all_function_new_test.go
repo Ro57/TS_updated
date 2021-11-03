@@ -14,7 +14,7 @@ import (
 	issuerNew "token-strike/internal/issuer"
 	address2 "token-strike/internal/types/address"
 	"token-strike/internal/types/pkt"
-	"token-strike/internal/utils/address"
+	addressScheme "token-strike/internal/utils/address_scheme"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/pktchain"
 	"token-strike/internal/wallet"
@@ -24,14 +24,14 @@ import (
 
 // creating keys
 var (
-	isaacPrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 0))
-	isaacAddress    = address.NewSimpleAddress(isaacPrivateKey.GetPublicKey())
+	isaacPrivateKey = (&addressScheme.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 0))
+	isaacAddress    = isaacPrivateKey.Address()
 
-	alicePrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
-	aliceAddress    = address.NewSimpleAddress(alicePrivateKey.GetPublicKey())
+	alicePrivateKey = (&addressScheme.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
+	aliceAddress    = alicePrivateKey.Address()
 
-	bobPrivateKey = (&address.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
-	bobAddress    = address.NewSimpleAddress(bobPrivateKey.GetPublicKey())
+	bobPrivateKey = (&addressScheme.SimpleAddressScheme{}).GenerateKey(randomSeed(32, 32))
+	bobAddress    = bobPrivateKey.Address()
 )
 
 const (
@@ -42,7 +42,7 @@ const (
 // creating additional variables
 var (
 	activePktChain      pkt.PktChain           = &pktchain.SimplePktChain{}
-	activeAddressScheme address2.AddressScheme = &address.SimpleAddressScheme{}
+	activeAddressScheme address2.AddressScheme = &addressScheme.SimpleAddressScheme{}
 )
 
 func TestAllFunctionsNew(t *testing.T) {
@@ -80,6 +80,7 @@ func TestAllFunctionsNew(t *testing.T) {
 		}
 	}()
 
+	// TODO: Change to wait group
 	time.Sleep(1 * time.Second)
 
 	issuer, err := issuerNew.CreateClient(httpIsaac, "asd")
