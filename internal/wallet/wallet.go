@@ -8,6 +8,7 @@ import (
 	"token-strike/internal/database"
 	addressTypes "token-strike/internal/types/address"
 	"token-strike/internal/utils/address"
+	addressScheme "token-strike/internal/utils/address_scheme"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/pktchain"
 	"token-strike/internal/utils/tokenstrikemock"
@@ -20,7 +21,7 @@ type Server struct {
 	address        address.SimpleAddress
 	privateKey     addressTypes.PrivateKey
 	pkt            pktchain.SimplePktChain
-	scheme         address.SimpleAddressScheme
+	scheme         addressScheme.SimpleAddressScheme
 	db             database.DBRepository
 	issuerInvSlice []rpcservice.RPCServiceClient
 	inv            *tokenstrikemock.TokenStrikeMock
@@ -69,7 +70,7 @@ func CreateWallet(db database.DBRepository, peerUrl string, pk addressTypes.Priv
 	walletAddress := address.NewSimpleAddress(pk.GetPublicKey())
 
 	pkt := cfg.Chain.(*pktchain.SimplePktChain)
-	scheme := cfg.Scheme.(*address.SimpleAddressScheme)
+	scheme := cfg.Scheme.(*addressScheme.SimpleAddressScheme)
 
 	issuerClients, err := getClients(peerUrl, issuerUrlHints)
 	if err != nil {

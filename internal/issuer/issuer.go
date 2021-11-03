@@ -62,10 +62,10 @@ func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address2.Privat
 }
 
 func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2.PrivateKey) (*Issuer, error) {
-	invServer := tokenstrikemock.New(tokendb, address.NewSimpleAddress(pk.GetPublicKey()))
+	invServer := tokenstrikemock.New(tokendb, pk.Address().(address.SimpleAddress))
 	issuer := &Issuer{
 		private:   pk,
-		address:   address.NewSimpleAddress(pk.GetPublicKey()),
+		address:   pk.Address().(address.SimpleAddress),
 		peers:     make([]string, 0),
 		config:    cfg,
 		invServer: invServer,

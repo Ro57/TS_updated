@@ -1,4 +1,4 @@
-package address
+package address_scheme
 
 import (
 	ed "crypto/ed25519"
@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"token-strike/internal/types/address"
+	simpleAddress "token-strike/internal/utils/address"
 
 	"token-strike/internal/utils/privkey"
 )
@@ -25,7 +26,7 @@ func (s SimpleAddressScheme) ParseAddr(ps string) (address.Address, error) {
 		return nil, errors.New(fmt.Sprintf("parse public address: bad length: %v", len(bytePS)))
 	}
 
-	address := SimpleAddress{publicKey: bytePS}
+	address := simpleAddress.NewSimpleAddress(bytePS)
 
 	return address, nil
 

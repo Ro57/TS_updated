@@ -3,7 +3,9 @@ package privkey
 import (
 	"bytes"
 	ed "crypto/ed25519"
+
 	"token-strike/internal/types/address"
+	simpleAddress "token-strike/internal/utils/address"
 )
 
 type SimplePrivateKey struct {
@@ -28,4 +30,12 @@ func (p SimplePrivateKey) Equal(private address.PrivateKey) bool {
 
 func (p SimplePrivateKey) Sign(data []byte) []byte {
 	return ed.Sign(p.Key, data)
+}
+
+func (p SimplePrivateKey) Address() address.Address {
+	publicKey := make([]byte, ed.PublicKeySize)
+
+	copy(publicKey, p.Key[32:])
+
+	return simpleAddress.NewSimpleAddress(publicKey)
 }

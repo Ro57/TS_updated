@@ -4,7 +4,6 @@ import (
 	"math/rand"
 	"time"
 	address2 "token-strike/internal/types/address"
-	"token-strike/internal/utils/address"
 )
 
 func randomInt(min, max int) int {
@@ -30,8 +29,8 @@ func (suite *TestSuite) TestCheckSig() {
 	keyOne, keyTwo := suite.addressScheme.GenerateKey(seedByteOne), suite.addressScheme.GenerateKey(seedByteTwo)
 	sigOne := keyOne.Sign(someData)
 	sigTwo := keyTwo.Sign(someData)
-	addressOne := address.NewSimpleAddress(keyOne.GetPublicKey())
-	addressTwo := address.NewSimpleAddress(keyTwo.GetPublicKey())
+	addressOne := keyOne.Address()
+	addressTwo := keyTwo.Address()
 
 	type args struct {
 		signature []byte
