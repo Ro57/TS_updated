@@ -40,5 +40,5 @@ func (p SimplePrivateKey) Address() address.Address {
 
 	copy(publicKey, p.key[32:])
 
-	return newSimpleAddress(publicKey)
+	return SimpleAddress{publicKey}
 }
