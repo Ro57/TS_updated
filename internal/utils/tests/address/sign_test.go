@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"crypto/ed25519"
 	"encoding/hex"
-	"token-strike/internal/utils/address"
+	"token-strike/internal/utils/simple"
 )
 
 func (suite *TestSuite) TestSign() {
@@ -20,7 +20,7 @@ func (suite *TestSuite) TestSign() {
 	wantPublic := wantKey.Public().(ed25519.PublicKey)
 	wantPublicHash := hex.EncodeToString(wantPublic)
 
-	suite.True(address.NewSimpleAddress(key.GetPublicKey()).String() == wantPublicHash)
+	suite.True(simple.NewSimpleAddress(key.GetPublicKey()).String() == wantPublicHash)
 
 	suite.True(bytes.Equal(singature, wantSingature), "error with signature bytes")
 }

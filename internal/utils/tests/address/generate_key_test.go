@@ -3,8 +3,7 @@ package utils_test
 import (
 	"crypto/ed25519"
 	"encoding/hex"
-	"token-strike/internal/utils/address"
-	"token-strike/internal/utils/privkey"
+	"token-strike/internal/utils/simple"
 )
 
 const (
@@ -109,13 +108,13 @@ func (suite *TestSuite) TestGenerateKey() {
 		suite.Run(tt.name, func() {
 			for i, a := range tt.args {
 				key := suite.addressScheme.GenerateKey(a.seed)
-				wantKey := privkey.SimplePrivateKey{Key: tt.wantKeys[i]}
+				wantKey := simple.SimplePrivateKey{Key: tt.wantKeys[i]}
 
 				tt.want(key.Equal(wantKey), "error in test %v (private) want %v but got %v", tt.name, wantKey, key)
 
 				wantPublic := tt.wantKeys[i].Public().(ed25519.PublicKey)
 				wantPublicHash := hex.EncodeToString(wantPublic)
-				gotPublic := address.NewSimpleAddress(key.GetPublicKey()).String()
+				gotPublic := simple.NewSimpleAddress(key.GetPublicKey()).String()
 
 				tt.want(gotPublic == wantPublicHash, "error in test %v (public) want %v but got %v", tt.name, wantPublicHash, gotPublic)
 			}
