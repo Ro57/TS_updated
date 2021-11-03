@@ -39,7 +39,7 @@ func TestSimplePrivateKey_Equal(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			p := SimplePrivateKey{
-				Key: tt.Key,
+				key: tt.Key,
 			}
 			got := p.Equal(tt.args.private)
 			if got != tt.want {
