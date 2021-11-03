@@ -8,7 +8,6 @@ import (
 	"token-strike/internal/database/repository"
 
 	address2 "token-strike/internal/types/address"
-	"token-strike/internal/utils/address"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/rpcservice"
@@ -62,10 +61,10 @@ func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address2.Privat
 }
 
 func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2.PrivateKey) (*Issuer, error) {
-	invServer := tokenstrikemock.New(tokendb, pk.Address().(address.SimpleAddress))
+	invServer := tokenstrikemock.New(tokendb, pk.Address())
 	issuer := &Issuer{
 		private:   pk,
-		address:   pk.Address().(address.SimpleAddress),
+		address:   pk.Address(),
 		peers:     make([]string, 0),
 		config:    cfg,
 		invServer: invServer,
