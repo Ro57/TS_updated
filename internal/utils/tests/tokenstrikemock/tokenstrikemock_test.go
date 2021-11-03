@@ -51,5 +51,5 @@ func (suite *TestSuite) SetupTest() {
 	activeAddressScheme := &addressScheme.SimpleAddressScheme{}
 	privKey := activeAddressScheme.GenerateKey(randomSeed(32, 0))
 
-	suite.tokenStrike = *tokenstrikemock.New(tokendb, addressScheme.NewSimpleAddress(privKey.GetPublicKey()))
+	suite.tokenStrike = *tokenstrikemock.New(tokendb, privKey.Address())
 }

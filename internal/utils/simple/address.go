@@ -12,7 +12,7 @@ type SimpleAddress struct {
 
 var _ address.Address = &SimpleAddress{}
 
-func NewSimpleAddress(pb ed.PublicKey) SimpleAddress {
+func newSimpleAddress(pb ed.PublicKey) SimpleAddress {
 	return SimpleAddress{publicKey: pb}
 }
 
