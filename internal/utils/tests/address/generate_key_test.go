@@ -114,7 +114,7 @@ func (suite *TestSuite) TestGenerateKey() {
 
 				wantPublic := tt.wantKeys[i].Public().(ed25519.PublicKey)
 				wantPublicHash := hex.EncodeToString(wantPublic)
-				gotPublic := simple.NewSimpleAddress(key.GetPublicKey()).String()
+				gotPublic := key.Address().String()
 
 				tt.want(gotPublic == wantPublicHash, "error in test %v (public) want %v but got %v", tt.name, wantPublicHash, gotPublic)
 			}

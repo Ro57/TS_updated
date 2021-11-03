@@ -23,7 +23,7 @@ func (s SimpleAddressScheme) ParseAddr(ps string) (address.Address, error) {
 		return nil, errors.New(fmt.Sprintf("parse public address: bad length: %v", len(bytePS)))
 	}
 
-	address := NewSimpleAddress(bytePS)
+	address := newSimpleAddress(bytePS)
 
 	return address, nil
 

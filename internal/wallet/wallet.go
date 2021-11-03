@@ -17,7 +17,7 @@ import (
 )
 
 type Server struct {
-	address        addressScheme.SimpleAddress
+	address        addressTypes.Address
 	privateKey     addressTypes.PrivateKey
 	pkt            pktchain.SimplePktChain
 	scheme         addressScheme.SimpleAddressScheme
@@ -66,7 +66,7 @@ func CreateWallet(db database.DBRepository, peerUrl string, pk addressTypes.Priv
 
 	cfg := config.DefaultSimpleConfig()
 
-	walletAddress := addressScheme.NewSimpleAddress(pk.GetPublicKey())
+	walletAddress := pk.Address()
 
 	pkt := cfg.Chain.(*pktchain.SimplePktChain)
 	scheme := cfg.Scheme.(*addressScheme.SimpleAddressScheme)
