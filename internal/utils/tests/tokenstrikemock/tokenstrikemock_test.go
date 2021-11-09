@@ -6,6 +6,8 @@ import (
 	"token-strike/internal/database/repository"
 	addressScheme "token-strike/internal/utils/simple"
 	"token-strike/internal/utils/tokenstrikemock"
+	"token-strike/tsp2p/server/DB"
+	"token-strike/tsp2p/server/tokenstrike"
 
 	"github.com/stretchr/testify/suite"
 )
@@ -17,6 +19,13 @@ func TestExampleTestSuite(t *testing.T) {
 type TestSuite struct {
 	suite.Suite
 	tokenStrike tokenstrikemock.TokenStrikeMock
+
+	sendingMessageTestData struct {
+		block  *DB.Block
+		invs   []*tokenstrike.Inv
+		hash   []byte
+		wallet *walletMockServer
+	}
 }
 
 func randomSeed(l, offset int) [32]byte {

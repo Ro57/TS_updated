@@ -106,5 +106,8 @@ func (t *TokenStrikeMock) sendingMessages(hash string) {
 			}
 		}
 	}
-	fmt.Println(genError)
+
+	if genError != nil {
+		fmt.Println(genError)
+	}
 }
