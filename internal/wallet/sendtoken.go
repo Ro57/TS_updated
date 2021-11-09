@@ -12,8 +12,8 @@ import (
 
 func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRequest) (*rpcservice.TransferTokensResponse, error) {
 	transferTokens := &tokenstrike.TransferTokens{
-		Htlc: req.Htlc,
-		Lock: req.Lock,
+		Htlc:   req.Htlc,
+		LockId: req.LockId,
 	}
 
 	transferTokensB, err := proto.Marshal(transferTokens)
@@ -23,7 +23,7 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 
 	transferTokensHash := sha256.Sum256(transferTokensB)
 
-	blockHash, err := hex.DecodeString(req.Token)
+	blockHash, err := hex.DecodeString(req.TokenId)
 	if err != nil {
 		return nil, err
 	}
@@ -56,10 +56,15 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 					return nil, err
 				}
 
-				s.db.TransferTokens(req.Token, hex.EncodeToString(req.Lock))
+				s.db.TransferTokens(req.TokenId, req.LockId)
 			}
 		}
 	}
 
-	return &rpcservice.TransferTokensResponse{Txid: transferTokensHash[:]}, nil
+	id, err := s.inv.AwaitJustification(req.TokenId, transferTokensHash[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpcservice.TransferTokensResponse{Txid: *id}, nil
 }

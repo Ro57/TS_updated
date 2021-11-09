@@ -24,6 +24,9 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		Signature:      "",
 	}
 
+	// skip genesis block
+	s.inv.AwaitJustification(req.TokenId, nil)
+
 	err := lockEl.Sing(s.privateKey)
 	if err != nil {
 		return nil, err
@@ -71,9 +74,13 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 				}
 				s.db.LockToken(req.TokenId, lockEl)
 			}
-
 		}
 	}
 
-	return &rpcservice.LockTokenResponse{LockId: lockHash[:]}, nil
+	id, err := s.inv.AwaitJustification(req.TokenId, lockHash[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpcservice.LockTokenResponse{LockId: *id}, nil
 }

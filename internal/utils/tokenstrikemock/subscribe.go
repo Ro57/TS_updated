@@ -1,48 +1,59 @@
 package tokenstrikemock
 
 import (
-	"fmt"
+	"encoding/hex"
+	"token-strike/tsp2p/server/justifications"
+	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/tokenstrike"
 )
 
-//
-//import (
-//	"fmt"
-//	"token-strike/tsp2p/server/tokenstrike"
-//
-//	empty "github.com/golang/protobuf/ptypes/empty"
-//)
-//
-//func (t *TokenStrikeMock) Subscribe(empty *empty.Empty, server tokenstrike.TokenStrike_SubscribeServer) error {
-//	if t.peers == nil {
-//		t.peers = []tokenstrike.TokenStrike_SubscribeServer{}
-//	}
-//	t.peers = append(t.peers, server)
-//
-//	<-server.Context().Done()
-//
-//	return nil
-//}
+type LockForBlock struct {
+	TokenID string
+	Content lock.Lock
+}
 
-func (t *TokenStrikeMock) sendDataToSubscribers(msg *tokenstrike.Data) error {
-	var genError = []error{}
+type TxForBlock struct {
+	TokenID string
+	Content justifications.TranferToken
+}
 
-	//for i, peer := range t.peers {
-	//	err := peer.Send(msg)
-	//	if err != nil {
-	//		genError = append(genError, fmt.Errorf("%v : %v /n", i, err))
-	//	}
-	//}
+func (t *TokenStrikeMock) CreateNewLockChannel() chan *LockForBlock {
+	newLockChannel := make(chan *LockForBlock)
 
-	if len(genError) > 0 {
-		err := genError[0]
+	t.lockDispatchers = append(t.lockDispatchers, newLockChannel)
 
-		for i, e := range genError[1:] {
-			err = fmt.Errorf("%v/n %v : %v", err, i, e)
+	return newLockChannel
+}
+
+func (t *TokenStrikeMock) CreateNewTxChannel() chan *TxForBlock {
+	newTxChannel := make(chan *TxForBlock)
+
+	t.txDispatchers = append(t.txDispatchers, newTxChannel)
+
+	return newTxChannel
+}
+
+func (t *TokenStrikeMock) dispatch(msg *tokenstrike.Data) {
+	go func() {
+		switch data := msg.Data.(type) {
+		case *tokenstrike.Data_Block:
+			t.blockDispatcher <- data
+		case *tokenstrike.Data_Lock:
+			for _, lockDispatcher := range t.lockDispatchers {
+				lockDispatcher <- &LockForBlock{
+					Content: *data.Lock,
+					TokenID: msg.Token,
+				}
+			}
+		case *tokenstrike.Data_Transfer:
+			for _, txDispatcher := range t.txDispatchers {
+				txDispatcher <- &TxForBlock{
+					Content: justifications.TranferToken{
+						HtlcSecret: hex.EncodeToString(data.Transfer.Htlc),
+						Lock:       data.Transfer.LockId,
+					},
+				}
+			}
 		}
-
-		return err
-	}
-
-	return nil
+	}()
 }

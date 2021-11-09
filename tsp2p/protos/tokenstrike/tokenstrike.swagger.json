@@ -351,10 +351,9 @@
           "format": "byte",
           "title": "htlc — contract from lnd network"
         },
-        "lock": {
+        "lock_id": {
           "type": "string",
-          "format": "byte",
-          "title": "lock id"
+          "title": "lock_id — formatted lock identifier"
         }
       },
       "title": "TransferTokens — information about transaction"

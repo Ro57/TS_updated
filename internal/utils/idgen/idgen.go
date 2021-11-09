@@ -9,7 +9,6 @@ import (
 const separator = ":"
 
 func Encode(blockHash string, number int) string {
-
 	return fmt.Sprint(blockHash, separator, number)
 }
 

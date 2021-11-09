@@ -12,7 +12,7 @@ import (
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 	issuerNew "token-strike/internal/issuer"
-	address2 "token-strike/internal/types/address"
+	"token-strike/internal/types/address"
 	"token-strike/internal/types/pkt"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/pktchain"
@@ -39,13 +39,30 @@ const (
 	httpAlice = "0.0.0.0:3334"
 )
 
-// creating additional variables
-var (
-	activePktChain      pkt.PktChain           = &pktchain.SimplePktChain{}
-	activeAddressScheme address2.AddressScheme = &addressScheme.SimpleAddressScheme{}
+const (
+	aliceIndex = iota
+	bobIndex
+	christyIndex
+
+	// this is issuer
+	isaacIndex
 )
 
-func TestAllFunctionsNew(t *testing.T) {
+func randomSeed(l, offset int) [32]byte {
+	bytes := [32]byte{}
+	for i := 0; i < l; i++ {
+		bytes[i] = byte(i + offset)
+	}
+	return bytes
+}
+
+// creating additional variables
+var (
+	activePktChain      pkt.PktChain          = &pktchain.SimplePktChain{}
+	activeAddressScheme address.AddressScheme = &addressScheme.SimpleAddressScheme{}
+)
+
+func TestAllFunctions(t *testing.T) {
 	// initialization the database
 	db, err := database.Connect("./test.db")
 	if err != nil {
@@ -114,14 +131,15 @@ func TestAllFunctionsNew(t *testing.T) {
 		t.Error(err)
 	}
 
-	lockID, err := alice.LockToken(
+	lockResp, err := alice.LockToken(
 		context.Background(),
 		&rpcservice.LockTokenRequest{
 			TokenId:    tokenID.TokenId,
 			Amount:     3,
 			Recipient:  bobAddress.String(),
 			SecretHash: hex.EncodeToString(htlcSL[:]),
-		})
+		},
+	)
 	if err != nil {
 		t.Error(err)
 	}
@@ -129,15 +147,15 @@ func TestAllFunctionsNew(t *testing.T) {
 	transferHash, err := alice.SendToken(
 		context.Background(),
 		&rpcservice.TransferTokensRequest{
-			Token: tokenID.TokenId,
-			Lock:  lockID.LockId,
-			Htlc:  randomSecret,
+			TokenId: tokenID.TokenId,
+			LockId:  lockResp.LockId,
+			Htlc:    randomSecret,
 		})
 	if err != nil {
 		t.Error(err)
 	}
 
-	fmt.Println(hex.EncodeToString(transferHash.Txid))
+	fmt.Println(transferHash.Txid)
 }
 
 func closeDB(db *database.TokenStrikeDB, t *testing.T) {

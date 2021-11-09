@@ -112,7 +112,7 @@ func (i *Issuer) sendBlock(tokenID string, blockHash [32]byte, block *DB.Block) 
 					}
 
 					//send selected lock and NOW skip check of warning
-					_, err := client.PostData(context.TODO(), DataReq)
+					_, err := client.PostData(context.Background(), DataReq)
 					if err != nil {
 						genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
 					}

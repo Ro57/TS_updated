@@ -2,7 +2,7 @@ package utils_test
 
 import (
 	"fmt"
-	idgen "token-strike/internal/utils/IDGen"
+	idgen "token-strike/internal/utils/idgen"
 )
 
 func (suite *TestSuite) TestSign() {
