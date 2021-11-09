@@ -26,7 +26,11 @@ type TokenStrikeMock struct {
 
 //var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
 
-func New(db database.DBRepository, simpleAddress address.Address) *TokenStrikeMock {
+func New(db database.DBRepository, simpleAddress address.Address) (res *TokenStrikeMock) {
+	defer func() {
+		go res.timerSendingMessages()
+	}()
+
 	return &TokenStrikeMock{
 		bboltDB:        db,
 		pktChain:       &pktchain.SimplePktChain{},

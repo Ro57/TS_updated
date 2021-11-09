@@ -51,7 +51,7 @@ func Generate(db *database.TokenStrikeDB) error {
 			Urls: []string{
 				"https://replication.com/" + name,
 			},
-		}, blockchain[0], nil)
+		}, blockchain[0], &DB.State{})
 		if err != nil {
 			return err
 		}

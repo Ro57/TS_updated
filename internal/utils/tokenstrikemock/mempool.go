@@ -5,6 +5,8 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"math/rand"
+	"time"
 
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
@@ -64,50 +66,77 @@ func (t *TokenStrikeMock) sendingMessages(hash string) {
 	var genError error
 
 	for index, peer := range t.peers {
-		conn, err := grpc.DialContext(
-			context.TODO(),
-			peer,
-			grpc.WithInsecure(),
-		)
-		if err != nil {
-			genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
-		}
-
-		client := rpcservice.NewRPCServiceClient(conn)
-
-		blockHash, err := proto.Marshal(t.mempoolEntries[hash].Message)
-		if err != nil {
-			genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
-		}
-
-		resp, err := client.Inv(
-			context.Background(),
-			&tokenstrike.InvReq{Invs: []*tokenstrike.Inv{
-				{
-					Parent:     []byte(t.mempoolEntries[hash].Hash),
-					Type:       t.mempoolEntries[hash].Type,
-					EntityHash: blockHash[:],
-				},
-			}},
-		)
-		if err != nil {
-			genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
-		}
-
-		if resp.Needed != nil {
-			for _, need := range resp.Needed {
-				if need {
-					//send selected lock and NOW skip check of warning
-					_, err := client.PostData(context.TODO(), t.mempoolEntries[hash].GetDataMsg())
-					if err != nil {
-						genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
-					}
-				}
-			}
-		}
+		err := t.sendMessageToPeer(hash, peer, index)
+		genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
 	}
 
 	if genError != nil {
 		fmt.Println(genError)
+	}
+}
+
+func (t *TokenStrikeMock) sendMessageToPeer(hash string, peer string, index int) error {
+	var genError error
+
+	conn, err := grpc.DialContext(
+		context.TODO(),
+		peer,
+		grpc.WithInsecure(),
+	)
+	if err != nil {
+		genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
+	}
+
+	client := rpcservice.NewRPCServiceClient(conn)
+
+	blockHash, err := proto.Marshal(t.mempoolEntries[hash].Message)
+	if err != nil {
+		genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
+	}
+
+	resp, err := client.Inv(
+		context.Background(),
+		&tokenstrike.InvReq{Invs: []*tokenstrike.Inv{
+			{
+				Parent:     []byte(t.mempoolEntries[hash].Hash),
+				Type:       t.mempoolEntries[hash].Type,
+				EntityHash: blockHash[:],
+			},
+		}},
+	)
+	if err != nil {
+		genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
+	}
+
+	if resp.Needed != nil {
+		for _, need := range resp.Needed {
+			if need {
+				//send selected lock and NOW skip check of warning
+				_, err := client.PostData(context.TODO(), t.mempoolEntries[hash].GetDataMsg())
+				if err != nil {
+					genError = fmt.Errorf("%v : %s /n %s", index, err, genError)
+				}
+			}
+		}
+	}
+	return genError
+}
+
+func (t *TokenStrikeMock) timerSendingMessages() {
+	for {
+		var (
+			countPeers = len(t.peers) - 1
+		)
+
+		if len(t.mempoolEntries) > 1 && countPeers >= 1 {
+			rand.Seed(time.Now().UnixNano())
+
+			err := t.sendMessageToPeer("m", t.peers[rand.Intn(countPeers)], 1)
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+
+		time.Sleep(time.Second * 60)
 	}
 }
