@@ -1,4 +1,4 @@
-package tokenstrikemock
+package utils_test
 
 import (
 	"testing"
@@ -8,11 +8,12 @@ import (
 	"google.golang.org/protobuf/runtime/protoiface"
 )
 
-func Test_mempoolImpl_Insert(t *testing.T) {
+func (suite *TestSuite) TestInsert() {
 
 	type args struct {
 		hash       string
 		message    protoiface.MessageV1
+		msgType    uint32
 		expiration int64
 	}
 	tests := []struct {
@@ -31,9 +32,14 @@ func Test_mempoolImpl_Insert(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			m := NewMempoolImpl()
-			if got := m.Insert(tt.args.hash, tt.args.message, tt.args.expiration); got != tt.want {
+		suite.T().Run(tt.name, func(t *testing.T) {
+
+			if got := suite.tokenStrike.Insert(
+				tt.args.hash,
+				tt.args.msgType,
+				tt.args.message,
+				tt.args.expiration,
+			); got != tt.want {
 				t.Errorf("Insert() = %v, want %v", got, tt.want)
 			}
 		})
