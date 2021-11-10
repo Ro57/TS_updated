@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"time"
+	"token-strike/internal/utils/tokenstrikemock"
 
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/rpcservice"
@@ -68,7 +69,13 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 		return nil, err
 	}
 
-	_ = i.invServer.Insert(tokenID, tokenstrike.TYPE_BLOCK, block, 123)
+	_ = i.invServer.Insert(
+		tokenstrikemock.MempoolEntry{
+			Hash:       tokenID,
+			Type:       tokenstrike.TYPE_BLOCK,
+			Message:    block,
+			Expiration: 123,
+		})
 
 	return &rpcservice.IssueTokenResponse{
 		TokenId: tokenID,

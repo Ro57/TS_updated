@@ -12,6 +12,8 @@ import (
 const (
 	NeedData     = true
 	DontNeedData = false
+
+	NumberSecondsWaitTime = 60
 )
 
 type TokenStrikeMock struct {

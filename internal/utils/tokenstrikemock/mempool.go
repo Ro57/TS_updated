@@ -13,14 +13,13 @@ import (
 
 	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
-	"google.golang.org/protobuf/runtime/protoiface"
 )
 
 type Mempool interface {
 	AddPeer(url string) error
 	List() map[string]*MempoolEntry
 	Remove(id string) bool
-	Insert(hash string, messageType uint32, msg protoiface.MessageV1, expiration int64) string
+	Insert(entry MempoolEntry) string
 }
 
 // implementation
@@ -40,14 +39,9 @@ func (t *TokenStrikeMock) Remove(id string) bool {
 	return false
 }
 
-func (t *TokenStrikeMock) Insert(hash string, messageType uint32, message protoiface.MessageV1, expiration int64) string {
-	key := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s/\\%s/\\%d", hash, message, expiration)))
-	t.mempoolEntries[key] = &MempoolEntry{
-		Type:       messageType,
-		Expiration: expiration,
-		Hash:       hash,
-		Message:    message,
-	}
+func (t *TokenStrikeMock) Insert(entry MempoolEntry) string {
+	key := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s/\\%s/\\%d", entry.Hash, entry.Message, entry.Expiration)))
+	t.mempoolEntries[key] = &entry
 
 	go t.sendingMessages(key)
 
@@ -137,6 +131,6 @@ func (t *TokenStrikeMock) timerSendingMessages() {
 			}
 		}
 
-		time.Sleep(time.Second * 60)
+		time.Sleep(time.Second * NumberSecondsWaitTime)
 	}
 }

@@ -44,10 +44,12 @@ func (suite *TestSuite) TestInsert() {
 		suite.T().Run(tt.name, func(t *testing.T) {
 
 			if got := suite.tokenStrike.Insert(
-				tt.args.hash,
-				tt.args.msgType,
-				tt.args.message,
-				tt.args.expiration,
+				tokenstrikemock.MempoolEntry{
+					Hash:       tt.args.hash,
+					Message:    tt.args.message,
+					Type:       tt.args.msgType,
+					Expiration: tt.args.expiration,
+				},
 			); got != tt.want {
 				t.Errorf("Insert() = %v, want %v", got, tt.want)
 			}
@@ -66,10 +68,12 @@ func (suite *TestSuite) TestSendingMessages() {
 	}
 
 	insertHash := tk.Insert(
-		hex.EncodeToString(suite.sendingMessageTestData.hash),
-		2,
-		suite.sendingMessageTestData.block,
-		123,
+		tokenstrikemock.MempoolEntry{
+			Hash:       hex.EncodeToString(suite.sendingMessageTestData.hash),
+			Message:    suite.sendingMessageTestData.block,
+			Type:       2,
+			Expiration: 123,
+		},
 	)
 	fmt.Printf("insertHash: %s \n", insertHash)
 
