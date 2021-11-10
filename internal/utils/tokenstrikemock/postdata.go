@@ -352,6 +352,7 @@ func getLock(lockID string, chain *replicator.ChainInfo) (*lock.Lock, error) {
 				return block.Justifications[*number], nil
 			}
 		}
+
 		return nil, fmt.Errorf("block with hash %v, not found", blockHash)
 	}()
 	if err != nil {

@@ -1,22 +1,52 @@
 package issuer
 
 import (
+	"context"
 	"encoding/hex"
 	"time"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/justifications"
+	"token-strike/tsp2p/server/tokenstrike"
 )
 
-func (i Issuer) bootBlockGenerator() {
+// TODO: Error handling
+func (i *Issuer) bootBlockGenerator() {
 
 	go func() {
 		lockChan := i.invServer.CreateNewLockChannel()
 		for {
 			curLock := <-lockChan
-			block, _ := i.generateLockBlock(curLock)
 
-			i.tokendb.SaveBlock(curLock.TokenID, block)
+			block, err := i.generateLockBlock(curLock)
+			if err != nil {
+				panic(err)
+			}
+
+			err = i.tokendb.SaveBlock(curLock.TokenID, block)
+			if err != nil {
+				panic(err)
+			}
+
+			resp, err := i.invServer.GetTokenStatus(context.Background(), &tokenstrike.TokenStatusReq{
+				Tokenid: curLock.TokenID,
+			})
+			if err != nil {
+				panic(err)
+			}
+
+			blockHash, err := resp.Dblock0.GetHash()
+			if err != nil {
+				panic(err)
+			}
+
+			block32 := [32]byte{}
+			copy(block32[:], blockHash[:32])
+
+			err = i.sendBlock(curLock.TokenID, block32, block)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}()
 
@@ -24,9 +54,29 @@ func (i Issuer) bootBlockGenerator() {
 		txChan := i.invServer.CreateNewTxChannel()
 		for {
 			tx := <-txChan
-			block, _ := i.generateTxBlock(tx)
 
-			i.tokendb.SaveBlock(tx.TokenID, block)
+			block, err := i.generateTxBlock(tx)
+			if err != nil {
+				panic(err)
+			}
+
+			err = i.tokendb.SaveBlock(tx.TokenID, block)
+			if err != nil {
+				panic(err)
+			}
+
+			blockHash, err := block.GetHash()
+			if err != nil {
+				panic(err)
+			}
+
+			block32 := [32]byte{}
+			copy(block32[:], blockHash[:32])
+
+			err = i.sendBlock(tx.TokenID, block32, block)
+			if err != nil {
+				panic(err)
+			}
 		}
 	}()
 }
@@ -37,12 +87,8 @@ func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockForBlock) (*DB.Bl
 		return nil, err
 	}
 
-	lastBlock := chain.Blocks[len(chain.Blocks)-1]
-
-	blockBytes, err := lastBlock.GetHash()
-	if err != nil {
-		return nil, err
-	}
+	// Blocks are reversed
+	lastBlock := chain.Blocks[0]
 
 	stateBytes, err := chain.State.GetHash()
 	if err != nil {
@@ -58,13 +104,18 @@ func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockForBlock) (*DB.Bl
 	}
 
 	block := &DB.Block{
-		PrevBlock:      hex.EncodeToString(blockBytes),
+		PrevBlock:      lastBlock.GetSignature(),
 		Justifications: []*DB.Justification{lockJustification},
 		Creation:       time.Now().Unix(),
 		State:          hex.EncodeToString(stateBytes),
-		PktBlockHash:   string(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
+		PktBlockHash:   hex.EncodeToString(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
 		PktBlockHeight: i.config.Chain.CurrentHeight(),
 		Height:         lastBlock.Height + 1,
+	}
+
+	err = block.Sing(i.private)
+	if err != nil {
+		return nil, err
 	}
 
 	return block, nil
@@ -76,12 +127,8 @@ func (i Issuer) generateTxBlock(curTx *tokenstrikemock.TxForBlock) (*DB.Block, e
 		return nil, err
 	}
 
-	lastBlock := chain.Blocks[len(chain.Blocks)-1]
-
-	blockBytes, err := lastBlock.GetHash()
-	if err != nil {
-		return nil, err
-	}
+	// Blocks are reversed
+	lastBlock := chain.Blocks[0]
 
 	stateBytes, err := chain.State.GetHash()
 	if err != nil {
@@ -95,14 +142,32 @@ func (i Issuer) generateTxBlock(curTx *tokenstrikemock.TxForBlock) (*DB.Block, e
 	}
 
 	block := &DB.Block{
-		PrevBlock:      hex.EncodeToString(blockBytes),
+		PrevBlock:      lastBlock.GetSignature(),
 		Justifications: []*DB.Justification{txJustification},
 		Creation:       time.Now().Unix(),
 		State:          hex.EncodeToString(stateBytes),
-		PktBlockHash:   string(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
+		PktBlockHash:   hex.EncodeToString(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
 		PktBlockHeight: i.config.Chain.CurrentHeight(),
 		Height:         lastBlock.Height + 1,
 	}
 
+	err = block.Sing(i.private)
+	if err != nil {
+		return nil, err
+	}
+
 	return block, nil
+}
+
+func (i *Issuer) GetGenesisBlock(tokenID string) [32]byte {
+	resp, _ := i.invServer.GetTokenStatus(context.Background(), &tokenstrike.TokenStatusReq{
+		Tokenid: tokenID,
+	})
+
+	blockHash, _ := resp.Dblock0.GetHash()
+
+	block32 := [32]byte{}
+	copy(block32[:], blockHash[:32])
+
+	return block32
 }

@@ -2,7 +2,6 @@ package issuer
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"time"
@@ -11,7 +10,6 @@ import (
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
 
-	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 )
 
@@ -42,7 +40,7 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 		Justifications: nil,
 		Creation:       time.Now().Unix(),
 		State:          hex.EncodeToString(stateBytes),
-		PktBlockHash:   string(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
+		PktBlockHash:   hex.EncodeToString(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
 		PktBlockHeight: i.config.Chain.CurrentHeight(),
 		Height:         0,
 	}
@@ -52,13 +50,12 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 		return nil, err
 	}
 
-	blockSigned, err := proto.Marshal(block)
+	blockHash, err := block.GetHash()
 	if err != nil {
 		return nil, err
 	}
 
-	blockHash := sha256.Sum256(blockSigned)
-	tokenID := hex.EncodeToString(blockHash[:])
+	tokenID := hex.EncodeToString(blockHash)
 
 	err = i.tokendb.SaveIssuerTokenDB(tokenID, i.address.String())
 	if err != nil {
@@ -70,12 +67,16 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 		return nil, err
 	}
 
+	publicKey := [32]byte{}
+
+	copy(publicKey[:], i.private.GetPublicKey()[:32])
+
 	return &rpcservice.IssueTokenResponse{
 		TokenId: tokenID,
-	}, i.sendBlock(tokenID, blockHash, block)
+	}, i.sendBlock(tokenID, publicKey, block)
 }
 
-func (i *Issuer) sendBlock(tokenID string, blockHash [32]byte, block *DB.Block) error {
+func (i *Issuer) sendBlock(tokenID string, genesisBlockHash [32]byte, block *DB.Block) error {
 	var genError error
 
 	for index, peer := range i.peers {
@@ -90,13 +91,18 @@ func (i *Issuer) sendBlock(tokenID string, blockHash [32]byte, block *DB.Block) 
 
 		client := rpcservice.NewRPCServiceClient(conn)
 
+		entityHash, err := block.GetHash()
+		if err != nil {
+			return err
+		}
+
 		resp, err := client.Inv(
 			context.Background(),
 			&tokenstrike.InvReq{Invs: []*tokenstrike.Inv{
 				{
-					Parent:     blockHash[:],
+					Parent:     genesisBlockHash[:],
 					Type:       tokenstrike.TYPE_BLOCK,
-					EntityHash: blockHash[:],
+					EntityHash: entityHash[:],
 				},
 			}},
 		)
@@ -108,7 +114,8 @@ func (i *Issuer) sendBlock(tokenID string, blockHash [32]byte, block *DB.Block) 
 			for _, need := range resp.Needed {
 				if need {
 					DataReq := &tokenstrike.Data{
-						Data: &tokenstrike.Data_Block{Block: block},
+						Data:  &tokenstrike.Data_Block{Block: block},
+						Token: tokenID,
 					}
 
 					//send selected lock and NOW skip check of warning

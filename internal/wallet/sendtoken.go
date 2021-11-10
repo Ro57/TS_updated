@@ -47,7 +47,8 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 		for _, need := range resp.Needed {
 			if need {
 				DataReq := &tokenstrike.Data{
-					Data: &tokenstrike.Data_Transfer{Transfer: transferTokens},
+					Data:  &tokenstrike.Data_Transfer{Transfer: transferTokens},
+					Token: req.TokenId,
 				}
 
 				//send selected lock and NOW skip check of warning
@@ -55,8 +56,6 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 				if err != nil {
 					return nil, err
 				}
-
-				s.db.TransferTokens(req.TokenId, req.LockId)
 			}
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/justifications"
 	"token-strike/tsp2p/server/lock"
+	"token-strike/tsp2p/server/tokenstrike"
 
 	"github.com/golang/protobuf/proto"
 )
@@ -64,7 +65,16 @@ func isLockEqual(lock *lock.Lock, entity []byte) bool {
 	return bytes.Equal(hash, entity)
 }
 
-func isTransferEqual(tx *justifications.TranferToken, entity []byte) bool {
+func isTransferEqual(justificationTX *justifications.TranferToken, entity []byte) bool {
+	htlc, err := hex.DecodeString(justificationTX.HtlcSecret)
+	if err != nil {
+		return false
+	}
+
+	tx := &tokenstrike.TransferTokens{
+		Htlc:   htlc,
+		LockId: justificationTX.Lock,
+	}
 
 	txBytes, err := proto.Marshal(tx)
 	if err != nil {

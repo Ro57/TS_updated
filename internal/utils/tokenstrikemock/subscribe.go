@@ -52,6 +52,7 @@ func (t *TokenStrikeMock) dispatch(msg *tokenstrike.Data) {
 						HtlcSecret: hex.EncodeToString(data.Transfer.Htlc),
 						Lock:       data.Transfer.LockId,
 					},
+					TokenID: msg.Token,
 				}
 			}
 		}

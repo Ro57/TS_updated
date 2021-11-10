@@ -93,6 +93,7 @@ func TestAllFunctions(t *testing.T) {
 	go func() {
 		err = wallet.NewServer(tokendb, alicePrivateKey, httpAlice, []string{httpIsaac})
 		if err != nil {
+
 			t.Error(err)
 		}
 	}()

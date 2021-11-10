@@ -64,7 +64,8 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		for _, need := range resp.Needed {
 			if need {
 				DataReq := &tokenstrike.Data{
-					Data: &tokenstrike.Data_Lock{lockEl},
+					Data:  &tokenstrike.Data_Lock{lockEl},
+					Token: req.TokenId,
 				}
 
 				//send selected lock and NOW skip check of warning
@@ -72,7 +73,6 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 				if err != nil {
 					return nil, err
 				}
-				s.db.LockToken(req.TokenId, lockEl)
 			}
 		}
 	}
