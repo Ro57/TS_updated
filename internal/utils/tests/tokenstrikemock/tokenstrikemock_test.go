@@ -1,10 +1,11 @@
 package utils_test
 
 import (
+	"os"
 	"testing"
-	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 	addressScheme "token-strike/internal/utils/simple"
+	utils "token-strike/internal/utils/tests"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/tokenstrike"
@@ -37,23 +38,9 @@ func randomSeed(l, offset int) [32]byte {
 }
 
 func (suite *TestSuite) SetupTest() {
-	db, err := database.Connect("./test.db")
-	if err != nil {
-		panic(err)
-	}
-
-	defer func() {
-		err := db.Close()
-		if err != nil {
-			suite.Error(err)
-		}
-
-		err = db.Clear()
-		if err != nil {
-			suite.Error(err)
-		}
-
-	}()
+	db, path := utils.InitTempDatabase(suite.T())
+	defer os.RemoveAll(path)
+	defer utils.CloseDB(db, suite.T())
 
 	tokendb := repository.NewBbolt(db)
 

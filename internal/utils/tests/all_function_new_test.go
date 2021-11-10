@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
 	"testing"
 	"time"
-	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 	issuerNew "token-strike/internal/issuer"
 	address2 "token-strike/internal/types/address"
@@ -17,6 +17,7 @@ import (
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/pktchain"
 	addressScheme "token-strike/internal/utils/simple"
+	utils "token-strike/internal/utils/tests"
 	"token-strike/internal/wallet"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/rpcservice"
@@ -47,11 +48,9 @@ var (
 
 func TestAllFunctionsNew(t *testing.T) {
 	// initialization the database
-	db, err := database.Connect("./test.db")
-	if err != nil {
-		panic(err)
-	}
-	defer closeDB(db, t)
+	db, path := utils.InitTempDatabase(t)
+	defer os.RemoveAll(path)
+	defer utils.CloseDB(db, t)
 
 	tokendb := repository.NewBbolt(db)
 
@@ -67,14 +66,14 @@ func TestAllFunctionsNew(t *testing.T) {
 	}
 
 	go func() {
-		err = issuerNew.NewServer(cfg, tokendb, isaacPrivateKey, httpIsaac)
+		err := issuerNew.NewServer(cfg, tokendb, isaacPrivateKey, httpIsaac)
 		if err != nil {
 			t.Error(err)
 		}
 	}()
 
 	go func() {
-		err = wallet.NewServer(tokendb, alicePrivateKey, httpAlice, []string{httpIsaac})
+		err := wallet.NewServer(tokendb, alicePrivateKey, httpAlice, []string{httpIsaac})
 		if err != nil {
 			t.Error(err)
 		}
@@ -138,17 +137,4 @@ func TestAllFunctionsNew(t *testing.T) {
 	}
 
 	fmt.Println(hex.EncodeToString(transferHash.Txid))
-}
-
-func closeDB(db *database.TokenStrikeDB, t *testing.T) {
-	err := db.Close()
-	if err != nil {
-		t.Error(err)
-	}
-
-	err = db.Clear()
-	if err != nil {
-		t.Error(err)
-	}
-
 }
