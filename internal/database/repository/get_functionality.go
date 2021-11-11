@@ -189,21 +189,19 @@ func (b *Bbolt) GetTokenList() ([]*replicator.Token, error) {
 
 		return rootBucket.ForEach(func(k, _ []byte) error {
 			tokenBucket := rootBucket.Bucket(k)
-
-			// skip useless buckets
-			if tokenBucket == nil {
+			if tokenBucket == nil { // skip useless buckets
 				return nil
 			}
 
-			var dbToken DB.Token
-			err := proto.Unmarshal(tokenBucket.Get(database.InfoKey), &dbToken)
+			var tokenInfo DB.Token
+			err := proto.Unmarshal(tokenBucket.Get(database.InfoKey), &tokenInfo)
 			if err != nil {
 				return err
 			}
 
 			token := replicator.Token{
 				Name:  string(k),
-				Token: &dbToken,
+				Token: &tokenInfo,
 				Root:  string(tokenBucket.Get(database.RootHashKey)),
 			}
 
