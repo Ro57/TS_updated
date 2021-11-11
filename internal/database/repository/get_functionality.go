@@ -139,11 +139,12 @@ func (b *Bbolt) GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBloc
 
 		if string(rootHash) != hash {
 
-			var (
-				currentHash = rootHash
-				chainBucket = tokenBucket.Bucket(database.ChainKey)
-			)
+			chainBucket := tokenBucket.Bucket(database.ChainKey)
+			if chainBucket == nil {
+				return errors.ChainBucketNotFoundErr
+			}
 
+			var currentHash = rootHash
 			for {
 				blockBytes := chainBucket.Get(currentHash)
 				if blockBytes == nil {
@@ -156,16 +157,17 @@ func (b *Bbolt) GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBloc
 					return err
 				}
 
-				if string(currentHash) == hash {
-					break
-				}
-
 				merkleBlock := replicator.MerkleBlock{
 					Hash:     string(currentHash),
 					PrevHash: block.PrevBlock,
 				}
 
 				blocks = append(blocks, &merkleBlock)
+
+				if string(currentHash) == hash {
+					break
+				}
+
 				currentHash = []byte(merkleBlock.PrevHash)
 			}
 		}
