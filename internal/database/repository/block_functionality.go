@@ -160,12 +160,15 @@ func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
 
 func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 	err := b.db.Update(func(tx *bbolt.Tx) error {
-		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
-		if err != nil {
-			return err
+		rootBucket := tx.Bucket(database.TokensKey)
+		if rootBucket == nil {
+			return errors.RootBucketNotFoundErr
 		}
 
 		tokenBucket := rootBucket.Bucket([]byte(name))
+		if tokenBucket == nil {
+			return errors.TokenNotFoundErr
+		}
 
 		if string(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
 			return fmt.Errorf(
@@ -175,9 +178,12 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 			)
 		}
 
-		blockSignatureBytes := []byte(block.GetSignature())
+		blockHash, err := block.GetHash()
+		if err != nil {
+			return err
+		}
 
-		err = tokenBucket.Put(database.RootHashKey, blockSignatureBytes)
+		err = tokenBucket.Put(database.RootHashKey, blockHash)
 		if err != nil {
 			return err
 		}
@@ -187,12 +193,12 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 			return errMarshal
 		}
 
-		chainBucket, err := tokenBucket.CreateBucketIfNotExists(database.ChainKey)
-		if err != nil {
-			return err
+		chainBucket := tokenBucket.Bucket(database.ChainKey)
+		if chainBucket == nil {
+			return errors.ChainBucketNotFoundErr
 		}
 
-		return chainBucket.Put(blockSignatureBytes, blockBytes)
+		return chainBucket.Put(blockHash, blockBytes)
 	})
 	if err != nil {
 		return err
