@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"token-strike/internal/database"
+	"token-strike/internal/errors"
 	"token-strike/internal/utils/idgen"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/lock"
@@ -102,19 +103,23 @@ func (b *Bbolt) IssueTokenDB(tokenID string, tokenInfo *DB.Token, block *DB.Bloc
 
 func (b *Bbolt) LockToken(tokenID string, lock *lock.Lock) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
-		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
-		if err != nil {
-			return err
+		rootBucket := tx.Bucket(database.TokensKey)
+		if rootBucket == nil {
+			return errors.RootBucketNotFoundErr
 		}
 
 		tokenBucket := rootBucket.Bucket([]byte(tokenID))
-		if err != nil {
-			return err
+		if tokenBucket == nil {
+			return errors.TokenNotFoundErr
+		}
+
+		stateBytes := tokenBucket.Get(database.StateKey)
+		if stateBytes == nil {
+			return errors.StateNotFoundErr
 		}
 
 		var state DB.State
-		stateBytes := tokenBucket.Get(database.StateKey)
-		err = proto.Unmarshal(stateBytes, &state)
+		err := proto.Unmarshal(stateBytes, &state)
 		if err != nil {
 			return err
 		}
