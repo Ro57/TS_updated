@@ -43,10 +43,13 @@ func (i *Issuer) bootBlockGenerator() {
 			block32 := [32]byte{}
 			copy(block32[:], blockHash[:32])
 
-			err = i.sendBlock(curLock.TokenID, block32, block)
-			if err != nil {
-				panic(err)
-			}
+			_ = i.invServer.Insert(
+				tokenstrikemock.MempoolEntry{
+					Hash:       curLock.TokenID,
+					Type:       tokenstrike.TYPE_LOCK,
+					Message:    block,
+					Expiration: 123,
+				})
 		}
 	}()
 
@@ -73,10 +76,13 @@ func (i *Issuer) bootBlockGenerator() {
 			block32 := [32]byte{}
 			copy(block32[:], blockHash[:32])
 
-			err = i.sendBlock(tx.TokenID, block32, block)
-			if err != nil {
-				panic(err)
-			}
+			_ = i.invServer.Insert(
+				tokenstrikemock.MempoolEntry{
+					Hash:       tx.TokenID,
+					Type:       tokenstrike.TYPE_TX,
+					Message:    block,
+					Expiration: 123,
+				})
 		}
 	}()
 }
