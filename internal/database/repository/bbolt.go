@@ -8,6 +8,7 @@ import (
 	"time"
 	"token-strike/internal/database"
 	"token-strike/internal/errors"
+	"token-strike/internal/utils/idgen"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/replicator"
@@ -44,22 +45,22 @@ func (b *Bbolt) GetTokenStatus(token string) (*DB.Block, *DB.State, error) {
 			return errors.TokenNotFoundErr
 		}
 
+		stateData := tokenBucket.Get(database.GenesisStateKey)
+		if stateData == nil {
+			return errors.InfoNotFoundErr
+		}
+
+		err := proto.Unmarshal(stateData, genesisState)
+		if err != nil {
+			return err
+		}
+
 		blockData := tokenBucket.Get(database.GenesisBlockKey)
 		if blockData == nil {
 			return errors.InfoNotFoundErr
 		}
 
-		err := proto.Unmarshal(blockData, genesisBlock)
-		if err != nil {
-			return err
-		}
-
-		stateData := tokenBucket.Get(database.GenesisBlockKey)
-		if stateData == nil {
-			return errors.InfoNotFoundErr
-		}
-
-		err = proto.Unmarshal(stateData, genesisState)
+		err = proto.Unmarshal(blockData, genesisBlock)
 		if err != nil {
 			return err
 		}
@@ -168,7 +169,9 @@ func (b *Bbolt) GetIssuerTokens() (tokens replicator.IssuerToken, err error) {
 func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 	var (
 		resp = &replicator.ChainInfo{
-			State:  &DB.State{},
+			State: &DB.State{},
+
+			// Blocks are reversed
 			Blocks: []*DB.Block{},
 			Root:   "",
 		}
@@ -208,7 +211,7 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 			blockBytes := chainBucket.Get(currentHash)
 			if blockBytes == nil {
 				return fmt.Errorf(
-					"block doesnot find by root hash=%v",
+					"block not found by root hash=%v",
 					currentHash,
 				)
 			}
@@ -301,7 +304,7 @@ func (b *Bbolt) GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBloc
 }
 
 func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
-	return b.db.Update(func(tx *bbolt.Tx) error {
+	err := b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
 		if err != nil {
 			return err
@@ -334,16 +337,20 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 			return err
 		}
 
-		for _, justification := range block.GetJustifications() {
-			err = b.ApplyJustification(name, justification)
-			if err != nil {
-				return err
-			}
-
-		}
-
 		return chainBucket.Put(blockSignatureBytes, blockBytes)
 	})
+	if err != nil {
+		return err
+	}
+
+	for _, justification := range block.GetJustifications() {
+		err := b.ApplyJustification(name, justification)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
@@ -552,6 +559,7 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 			if err != nil {
 				return err
 			}
+
 			errPut := tokenBucket.Put(database.StateKey, marshaledState)
 			if errPut != nil {
 				return errPut
@@ -583,14 +591,14 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 			return err
 		}
 
-		err = tokenBucket.Put(database.GenesisBlockKey, blockSignatureBytes)
-		if err != nil {
-			return err
-		}
-
 		blockBytes, errMarshal := proto.Marshal(block)
 		if errMarshal != nil {
 			return errMarshal
+		}
+
+		err = tokenBucket.Put(database.GenesisBlockKey, blockBytes)
+		if err != nil {
+			return err
 		}
 
 		chainBucket, err := tokenBucket.CreateBucketIfNotExists(database.ChainKey)
@@ -601,7 +609,7 @@ func (b *Bbolt) IssueTokenDB(name string, offer *DB.Token, block *DB.Block, stat
 	})
 }
 
-func (b *Bbolt) TransferTokens(tokenID, lock string) error {
+func (b *Bbolt) TransferTokens(tokenID, lockID string) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket, err := tx.CreateBucketIfNotExists(database.TokensKey)
 		if err != nil {
@@ -609,8 +617,53 @@ func (b *Bbolt) TransferTokens(tokenID, lock string) error {
 		}
 
 		tokenBucket := rootBucket.Bucket([]byte(tokenID))
+		if tokenBucket == nil {
+			return fmt.Errorf("token with id %v not found", tokenID)
+		}
+
+		rootHash := tokenBucket.Get(database.RootHashKey)
+		chainBucket := tokenBucket.Bucket(database.ChainKey)
+		currentHash := rootHash
+
+		blockHash, justificationIndex, err := idgen.Decode(lockID)
 		if err != nil {
 			return err
+		}
+
+		var resultBlockSign string
+		// Iterate blocks
+		for {
+			blockBytes := chainBucket.Get(currentHash)
+			if blockBytes == nil {
+				return fmt.Errorf(
+					"block not found by root hash=%v",
+					currentHash,
+				)
+			}
+
+			var block DB.Block
+			err := proto.Unmarshal(blockBytes, &block)
+			if err != nil {
+				return err
+			}
+
+			if block.PrevBlock == "" {
+				return fmt.Errorf("block with hash %v not found", blockHash)
+			}
+
+			resultBlockBytes, err := block.GetHash()
+			if err != nil {
+				return err
+			}
+
+			resultBlockHash := hex.EncodeToString(resultBlockBytes)
+
+			if *blockHash == resultBlockHash {
+				resultBlockSign = block.GetSignature()
+				break
+			}
+
+			currentHash = []byte(block.PrevBlock)
 		}
 
 		var state DB.State
@@ -620,10 +673,35 @@ func (b *Bbolt) TransferTokens(tokenID, lock string) error {
 			return err
 		}
 
-		lockHashIndex := state.GetLockIndexByHash(lock, state.Locks)
+		var block DB.Block
+
+		blockBytes := chainBucket.Get([]byte(resultBlockSign))
+		if blockBytes == nil {
+			return fmt.Errorf(
+				"block not found by signature=%v",
+				resultBlockSign,
+			)
+		}
+
+		err = proto.Unmarshal(blockBytes, &block)
+		if err != nil {
+			return err
+		}
+
+		lockJustification, ok := block.Justifications[*justificationIndex].Content.(*DB.Justification_Lock)
+		if !ok {
+			return fmt.Errorf("lock not found in blockL %v", block)
+		}
+
+		lockHash, err := lockJustification.Lock.Lock.GetHash()
+		if err != nil {
+			return err
+		}
+
+		lockHashIndex := state.GetLockIndexByHash(hex.EncodeToString(lockHash), state.Locks)
 
 		if lockHashIndex == nil {
-			return fmt.Errorf("not found lock %v in state", lock)
+			return fmt.Errorf("not found lock %v in state", lockID)
 		}
 
 		lock := state.Locks[*lockHashIndex]

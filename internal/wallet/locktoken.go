@@ -24,6 +24,9 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		Signature:      "",
 	}
 
+	// skip genesis block
+	s.inv.AwaitJustification(req.TokenId, nil)
+
 	err := lockEl.Sing(s.privateKey)
 	if err != nil {
 		return nil, err
@@ -61,7 +64,8 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		for _, need := range resp.Needed {
 			if need {
 				DataReq := &tokenstrike.Data{
-					Data: &tokenstrike.Data_Lock{lockEl},
+					Data:  &tokenstrike.Data_Lock{lockEl},
+					Token: req.TokenId,
 				}
 
 				//send selected lock and NOW skip check of warning
@@ -69,11 +73,14 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 				if err != nil {
 					return nil, err
 				}
-				s.db.LockToken(req.TokenId, lockEl)
 			}
-
 		}
 	}
 
-	return &rpcservice.LockTokenResponse{LockId: lockHash[:]}, nil
+	id, err := s.inv.AwaitJustification(req.TokenId, lockHash[:])
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpcservice.LockTokenResponse{LockId: *id}, nil
 }

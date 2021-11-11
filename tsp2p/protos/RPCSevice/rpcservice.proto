@@ -40,10 +40,10 @@ service RPCService {
 
 // TransferTokensRequest contain information about sending transaction
 message TransferTokensRequest {
-    // token — token name
-    string token = 1;
-    // lock — hash of locked tokens
-    bytes lock = 2;
+    // token_id — hash of genesis block
+    string token_id = 1;
+    // lock_id — hash of locked tokens
+    string lock_id = 2;
     // htlc — funds transfer contract generated in lightning network
     bytes htlc = 3; 
 }
@@ -51,7 +51,7 @@ message TransferTokensRequest {
 // TransferTokensResponse — contain transaction id
 message TransferTokensResponse {
     // txid — hash of transaction information
-    bytes txid = 1;
+    string txid = 1;
 }
 
 // IssueTokenRequest contains a list of owners and the number of pkt blocks 
@@ -85,7 +85,7 @@ message LockTokenRequest {
 // LockTokenResponse response with hash of lock 
 message LockTokenResponse {
     // lock_id — hash of lock
-    bytes lock_id = 1;
+    string lock_id = 1;
 }
 
 // PeerRequest contain url with host 

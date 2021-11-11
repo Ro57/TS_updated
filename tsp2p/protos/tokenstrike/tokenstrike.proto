@@ -71,8 +71,8 @@ message PostDataResp {
 message TransferTokens {
     // htlc — contract from lnd network
     bytes htlc = 1;
-    // lock id
-    bytes lock = 2;
+    // lock_id — formatted lock identifier
+    string lock_id = 2;
 }
 
 // TokenStatusReq — status of which token is needed

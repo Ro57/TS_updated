@@ -6,7 +6,7 @@ import (
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
 
-	address2 "token-strike/internal/types/address"
+	"token-strike/internal/types/address"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/rpcservice"
@@ -23,8 +23,8 @@ type Issuer struct {
 	tokendb   database.DBRepository
 	invServer *tokenstrikemock.TokenStrikeMock
 
-	private address2.PrivateKey
-	address address2.Address
+	private address.PrivateKey
+	address address.Address
 }
 
 func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) {
@@ -41,7 +41,7 @@ func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) 
 	return client, nil
 }
 
-func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address2.PrivateKey, target string) error {
+func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address.PrivateKey, target string) error {
 	lis, err := net.Listen("tcp", target)
 	if err != nil {
 		return err
@@ -54,11 +54,13 @@ func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address2.Privat
 		return err
 	}
 
+	issuerImpl.bootBlockGenerator()
+
 	rpcservice.RegisterRPCServiceServer(grpcServer, issuerImpl)
 	return grpcServer.Serve(lis)
 }
 
-func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2.PrivateKey) (*Issuer, error) {
+func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address.PrivateKey) (*Issuer, error) {
 	invServer := tokenstrikemock.New(tokendb, pk.Address())
 	issuer := &Issuer{
 		private:   pk,

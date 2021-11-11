@@ -2,7 +2,6 @@ package issuer
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"time"
 	"token-strike/internal/utils/tokenstrikemock"
@@ -10,8 +9,6 @@ import (
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
-
-	"github.com/golang/protobuf/proto"
 )
 
 func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenRequest) (*rpcservice.IssueTokenResponse, error) {
@@ -41,7 +38,7 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 		Justifications: nil,
 		Creation:       time.Now().Unix(),
 		State:          hex.EncodeToString(stateBytes),
-		PktBlockHash:   string(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
+		PktBlockHash:   hex.EncodeToString(i.config.Chain.BlockHashAtHeight(i.config.Chain.CurrentHeight())),
 		PktBlockHeight: i.config.Chain.CurrentHeight(),
 		Height:         0,
 	}
@@ -51,13 +48,12 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 		return nil, err
 	}
 
-	blockSigned, err := proto.Marshal(block)
+	blockHash, err := block.GetHash()
 	if err != nil {
 		return nil, err
 	}
 
-	blockHash := sha256.Sum256(blockSigned)
-	tokenID := hex.EncodeToString(blockHash[:])
+	tokenID := hex.EncodeToString(blockHash)
 
 	err = i.tokendb.SaveIssuerTokenDB(tokenID, i.address.String())
 	if err != nil {
