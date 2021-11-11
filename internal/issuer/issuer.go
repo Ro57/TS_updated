@@ -2,7 +2,6 @@ package issuer
 
 import (
 	"context"
-	"errors"
 	"net"
 	"token-strike/internal/database"
 	"token-strike/internal/database/repository"
@@ -26,7 +25,6 @@ type Issuer struct {
 
 	private address2.PrivateKey
 	address address2.Address
-	peers   []string
 }
 
 func CreateClient(target, selfAddr string) (rpcservice.RPCServiceClient, error) {
@@ -65,7 +63,6 @@ func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2
 	issuer := &Issuer{
 		private:   pk,
 		address:   pk.Address(),
-		peers:     make([]string, 0),
 		config:    cfg,
 		invServer: invServer,
 		tokendb:   tokendb,
@@ -74,11 +71,7 @@ func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address2
 	return issuer, nil
 }
 func (i *Issuer) AddPeer(ctx context.Context, request *rpcservice.PeerRequest) (*empty.Empty, error) {
-	if request.Url != "" {
-		i.peers = append(i.peers, request.Url)
-		return &empty.Empty{}, nil
-	}
-	return &empty.Empty{}, errors.New("url cannot is empty")
+	return &empty.Empty{}, i.invServer.AddPeer(request.Url)
 }
 
 func (i *Issuer) SendToken(ctx context.Context, req *rpcservice.TransferTokensRequest) (*rpcservice.TransferTokensResponse, error) {
