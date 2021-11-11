@@ -217,17 +217,24 @@ func (b *Bbolt) TransferTokens(tokenID, lockID string) error {
 
 		lockFromState := state.Locks[*lockHashIndex]
 		recipientIndex := state.GetOwnerIndexByHolder(lockFromState.Recipient, state.Owners)
-		if recipientIndex == nil {
-			index := len(state.Owners)
-			recipientIndex = &index
-			state.Owners = append(state.Owners, &DB.Owner{HolderWallet: lockFromState.Recipient, Count: state.Locks[*lockHashIndex].Count})
-		} else {
-			// Remove lockFromState
-			state.Locks = append(state.Locks[:*lockHashIndex], state.Locks[*lockHashIndex+1:]...)
 
+		if recipientIndex == nil {
+
+			state.Owners = append(
+				state.Owners,
+				&DB.Owner{
+					HolderWallet: lockFromState.Recipient,
+					Count:        state.Locks[len(state.Owners)].Count,
+				},
+			)
+
+		} else {
 			// Change balance
 			state.Owners[*recipientIndex].Count = state.Owners[*recipientIndex].Count + lockFromState.Count
 		}
+
+		// Remove lockFromState
+		state.Locks = append(state.Locks[:*lockHashIndex], state.Locks[*lockHashIndex+1:]...)
 
 		stateBytes, err = proto.Marshal(&state)
 		if err != nil {

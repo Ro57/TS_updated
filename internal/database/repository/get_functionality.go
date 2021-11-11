@@ -24,8 +24,8 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 			Root:   "",
 		}
 
-		err     error
-		dbstate DB.State
+		err   error
+		state DB.State
 	)
 	err = b.db.View(func(tx *bbolt.Tx) error {
 
@@ -40,9 +40,14 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 			return errors.TokensDBNotFound
 		}
 
+		chainBucket := tokenBucket.Bucket(database.ChainKey)
+		if chainBucket == nil {
+			return errors.ChainBucketNotFoundErr
+		}
+
 		// unmarshal chain state
 		dbStateByte := tokenBucket.Get(database.StateKey)
-		err = proto.Unmarshal(dbStateByte, &dbstate)
+		err = proto.Unmarshal(dbStateByte, &state)
 		if err != nil {
 			return err
 		}
@@ -50,8 +55,6 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 		// getting chain blocks
 		var (
 			rootHash    = tokenBucket.Get(database.RootHashKey)
-			chainBucket = tokenBucket.Bucket(database.ChainKey)
-
 			currentHash = rootHash
 		)
 
@@ -77,10 +80,9 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 			}
 
 			currentHash = []byte(block.PrevBlock)
-
 		}
 
-		resp.State = &dbstate
+		resp.State = &state
 		resp.Root = string(rootHash)
 
 		return nil
