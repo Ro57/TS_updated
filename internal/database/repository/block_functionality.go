@@ -39,6 +39,9 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 		}
 
 		tokenBucket := rootBucket.Bucket([]byte(name))
+		if tokenBucket == nil {
+			return errors.RootBucketNotFoundErr
+		}
 
 		lastHash := tokenBucket.Get(database.RootHashKey)
 		if lastHash == nil {
@@ -106,16 +109,12 @@ func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
 	return b.db.Update(func(tx *bbolt.Tx) error {
 		rootBucket := tx.Bucket(database.TokensKey)
 		if rootBucket == nil {
-			var err error
-			rootBucket, err = tx.CreateBucketIfNotExists(database.TokensKey)
-			if err != nil {
-				return err
-			}
+			return errors.RootBucketNotFoundErr
 		}
 
-		tokenBucket, err := rootBucket.CreateBucketIfNotExists([]byte(name))
-		if err != nil {
-			return err
+		tokenBucket := rootBucket.Bucket([]byte(name))
+		if tokenBucket == nil {
+			return errors.TokenNotFoundErr
 		}
 
 		// below is the algorithm for searching and saving blocks in order

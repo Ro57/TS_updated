@@ -275,6 +275,7 @@ func (b *Bbolt) GetToken(name string) (replicator.Token, error) {
 		if tokenBucket == nil {
 			return errors.TokenNotFoundErr
 		}
+
 		infoBytes := tokenBucket.Get(database.InfoKey)
 		if infoBytes == nil {
 			return errors.InfoNotFoundErr
