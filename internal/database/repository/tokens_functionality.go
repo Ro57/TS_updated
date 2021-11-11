@@ -165,68 +165,36 @@ func (b *Bbolt) TransferTokens(tokenID, lockID string) error {
 			return fmt.Errorf("token with id %v not found", tokenID)
 		}
 
-		rootHash := tokenBucket.Get(database.RootHashKey)
+		stateBytes := tokenBucket.Get(database.StateKey)
+		if stateBytes == nil {
+			return errors.StateNotFoundErr
+		}
+
 		chainBucket := tokenBucket.Bucket(database.ChainKey)
-		currentHash := rootHash
+		if chainBucket == nil {
+			return errors.ChainBucketNotFoundErr
+		}
 
 		blockHash, justificationIndex, err := idgen.Decode(lockID)
 		if err != nil {
 			return err
 		}
 
-		var resultBlockSign string
-		// Iterate blocks
-		for {
-			blockBytes := chainBucket.Get(currentHash)
-			if blockBytes == nil {
-				return fmt.Errorf(
-					"block not found by root hash=%v",
-					currentHash,
-				)
-			}
-
-			var block DB.Block
-			err := proto.Unmarshal(blockBytes, &block)
-			if err != nil {
-				return err
-			}
-
-			if block.PrevBlock == "" {
-				return fmt.Errorf("block with hash %v not found", blockHash)
-			}
-
-			resultBlockBytes, err := block.GetHash()
-			if err != nil {
-				return err
-			}
-
-			resultBlockHash := hex.EncodeToString(resultBlockBytes)
-
-			if *blockHash == resultBlockHash {
-				resultBlockSign = block.GetSignature()
-				break
-			}
-
-			currentHash = []byte(block.PrevBlock)
-		}
-
 		var state DB.State
-		stateBytes := tokenBucket.Get(database.StateKey)
 		err = proto.Unmarshal(stateBytes, &state)
 		if err != nil {
 			return err
 		}
 
-		var block DB.Block
-
-		blockBytes := chainBucket.Get([]byte(resultBlockSign))
+		blockBytes := chainBucket.Get([]byte(*blockHash))
 		if blockBytes == nil {
 			return fmt.Errorf(
 				"block not found by signature=%v",
-				resultBlockSign,
+				blockHash,
 			)
 		}
 
+		var block DB.Block
 		err = proto.Unmarshal(blockBytes, &block)
 		if err != nil {
 			return err
@@ -234,7 +202,7 @@ func (b *Bbolt) TransferTokens(tokenID, lockID string) error {
 
 		lockJustification, ok := block.Justifications[*justificationIndex].Content.(*DB.Justification_Lock)
 		if !ok {
-			return fmt.Errorf("lock not found in blockL %v", block)
+			return fmt.Errorf("lockFromState not found in blockL %v", block)
 		}
 
 		lockHash, err := lockJustification.Lock.Lock.GetHash()
@@ -243,25 +211,23 @@ func (b *Bbolt) TransferTokens(tokenID, lockID string) error {
 		}
 
 		lockHashIndex := state.GetLockIndexByHash(hex.EncodeToString(lockHash), state.Locks)
-
 		if lockHashIndex == nil {
-			return fmt.Errorf("not found lock %v in state", lockID)
+			return fmt.Errorf("not found lockFromState %v in state", lockID)
 		}
 
-		lock := state.Locks[*lockHashIndex]
-
-		recipientIndex := state.GetOwnerIndexByHolder(lock.Recipient, state.Owners)
+		lockFromState := state.Locks[*lockHashIndex]
+		recipientIndex := state.GetOwnerIndexByHolder(lockFromState.Recipient, state.Owners)
 		if recipientIndex == nil {
 			index := len(state.Owners)
 			recipientIndex = &index
-			state.Owners = append(state.Owners, &DB.Owner{HolderWallet: lock.Recipient, Count: 0})
+			state.Owners = append(state.Owners, &DB.Owner{HolderWallet: lockFromState.Recipient, Count: state.Locks[*lockHashIndex].Count})
+		} else {
+			// Remove lockFromState
+			state.Locks = append(state.Locks[:*lockHashIndex], state.Locks[*lockHashIndex+1:]...)
+
+			// Change balance
+			state.Owners[*recipientIndex].Count = state.Owners[*recipientIndex].Count + lockFromState.Count
 		}
-
-		// Remove lock
-		state.Locks = append(state.Locks[:*lockHashIndex], state.Locks[*lockHashIndex+1:]...)
-
-		// Change balance
-		state.Owners[*recipientIndex].Count = state.Owners[*recipientIndex].Count + lock.Count
 
 		stateBytes, err = proto.Marshal(&state)
 		if err != nil {
