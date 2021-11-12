@@ -3,6 +3,8 @@ package wallet
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
+	"token-strike/internal/utils/idgen"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/rpcservice"
@@ -24,8 +26,9 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		Signature:      "",
 	}
 
-	// skip genesis block
-	s.inv.AwaitJustification(req.TokenId, nil)
+	dispatcher := s.inv.Subscribe(req.TokenId)
+	// Skip genesis block from pool
+	<-dispatcher.Block
 
 	err := lockEl.Sing(s.privateKey)
 	if err != nil {
@@ -40,16 +43,26 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 	lockHash := sha256.Sum256(lockSigned)
 
 	_ = s.inv.Insert(tokenstrikemock.MempoolEntry{
-		ParentHash: "req.TokenId",
+		ParentHash: req.TokenId,
 		Expiration: 123,
-		Type:       tokenstrike.TYPE_TX,
+		Type:       tokenstrike.TYPE_LOCK,
 		Message:    lockEl,
 	})
 
-	id, err := s.inv.AwaitJustification(req.TokenId, lockHash[:])
+	lockBlock := <-dispatcher.Block
+
+	number, err := idgen.EntityIndex(lockBlock.Content, lockHash[:])
 	if err != nil {
 		return nil, err
 	}
 
-	return &rpcservice.LockTokenResponse{LockId: *id}, nil
+	lockBlockBytes, err := lockBlock.Content.GetHash()
+	if err != nil {
+		return nil, err
+	}
+
+	lockBlockHash := hex.EncodeToString(lockBlockBytes)
+
+	id := idgen.Encode(lockBlockHash, number)
+	return &rpcservice.LockTokenResponse{LockId: id}, nil
 }

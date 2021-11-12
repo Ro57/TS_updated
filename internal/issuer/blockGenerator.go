@@ -11,12 +11,11 @@ import (
 )
 
 // TODO: Error handling
-func (i *Issuer) bootBlockGenerator() {
-
+func (i *Issuer) startBlockGenerator(tokenID string) {
+	dispather := i.invServer.Subscribe(tokenID)
 	go func() {
-		lockChan := i.invServer.CreateNewLockChannel()
 		for {
-			curLock := <-lockChan
+			curLock := <-dispather.Lock
 
 			block, err := i.generateLockBlock(curLock)
 			if err != nil {
@@ -46,7 +45,7 @@ func (i *Issuer) bootBlockGenerator() {
 			_ = i.invServer.Insert(
 				tokenstrikemock.MempoolEntry{
 					ParentHash: curLock.TokenID,
-					Type:       tokenstrike.TYPE_LOCK,
+					Type:       tokenstrike.TYPE_BLOCK,
 					Message:    block,
 					Expiration: 123,
 				})
@@ -54,9 +53,8 @@ func (i *Issuer) bootBlockGenerator() {
 	}()
 
 	go func() {
-		txChan := i.invServer.CreateNewTxChannel()
 		for {
-			tx := <-txChan
+			tx := <-dispather.TX
 
 			block, err := i.generateTxBlock(tx)
 			if err != nil {
@@ -87,7 +85,7 @@ func (i *Issuer) bootBlockGenerator() {
 	}()
 }
 
-func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockForBlock) (*DB.Block, error) {
+func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockEvent) (*DB.Block, error) {
 	chain, err := i.tokendb.GetChainInfoDB(curLock.TokenID)
 	if err != nil {
 		return nil, err
@@ -127,7 +125,7 @@ func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockForBlock) (*DB.Bl
 	return block, nil
 }
 
-func (i Issuer) generateTxBlock(curTx *tokenstrikemock.TxForBlock) (*DB.Block, error) {
+func (i Issuer) generateTxBlock(curTx *tokenstrikemock.TxEvent) (*DB.Block, error) {
 	chain, err := i.tokendb.GetChainInfoDB(curTx.TokenID)
 	if err != nil {
 		return nil, err

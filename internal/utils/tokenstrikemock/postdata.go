@@ -43,7 +43,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		return nil, errors.New("unknown data type")
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("validation error : %v ", err)
 	}
 
 	t.dispatch(req)
@@ -303,17 +303,18 @@ func (t TokenStrikeMock) validateBlockInv(block *DB.Block) error {
 		return fmt.Errorf("type of justification want block(2) but get %v", t.mempoolEntries[blockHashStr].Type)
 	}
 
+	t.mempoolEntries[blockHashStr].Message = block
+
 	return nil
 
 }
 
 func (t TokenStrikeMock) getTokenID(data []byte) string {
-	dataHash := sha256.Sum256(data)
-	entity := hex.EncodeToString(dataHash[:])
+	entity := hex.EncodeToString(data)
 
-	inv := t.invCache[entity]
+	tokenID := t.mempoolEntries[entity].ParentHash
 
-	return hex.EncodeToString(inv.Parent)
+	return tokenID
 }
 
 func getOwner(ownerName string, owners []*DB.Owner) *DB.Owner {

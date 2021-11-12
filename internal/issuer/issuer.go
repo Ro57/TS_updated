@@ -54,8 +54,6 @@ func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address.Private
 		return err
 	}
 
-	issuerImpl.bootBlockGenerator()
-
 	rpcservice.RegisterRPCServiceServer(grpcServer, issuerImpl)
 	return grpcServer.Serve(lis)
 }
@@ -72,6 +70,7 @@ func CreateIssuer(cfg *config.Config, tokendb database.DBRepository, pk address.
 
 	return issuer, nil
 }
+
 func (i *Issuer) AddPeer(ctx context.Context, request *rpcservice.PeerRequest) (*empty.Empty, error) {
 	return &empty.Empty{}, i.invServer.AddPeer(request.Url)
 }

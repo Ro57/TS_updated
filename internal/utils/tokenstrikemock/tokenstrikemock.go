@@ -17,16 +17,14 @@ const (
 )
 
 type TokenStrikeMock struct {
-	address         address.Address
-	bboltDB         database.DBRepository
-	pktChain        pkt.PktChain
-	addressScheme   addressScheme.SimpleAddressScheme
-	invCache        map[string]tokenstrike.Inv
-	blockDispatcher chan *tokenstrike.Data_Block
-	lockDispatchers []chan *LockForBlock
-	txDispatchers   []chan *TxForBlock
-	mempoolEntries  map[string]*MempoolEntry
-	peers           []string
+	address        address.Address
+	bboltDB        database.DBRepository
+	pktChain       pkt.PktChain
+	addressScheme  addressScheme.SimpleAddressScheme
+	invCache       map[string]tokenstrike.Inv
+	dispatchers    map[string]*Dispatcher
+	mempoolEntries map[string]*MempoolEntry
+	peers          []string
 }
 
 //var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
@@ -37,15 +35,13 @@ func New(db database.DBRepository, simpleAddress address.Address) (res *TokenStr
 	}()
 
 	return &TokenStrikeMock{
-		bboltDB:         db,
-		pktChain:        &pktchain.SimplePktChain{},
-		addressScheme:   addressScheme.SimpleAddressScheme{},
-		invCache:        make(map[string]tokenstrike.Inv),
-		address:         simpleAddress,
-		mempoolEntries:  make(map[string]*MempoolEntry, 0),
-		peers:           make([]string, 0),
-		blockDispatcher: make(chan *tokenstrike.Data_Block),
-		lockDispatchers: []chan *LockForBlock{},
-		txDispatchers:   []chan *TxForBlock{},
+		bboltDB:        db,
+		pktChain:       &pktchain.SimplePktChain{},
+		addressScheme:  addressScheme.SimpleAddressScheme{},
+		invCache:       make(map[string]tokenstrike.Inv),
+		address:        simpleAddress,
+		mempoolEntries: make(map[string]*MempoolEntry, 0),
+		peers:          make([]string, 0),
+		dispatchers:    make(map[string]*Dispatcher),
 	}
 }
