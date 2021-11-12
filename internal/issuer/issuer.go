@@ -54,8 +54,6 @@ func NewServer(cfg *config.Config, tokendb *repository.Bbolt, pk address.Private
 		return err
 	}
 
-	issuerImpl.bootBlockGenerator()
-
 	rpcservice.RegisterRPCServiceServer(grpcServer, issuerImpl)
 	return grpcServer.Serve(lis)
 }

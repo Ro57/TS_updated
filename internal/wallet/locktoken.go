@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"token-strike/internal/utils/idgen"
 	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
@@ -24,8 +25,9 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		Signature:      "",
 	}
 
-	// skip genesis block
-	s.inv.AwaitJustification(req.TokenId, nil)
+	dispatcher := s.inv.Subscribe(req.TokenId)
+	// Skip genesis block from pool
+	<-dispatcher.Block
 
 	err := lockEl.Sing(s.privateKey)
 	if err != nil {
@@ -77,10 +79,20 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		}
 	}
 
-	id, err := s.inv.AwaitJustification(req.TokenId, lockHash[:])
+	lockBlock := <-dispatcher.Block
+
+	number, err := idgen.EntityIndex(lockBlock.Content, lockHash[:])
 	if err != nil {
 		return nil, err
 	}
 
-	return &rpcservice.LockTokenResponse{LockId: *id}, nil
+	lockBlockBytes, err := lockBlock.Content.GetHash()
+	if err != nil {
+		return nil, err
+	}
+
+	lockBlockHash := hex.EncodeToString(lockBlockBytes)
+
+	id := idgen.Encode(lockBlockHash, number)
+	return &rpcservice.LockTokenResponse{LockId: id}, nil
 }

@@ -73,6 +73,8 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 			Expiration: 123,
 		})
 
+	i.startBlockGenerator(tokenID)
+
 	return &rpcservice.IssueTokenResponse{
 		TokenId: tokenID,
 	}, nil
