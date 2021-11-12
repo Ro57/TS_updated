@@ -24,6 +24,7 @@ type Server struct {
 	db             database.DBRepository
 	issuerInvSlice []rpcservice.RPCServiceClient
 	inv            *tokenstrikemock.TokenStrikeMock
+	dispather      tokenstrikemock.Dispatcher
 }
 
 var _ rpcservice.RPCServiceServer = &Server{}

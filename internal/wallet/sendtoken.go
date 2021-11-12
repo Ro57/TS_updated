@@ -3,6 +3,8 @@ package wallet
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/hex"
+	"token-strike/internal/utils/idgen"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
@@ -30,10 +32,22 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 		Message:    transferTokens,
 	})
 
-	id, err := s.inv.AwaitJustification(req.TokenId, transferTokensHash[:])
+	dispatcher := s.inv.Subscribe(req.TokenId)
+	txBlock := <-dispatcher.Block
+
+	number, err := idgen.EntityIndex(txBlock.Content, transferTokensHash[:])
 	if err != nil {
 		return nil, err
 	}
 
-	return &rpcservice.TransferTokensResponse{Txid: *id}, nil
+	txBlockBytes, err := txBlock.Content.GetHash()
+	if err != nil {
+		return nil, err
+	}
+
+	txBlockHash := hex.EncodeToString(txBlockBytes)
+
+	id := idgen.Encode(txBlockHash, number)
+
+	return &rpcservice.TransferTokensResponse{Txid: id}, nil
 }

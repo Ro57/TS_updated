@@ -17,6 +17,16 @@ import (
 
 const separator = ":"
 
+func EntityIndex(Block DB.Block, hashOfEntity []byte) (int, error) {
+	for i, justification := range Block.Justifications {
+		if isEntity(justification, hashOfEntity) {
+			return i, nil
+		}
+	}
+
+	return 0, fmt.Errorf("Justification with %v content hash, not found", hashOfEntity)
+}
+
 func Encode(blockHash string, number int) string {
 	return fmt.Sprint(blockHash, separator, number)
 }
@@ -32,16 +42,6 @@ func Decode(ID string) (*string, *int, error) {
 	}
 
 	return &blockHash, &justificationNumber, nil
-}
-
-func EntityIndex(Block DB.Block, hashOfEntity []byte) (int, error) {
-	for i, justification := range Block.Justifications {
-		if isEntity(justification, hashOfEntity) {
-			return i, nil
-		}
-	}
-
-	return 0, fmt.Errorf("Justification with %v content hash, not found", hashOfEntity)
 }
 
 func isEntity(justification *DB.Justification, hashOfEntity []byte) bool {

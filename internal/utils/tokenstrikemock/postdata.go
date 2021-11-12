@@ -8,10 +8,8 @@ import (
 	"errors"
 	"fmt"
 	tokenErrors "token-strike/internal/errors"
-	"token-strike/internal/utils/idgen"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/lock"
-	"token-strike/tsp2p/server/replicator"
 	"token-strike/tsp2p/server/tokenstrike"
 
 	"github.com/golang/protobuf/proto"
@@ -46,9 +44,7 @@ func (t TokenStrikeMock) PostData(ctx context.Context, req *tokenstrike.Data) (*
 		return nil, err
 	}
 
-	t.dispatch(req)
-
-	return resp, nil
+	return resp, t.sendDataToSubscribers(req)
 }
 
 func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err error) {
@@ -65,6 +61,7 @@ func (t TokenStrikeMock) validateBlock(block *DB.Block) (warnings []string, err 
 	tokenID := t.getTokenID(blockBytes)
 
 	if block.Justifications == nil {
+
 		return nil, nil
 	}
 
@@ -143,10 +140,10 @@ func (t TokenStrikeMock) validateLockHeight(lock lock.Lock) error {
 }
 
 //Is pkt block hash correct ?
-func (t TokenStrikeMock) validateLockHashCorrect(curLock lock.Lock) error {
-	pktBlockHash := t.pktChain.BlockHashAtHeight(int32(curLock.PktBlockHeight))
+func (t TokenStrikeMock) validateLockHashCorrect(lock lock.Lock) error {
+	pktBlockHash := t.pktChain.BlockHashAtHeight(int32(lock.PktBlockHeight))
 
-	if bytes.Compare(curLock.PktBlockHash, pktBlockHash) != 0 {
+	if bytes.Compare(lock.PktBlockHash, pktBlockHash) != 0 {
 		return errors.New("pkt block hash not correct")
 	}
 
@@ -227,7 +224,7 @@ func (t TokenStrikeMock) validateTransferLock(transfer tokenstrike.TransferToken
 		return err
 	}
 
-	if _, err := getLock(transfer.LockId, chain); err != nil {
+	if _, err := getLock(transfer.Lock, chain.State.Locks); err != nil {
 		return err
 	}
 
@@ -248,7 +245,7 @@ func (t TokenStrikeMock) validateTransferHtlc(transfer tokenstrike.TransferToken
 		return err
 	}
 
-	lock, err := getLock(transfer.LockId, chain)
+	lock, err := getLock(transfer.Lock, chain.State.Locks)
 	if err != nil {
 		return err
 	}
@@ -336,43 +333,8 @@ func isContainToken(tokenName string, tokenSlice []string) bool {
 	return false
 }
 
-func getLock(lockID string, chain *replicator.ChainInfo) (*lock.Lock, error) {
-	blockHash, number, err := idgen.Decode(lockID)
-	if err != nil {
-		return nil, err
-	}
-
-	justification, err := func() (*DB.Justification, error) {
-		for _, block := range chain.Blocks {
-			blockBytes, err := block.GetHash()
-			if err != nil {
-				return nil, err
-			}
-
-			hash := hex.EncodeToString(blockBytes)
-
-			if *blockHash == hash {
-				return block.Justifications[*number], nil
-			}
-		}
-
-		return nil, fmt.Errorf("block with hash %v, not found", blockHash)
-	}()
-	if err != nil {
-		return nil, err
-	}
-
-	lockContent, ok := justification.Content.(*DB.Justification_Lock)
-	if !ok {
-		return nil, fmt.Errorf("incorrect type of justification in %v, want lock type", justification.Content)
-	}
-
-	lockHash, err := lockContent.Lock.Lock.GetHash()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, lock := range chain.State.Locks {
+func getLock(lockHash []byte, lockSlice []*lock.Lock) (*lock.Lock, error) {
+	for _, lock := range lockSlice {
 		lockBytes, err := proto.Marshal(lock)
 		if err != nil {
 			return nil, err
