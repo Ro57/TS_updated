@@ -72,7 +72,8 @@ func CreateWallet(db database.DBRepository, peerUrl string, pk addressTypes.Priv
 	pkt := cfg.Chain.(*pktchain.SimplePktChain)
 	scheme := cfg.Scheme.(*addressScheme.SimpleAddressScheme)
 
-	issuerClients, err := getClients(peerUrl, issuerUrlHints)
+	inv := tokenstrikemock.New(db, walletAddress)
+	issuerClients, err := getClients(peerUrl, issuerUrlHints, inv)
 	if err != nil {
 		return nil, err
 	}
@@ -84,13 +85,13 @@ func CreateWallet(db database.DBRepository, peerUrl string, pk addressTypes.Priv
 		scheme:         *scheme,
 		db:             db,
 		issuerInvSlice: issuerClients,
-		inv:            tokenstrikemock.New(db, walletAddress),
+		inv:            inv,
 	}
 
 	return wallet, nil
 }
 
-func getClients(peerUrl string, issuerUrls []string) (issuerSlice []rpcservice.RPCServiceClient, err error) {
+func getClients(peerUrl string, issuerUrls []string, inv *tokenstrikemock.TokenStrikeMock) (issuerSlice []rpcservice.RPCServiceClient, err error) {
 	for _, url := range issuerUrls {
 		conn, err := grpc.DialContext(
 			context.TODO(),
@@ -101,14 +102,19 @@ func getClients(peerUrl string, issuerUrls []string) (issuerSlice []rpcservice.R
 			return nil, err
 		}
 
-		client := rpcservice.NewRPCServiceClient(conn)
+		issuerClient := rpcservice.NewRPCServiceClient(conn)
 
-		_, err = client.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: peerUrl})
+		_, err = issuerClient.AddPeer(context.Background(), &rpcservice.PeerRequest{Url: peerUrl})
 		if err != nil {
 			return nil, err
 		}
 
-		issuerSlice = append(issuerSlice, client)
+		err = inv.AddPeer(url)
+		if err != nil {
+			return nil, err
+		}
+
+		issuerSlice = append(issuerSlice, issuerClient)
 	}
 	return
 }

@@ -45,7 +45,7 @@ func (i *Issuer) startBlockGenerator(tokenID string) {
 			_ = i.invServer.Insert(
 				tokenstrikemock.MempoolEntry{
 					ParentHash: curLock.TokenID,
-					Type:       tokenstrike.TYPE_LOCK,
+					Type:       tokenstrike.TYPE_BLOCK,
 					Message:    block,
 					Expiration: 123,
 				})

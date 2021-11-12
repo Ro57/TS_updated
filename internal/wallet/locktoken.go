@@ -43,9 +43,9 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 	lockHash := sha256.Sum256(lockSigned)
 
 	_ = s.inv.Insert(tokenstrikemock.MempoolEntry{
-		ParentHash: "req.TokenId",
+		ParentHash: req.TokenId,
 		Expiration: 123,
-		Type:       tokenstrike.TYPE_TX,
+		Type:       tokenstrike.TYPE_LOCK,
 		Message:    lockEl,
 	})
 

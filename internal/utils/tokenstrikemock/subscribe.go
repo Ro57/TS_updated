@@ -30,15 +30,17 @@ type Dispatcher struct {
 }
 
 func (t *TokenStrikeMock) Subscribe(PartenHash string) Dispatcher {
-	dispatcher := &Dispatcher{
-		Lock:  make(chan *LockEvent),
-		TX:    make(chan *TxEvent),
-		Block: make(chan *BlockEvent),
+
+	// if dispather not exist, create it
+	if t.dispatchers[PartenHash] == nil {
+		t.dispatchers[PartenHash] = &Dispatcher{
+			Lock:  make(chan *LockEvent),
+			TX:    make(chan *TxEvent),
+			Block: make(chan *BlockEvent),
+		}
 	}
 
-	t.dispatchers[PartenHash] = append(t.dispatchers[PartenHash], dispatcher)
-
-	return *dispatcher
+	return *t.dispatchers[PartenHash]
 }
 
 func (t *TokenStrikeMock) dispatch(msg *tokenstrike.Data) {
@@ -56,31 +58,25 @@ func (t *TokenStrikeMock) dispatch(msg *tokenstrike.Data) {
 }
 
 func (t *TokenStrikeMock) dispatchBlock(ParentHash string, data *tokenstrike.Data_Block) {
-	for _, dispathcer := range t.dispatchers[ParentHash] {
-		dispathcer.Block <- &BlockEvent{
-			TokenID: ParentHash,
-			Content: *data.Block,
-		}
+	t.dispatchers[ParentHash].Block <- &BlockEvent{
+		TokenID: ParentHash,
+		Content: *data.Block,
 	}
 }
 
 func (t *TokenStrikeMock) dispatchLock(ParentHash string, data *tokenstrike.Data_Lock) {
-	for _, dispathcer := range t.dispatchers[ParentHash] {
-		dispathcer.Lock <- &LockEvent{
-			TokenID: ParentHash,
-			Content: *data.Lock,
-		}
+	t.dispatchers[ParentHash].Lock <- &LockEvent{
+		TokenID: ParentHash,
+		Content: *data.Lock,
 	}
 }
 
 func (t *TokenStrikeMock) dispatchTx(ParentHash string, data *tokenstrike.Data_Transfer) {
-	for _, dispathcer := range t.dispatchers[ParentHash] {
-		dispathcer.TX <- &TxEvent{
-			TokenID: ParentHash,
-			Content: justifications.TranferToken{
-				HtlcSecret: hex.EncodeToString(data.Transfer.GetHtlc()),
-				Lock:       data.Transfer.GetLockId(),
-			},
-		}
+	t.dispatchers[ParentHash].TX <- &TxEvent{
+		TokenID: ParentHash,
+		Content: justifications.TranferToken{
+			HtlcSecret: hex.EncodeToString(data.Transfer.GetHtlc()),
+			Lock:       data.Transfer.GetLockId(),
+		},
 	}
 }

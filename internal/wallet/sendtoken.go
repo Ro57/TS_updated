@@ -25,14 +25,15 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 
 	transferTokensHash := sha256.Sum256(transferTokensB)
 
+	dispatcher := s.inv.Subscribe(req.TokenId)
+
 	_ = s.inv.Insert(tokenstrikemock.MempoolEntry{
-		ParentHash: "req.TokenId",
+		ParentHash: req.TokenId,
 		Expiration: 123,
 		Type:       tokenstrike.TYPE_TX,
 		Message:    transferTokens,
 	})
 
-	dispatcher := s.inv.Subscribe(req.TokenId)
 	txBlock := <-dispatcher.Block
 
 	number, err := idgen.EntityIndex(txBlock.Content, transferTokensHash[:])

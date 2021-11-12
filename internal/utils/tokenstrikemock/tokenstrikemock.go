@@ -22,7 +22,7 @@ type TokenStrikeMock struct {
 	pktChain       pkt.PktChain
 	addressScheme  addressScheme.SimpleAddressScheme
 	invCache       map[string]tokenstrike.Inv
-	dispatchers    map[string][]*Dispatcher
+	dispatchers    map[string]*Dispatcher
 	mempoolEntries map[string]*MempoolEntry
 	peers          []string
 }
@@ -42,6 +42,6 @@ func New(db database.DBRepository, simpleAddress address.Address) (res *TokenStr
 		address:        simpleAddress,
 		mempoolEntries: make(map[string]*MempoolEntry, 0),
 		peers:          make([]string, 0),
-		dispatchers:    make(map[string][]*Dispatcher),
+		dispatchers:    make(map[string]*Dispatcher),
 	}
 }
