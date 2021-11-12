@@ -186,10 +186,15 @@ func (b *Bbolt) TransferTokens(tokenID, lockID string) error {
 			return err
 		}
 
-		blockBytes := chainBucket.Get([]byte(*blockHash))
+		blockDecoded, err := hex.DecodeString(*blockHash)
+		if err != nil {
+			return err
+		}
+
+		blockBytes := chainBucket.Get(blockDecoded)
 		if blockBytes == nil {
 			return fmt.Errorf(
-				"block not found by signature=%v",
+				"block not found by hash=%v",
 				blockHash,
 			)
 		}

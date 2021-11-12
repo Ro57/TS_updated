@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"encoding/hex"
 	"encoding/json"
 	stdErrors "errors"
 	"fmt"
@@ -79,7 +80,10 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 				break
 			}
 
-			currentHash = []byte(block.PrevBlock)
+			currentHash, err = hex.DecodeString(block.PrevBlock)
+			if err != nil {
+				return err
+			}
 		}
 
 		resp.State = &state

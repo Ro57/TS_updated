@@ -170,10 +170,10 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 			return errors.TokenNotFoundErr
 		}
 
-		if string(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
+		if hex.EncodeToString(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
 			return fmt.Errorf(
 				"invalid hash of the previous block want %s but get %s",
-				tokenBucket.Get(database.RootHashKey),
+				hex.EncodeToString(tokenBucket.Get(database.RootHashKey)),
 				block.PrevBlock,
 			)
 		}

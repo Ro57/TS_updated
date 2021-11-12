@@ -107,8 +107,13 @@ func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockEvent) (*DB.Block
 		},
 	}
 
+	lastBlockHash, err := lastBlock.GetHash()
+	if err != nil {
+		return nil, err
+	}
+
 	block := &DB.Block{
-		PrevBlock:      lastBlock.GetSignature(),
+		PrevBlock:      hex.EncodeToString(lastBlockHash),
 		Justifications: []*DB.Justification{lockJustification},
 		Creation:       time.Now().Unix(),
 		State:          hex.EncodeToString(stateBytes),
@@ -145,8 +150,13 @@ func (i Issuer) generateTxBlock(curTx *tokenstrikemock.TxEvent) (*DB.Block, erro
 		},
 	}
 
+	lastBlockHash, err := lastBlock.GetHash()
+	if err != nil {
+		return nil, err
+	}
+
 	block := &DB.Block{
-		PrevBlock:      lastBlock.GetSignature(),
+		PrevBlock:      hex.EncodeToString(lastBlockHash),
 		Justifications: []*DB.Justification{txJustification},
 		Creation:       time.Now().Unix(),
 		State:          hex.EncodeToString(stateBytes),
