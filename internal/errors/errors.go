@@ -15,4 +15,5 @@ var (
 	RootHashNotFoundErr    = errors.New("root hash not found")
 	LastBlockNotFoundErr   = errors.New("last block not found")
 	ChainBucketNotFoundErr = errors.New("chain bucket not found")
+	RootBucketNotFoundErr  = errors.New("root bucket not found")
 )
