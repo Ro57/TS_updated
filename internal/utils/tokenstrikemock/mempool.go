@@ -2,7 +2,6 @@ package tokenstrikemock
 
 import (
 	"context"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -40,12 +39,11 @@ func (t *TokenStrikeMock) Remove(id string) bool {
 }
 
 func (t *TokenStrikeMock) Insert(entry MempoolEntry) string {
-	key := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s/\\%s/\\%d", entry.Hash, entry.Message, entry.Expiration)))
-	t.mempoolEntries[key] = &entry
+	t.mempoolEntries[entry.ParentHash] = &entry
 
-	go t.sendingMessages(key)
+	go t.sendingMessages(entry.ParentHash)
 
-	return key
+	return entry.ParentHash
 }
 
 func (t *TokenStrikeMock) AddPeer(url string) error {
@@ -92,7 +90,7 @@ func (t *TokenStrikeMock) sendMessageToPeer(hash string, peer string, index int)
 		context.Background(),
 		&tokenstrike.InvReq{Invs: []*tokenstrike.Inv{
 			{
-				Parent:     []byte(t.mempoolEntries[hash].Hash),
+				Parent:     []byte(t.mempoolEntries[hash].ParentHash),
 				Type:       t.mempoolEntries[hash].Type,
 				EntityHash: blockHash[:],
 			},

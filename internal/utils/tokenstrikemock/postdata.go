@@ -270,9 +270,15 @@ func (t TokenStrikeMock) validateLockInv(checkedLock *lock.Lock) error {
 		return err
 	}
 
-	inv := t.getInv(lockHash)
-	if inv.Type != tokenstrike.TYPE_LOCK {
-		return fmt.Errorf("type of justification want lock(1) but get %v", inv.Type)
+	lockHashStr := hex.EncodeToString(lockHash)
+
+	_, ok := t.mempoolEntries[lockHashStr]
+	if !ok {
+		return fmt.Errorf("lock not found : %s", lockHashStr)
+	}
+
+	if t.mempoolEntries[lockHashStr].Type != tokenstrike.TYPE_LOCK {
+		return fmt.Errorf("type of justification want lock(1) but get %v", t.mempoolEntries[lockHashStr].Type)
 	}
 
 	return nil
@@ -286,22 +292,19 @@ func (t TokenStrikeMock) validateBlockInv(block *DB.Block) error {
 		return err
 	}
 
-	inv := t.getInv(blockHash)
-	if inv.Type != tokenstrike.TYPE_BLOCK {
-		return fmt.Errorf("type of justification want block(2) but get %v", inv.Type)
+	blockHashStr := hex.EncodeToString(blockHash)
+
+	_, ok := t.mempoolEntries[blockHashStr]
+	if !ok {
+		return fmt.Errorf("block not found : %s", blockHashStr)
+	}
+
+	if t.mempoolEntries[blockHashStr].Type != tokenstrike.TYPE_BLOCK {
+		return fmt.Errorf("type of justification want block(2) but get %v", t.mempoolEntries[blockHashStr].Type)
 	}
 
 	return nil
 
-}
-
-func (t TokenStrikeMock) getInv(data []byte) tokenstrike.Inv {
-	dataHash := sha256.Sum256(data)
-	entity := hex.EncodeToString(dataHash[:])
-
-	inv := t.invCache[entity]
-
-	return inv
 }
 
 func (t TokenStrikeMock) getTokenID(data []byte) string {

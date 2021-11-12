@@ -31,12 +31,17 @@ func (t *TokenStrikeMock) selectNeeded(inv *tokenstrike.Inv) bool {
 	// 	return DontNeedData
 	// }
 
-	if _, ok := t.invCache[entity]; ok {
+	if _, ok := t.mempoolEntries[entity]; ok {
 		return DontNeedData
 	}
 
 	// TODO: move invCache out of this function
-	t.invCache[entity] = *inv
+	t.mempoolEntries[entity] = &MempoolEntry{
+		ParentHash: string(inv.Parent),
+		Expiration: 0,
+		Type:       inv.Type,
+		Message:    nil,
+	}
 
 	return NeedData
 }

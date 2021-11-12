@@ -67,7 +67,7 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 
 	_ = i.invServer.Insert(
 		tokenstrikemock.MempoolEntry{
-			Hash:       tokenID,
+			ParentHash: tokenID,
 			Type:       tokenstrike.TYPE_BLOCK,
 			Message:    block,
 			Expiration: 123,

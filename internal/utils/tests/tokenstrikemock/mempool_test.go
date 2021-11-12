@@ -33,7 +33,7 @@ func (suite *TestSuite) TestInsert() {
 		{
 			name: "valid test",
 			args: args{
-				hash:       "test Hash",
+				hash:       "test ParentHash",
 				message:    &DB.State{},
 				expiration: 12312312,
 			},
@@ -45,7 +45,7 @@ func (suite *TestSuite) TestInsert() {
 
 			if got := suite.tokenStrike.Insert(
 				tokenstrikemock.MempoolEntry{
-					Hash:       tt.args.hash,
+					ParentHash: tt.args.hash,
 					Message:    tt.args.message,
 					Type:       tt.args.msgType,
 					Expiration: tt.args.expiration,
@@ -69,7 +69,7 @@ func (suite *TestSuite) TestSendingMessages() {
 
 	insertHash := tk.Insert(
 		tokenstrikemock.MempoolEntry{
-			Hash:       hex.EncodeToString(suite.sendingMessageTestData.hash),
+			ParentHash: hex.EncodeToString(suite.sendingMessageTestData.hash),
 			Message:    suite.sendingMessageTestData.block,
 			Type:       2,
 			Expiration: 123,

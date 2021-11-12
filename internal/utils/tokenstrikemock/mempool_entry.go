@@ -9,7 +9,7 @@ import (
 )
 
 type MempoolEntry struct {
-	Hash       string
+	ParentHash string
 	Expiration int64
 	Type       uint32
 	Message    protoiface.MessageV1
@@ -20,17 +20,17 @@ func (m *MempoolEntry) GetDataMsg() *tokenstrike.Data {
 	case tokenstrike.TYPE_LOCK:
 		return &tokenstrike.Data{
 			Data:  &tokenstrike.Data_Lock{Lock: m.Message.(*lock.Lock)},
-			Token: m.Hash,
+			Token: m.ParentHash,
 		}
 	case tokenstrike.TYPE_BLOCK:
 		return &tokenstrike.Data{
 			Data:  &tokenstrike.Data_Block{Block: m.Message.(*DB.Block)},
-			Token: m.Hash,
+			Token: m.ParentHash,
 		}
 	case tokenstrike.TYPE_TX:
 		return &tokenstrike.Data{
 			Data:  &tokenstrike.Data_Transfer{Transfer: m.Message.(*tokenstrike.TransferTokens)},
-			Token: m.Hash,
+			Token: m.ParentHash,
 		}
 	case tokenstrike.TYPE_ISSUE:
 		msg := m.Message.(*DB.Block)

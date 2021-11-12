@@ -3,7 +3,7 @@ package wallet
 import (
 	"context"
 	"crypto/sha256"
-	"encoding/hex"
+	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
 
@@ -23,42 +23,12 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 
 	transferTokensHash := sha256.Sum256(transferTokensB)
 
-	blockHash, err := hex.DecodeString(req.TokenId)
-	if err != nil {
-		return nil, err
-	}
-
-	transferInvs := []*tokenstrike.Inv{
-		{
-			Parent:     blockHash[:],
-			Type:       tokenstrike.TYPE_TX,
-			EntityHash: transferTokensHash[:],
-		},
-	}
-
-	resp, err := s.issuerInvSlice[0].Inv(context.TODO(), &tokenstrike.InvReq{
-		Invs: transferInvs,
+	_ = s.inv.Insert(tokenstrikemock.MempoolEntry{
+		ParentHash: "req.TokenId",
+		Expiration: 123,
+		Type:       tokenstrike.TYPE_TX,
+		Message:    transferTokens,
 	})
-	if err != nil {
-		return nil, err
-	}
-
-	if resp.Needed != nil {
-		for _, need := range resp.Needed {
-			if need {
-				DataReq := &tokenstrike.Data{
-					Data:  &tokenstrike.Data_Transfer{Transfer: transferTokens},
-					Token: req.TokenId,
-				}
-
-				//send selected lock and NOW skip check of warning
-				_, err := s.issuerInvSlice[0].PostData(context.TODO(), DataReq)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
 
 	id, err := s.inv.AwaitJustification(req.TokenId, transferTokensHash[:])
 	if err != nil {
