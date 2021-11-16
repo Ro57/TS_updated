@@ -4,89 +4,104 @@ import (
 	"context"
 	"encoding/hex"
 	"time"
+	"token-strike/internal/types/dispatcher"
 	"token-strike/internal/utils/tokenstrikemock"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/justifications"
+	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/tokenstrike"
 )
 
 // TODO: Error handling
 func (i *Issuer) startBlockGenerator(tokenID string) {
-	dispather := i.invServer.Subscribe(tokenID)
+	dispather := i.invServer.Subscribe(tokenID).(dispatcher.TokenDispatcher)
+
 	go func() {
 		for {
-			curLock := <-dispather.Lock
+			wait := dispather.WaitLockAction(func(l lock.Lock) (string, error) {
+				block, err := i.generateLockBlock(tokenID, l)
+				if err != nil {
+					panic(err)
+				}
 
-			block, err := i.generateLockBlock(curLock)
-			if err != nil {
-				panic(err)
-			}
+				err = i.tokendb.SaveBlock(tokenID, block)
+				if err != nil {
+					panic(err)
+				}
 
-			err = i.tokendb.SaveBlock(curLock.TokenID, block)
-			if err != nil {
-				panic(err)
-			}
+				resp, err := i.invServer.GetTokenStatus(context.Background(), &tokenstrike.TokenStatusReq{
+					Tokenid: tokenID,
+				})
+				if err != nil {
+					panic(err)
+				}
 
-			resp, err := i.invServer.GetTokenStatus(context.Background(), &tokenstrike.TokenStatusReq{
-				Tokenid: curLock.TokenID,
+				blockHash, err := resp.Dblock0.GetHash()
+				if err != nil {
+					panic(err)
+				}
+
+				block32 := [32]byte{}
+				copy(block32[:], blockHash[:32])
+
+				_ = i.invServer.Insert(
+					tokenstrikemock.MempoolEntry{
+						ParentHash: tokenID,
+						Type:       tokenstrike.TYPE_BLOCK,
+						Message:    block,
+						Expiration: 123,
+					},
+				)
+				return "", nil
 			})
-			if err != nil {
-				panic(err)
-			}
 
-			blockHash, err := resp.Dblock0.GetHash()
-			if err != nil {
-				panic(err)
-			}
-
-			block32 := [32]byte{}
-			copy(block32[:], blockHash[:32])
-
-			_ = i.invServer.Insert(
-				tokenstrikemock.MempoolEntry{
-					ParentHash: curLock.TokenID,
-					Type:       tokenstrike.TYPE_BLOCK,
-					Message:    block,
-					Expiration: 123,
-				})
+			<-wait
 		}
 	}()
 
 	go func() {
 		for {
-			tx := <-dispather.TX
+			wait := dispather.WaitTxAction(func(tx justifications.TranferToken) (string, error) {
+				block, err := i.generateTxBlock(tokenID, tx)
+				if err != nil {
+					panic(err)
+				}
 
-			block, err := i.generateTxBlock(tx)
-			if err != nil {
-				panic(err)
-			}
+				err = i.tokendb.SaveBlock(tokenID, block)
+				if err != nil {
+					panic(err)
+				}
 
-			err = i.tokendb.SaveBlock(tx.TokenID, block)
-			if err != nil {
-				panic(err)
-			}
+				blockHash, err := block.GetHash()
+				if err != nil {
+					panic(err)
+				}
 
-			blockHash, err := block.GetHash()
-			if err != nil {
-				panic(err)
-			}
+				block32 := [32]byte{}
+				copy(block32[:], blockHash[:32])
 
-			block32 := [32]byte{}
-			copy(block32[:], blockHash[:32])
+				_ = i.invServer.Insert(
+					tokenstrikemock.MempoolEntry{
+						ParentHash: tokenID,
+						Type:       tokenstrike.TYPE_BLOCK,
+						Message:    block,
+						Expiration: 123,
+					},
+				)
 
-			_ = i.invServer.Insert(
-				tokenstrikemock.MempoolEntry{
-					ParentHash: tx.TokenID,
-					Type:       tokenstrike.TYPE_BLOCK,
-					Message:    block,
-					Expiration: 123,
-				})
+				return "", nil
+			})
+
+			<-wait
 		}
 	}()
+
+	dispather.Observe()
+
 }
 
-func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockEvent) (*DB.Block, error) {
-	chain, err := i.tokendb.GetChainInfoDB(curLock.TokenID)
+func (i Issuer) generateLockBlock(tokenID string, l lock.Lock) (*DB.Block, error) {
+	chain, err := i.tokendb.GetChainInfoDB(tokenID)
 	if err != nil {
 		return nil, err
 	}
@@ -102,7 +117,7 @@ func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockEvent) (*DB.Block
 	lockJustification := &DB.Justification{
 		Content: &DB.Justification_Lock{
 			Lock: &justifications.LockToken{
-				Lock: &curLock.Content,
+				Lock: &l,
 			},
 		},
 	}
@@ -130,8 +145,8 @@ func (i Issuer) generateLockBlock(curLock *tokenstrikemock.LockEvent) (*DB.Block
 	return block, nil
 }
 
-func (i Issuer) generateTxBlock(curTx *tokenstrikemock.TxEvent) (*DB.Block, error) {
-	chain, err := i.tokendb.GetChainInfoDB(curTx.TokenID)
+func (i Issuer) generateTxBlock(tokenID string, tx justifications.TranferToken) (*DB.Block, error) {
+	chain, err := i.tokendb.GetChainInfoDB(tokenID)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +161,7 @@ func (i Issuer) generateTxBlock(curTx *tokenstrikemock.TxEvent) (*DB.Block, erro
 
 	txJustification := &DB.Justification{
 		Content: &DB.Justification_Transfer{
-			Transfer: &curTx.Content,
+			Transfer: &tx,
 		},
 	}
 

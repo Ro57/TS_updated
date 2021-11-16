@@ -3,25 +3,24 @@ package wallet
 import (
 	"context"
 	"errors"
-	"token-strike/tsp2p/server/tokenstrike"
+	"token-strike/internal/types/dispatcher"
+	"token-strike/tsp2p/server/rpcservice"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 const emptyIssue = "empty issue url collection"
 
-func (s Server) DiscoverToken(tokenID string) error {
-
-	req := &tokenstrike.TokenStatusReq{
-		Tokenid: tokenID,
+func (s *Server) DiscoverToken(ctx context.Context, req *rpcservice.DiscoverTokenRequest) (*empty.Empty, error) {
+	disp, ok := s.inv.Subscribe(req.ParentHash).(dispatcher.TokenDispatcher)
+	if !ok {
+		return &emptypb.Empty{}, errors.New("subscribe return not correct type")
 	}
 
-	tokenStatus, err := s.issuerInvSlice[0].GetTokenStatus(context.Background(), req)
-	if err != nil {
-		return err
-	}
+	s.dispatcher = disp
 
-	if tokenStatus == nil {
-		return errors.New("token not found")
-	}
+	s.dispatcher.Observe()
 
-	return nil
+	return &emptypb.Empty{}, nil
 }

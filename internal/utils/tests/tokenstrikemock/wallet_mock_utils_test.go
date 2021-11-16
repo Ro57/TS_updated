@@ -48,3 +48,7 @@ func (w *walletMockServer) PostData(ctx context.Context, data *tokenstrike.Data)
 func (w *walletMockServer) GetTokenStatus(ctx context.Context, req *tokenstrike.TokenStatusReq) (*tokenstrike.TokenStatus, error) {
 	panic("implement me")
 }
+
+func (w *walletMockServer) DiscoverToken(ctx context.Context, req *rpcservice.DiscoverTokenRequest) (*empty.Empty, error) {
+	panic("implement me")
+}

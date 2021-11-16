@@ -8,6 +8,7 @@ import (
 
 	"token-strike/internal/database"
 	addressTypes "token-strike/internal/types/address"
+	"token-strike/internal/types/dispatcher"
 	"token-strike/internal/utils/config"
 	"token-strike/internal/utils/pktchain"
 	"token-strike/internal/utils/tokenstrikemock"
@@ -24,7 +25,7 @@ type Server struct {
 	db             database.DBRepository
 	issuerInvSlice []rpcservice.RPCServiceClient
 	inv            *tokenstrikemock.TokenStrikeMock
-	dispather      tokenstrikemock.Dispatcher
+	dispatcher     dispatcher.TokenDispatcher
 }
 
 var _ rpcservice.RPCServiceServer = &Server{}

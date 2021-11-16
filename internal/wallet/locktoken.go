@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"token-strike/internal/utils/idgen"
 	"token-strike/internal/utils/tokenstrikemock"
+	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/lock"
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
@@ -26,9 +27,8 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		Signature:      "",
 	}
 
-	dispatcher := s.inv.Subscribe(req.TokenId)
 	// Skip genesis block from pool
-	<-dispatcher.Block
+	// <-s.dispatcher.Block
 
 	err := lockEl.Sing(s.privateKey)
 	if err != nil {
@@ -49,20 +49,29 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		Message:    lockEl,
 	})
 
-	lockBlock := <-dispatcher.Block
+	wait := s.dispatcher.WaitBlockAction(func(b DB.Block) (string, error) {
+		number, err := idgen.EntityIndex(b, lockHash[:])
+		if err != nil {
+			return "", err
+		}
 
-	number, err := idgen.EntityIndex(lockBlock.Content, lockHash[:])
-	if err != nil {
-		return nil, err
+		lockBlockBytes, err := b.GetHash()
+		if err != nil {
+			return "", err
+		}
+
+		lockBlockHash := hex.EncodeToString(lockBlockBytes)
+
+		id := idgen.Encode(lockBlockHash, number)
+
+		return id, nil
+	})
+
+	lockID := <-wait
+
+	if lockID.Err != nil {
+		return &rpcservice.LockTokenResponse{}, lockID.Err
 	}
 
-	lockBlockBytes, err := lockBlock.Content.GetHash()
-	if err != nil {
-		return nil, err
-	}
-
-	lockBlockHash := hex.EncodeToString(lockBlockBytes)
-
-	id := idgen.Encode(lockBlockHash, number)
-	return &rpcservice.LockTokenResponse{LockId: id}, nil
+	return &rpcservice.LockTokenResponse{LockId: lockID.ID}, nil
 }

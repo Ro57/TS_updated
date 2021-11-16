@@ -1,46 +1,19 @@
 package tokenstrikemock
 
 import (
-	"encoding/hex"
-	"token-strike/tsp2p/server/DB"
-	"token-strike/tsp2p/server/justifications"
-	"token-strike/tsp2p/server/lock"
+	"token-strike/internal/types/dispatcher"
+	"token-strike/internal/utils/simple"
 	"token-strike/tsp2p/server/tokenstrike"
 )
 
-type LockEvent struct {
-	TokenID string
-	Content lock.Lock
-}
-
-type TxEvent struct {
-	TokenID string
-	Content justifications.TranferToken
-}
-
-type BlockEvent struct {
-	TokenID string
-	Content DB.Block
-}
-
-type Dispatcher struct {
-	Lock  chan *LockEvent
-	TX    chan *TxEvent
-	Block chan *BlockEvent
-}
-
-func (t *TokenStrikeMock) Subscribe(PartenHash string) Dispatcher {
+func (t *TokenStrikeMock) Subscribe(PartenHash string) dispatcher.Dispatcher {
 
 	// if dispather not exist, create it
 	if t.dispatchers[PartenHash] == nil {
-		t.dispatchers[PartenHash] = &Dispatcher{
-			Lock:  make(chan *LockEvent),
-			TX:    make(chan *TxEvent),
-			Block: make(chan *BlockEvent),
-		}
+		t.dispatchers[PartenHash] = simple.NewTokenDispatcher()
 	}
 
-	return *t.dispatchers[PartenHash]
+	return t.dispatchers[PartenHash]
 }
 
 func (t *TokenStrikeMock) dispatch(msg *tokenstrike.Data) {
@@ -52,31 +25,18 @@ func (t *TokenStrikeMock) dispatch(msg *tokenstrike.Data) {
 			t.dispatchLock(msg.Token, data)
 		case *tokenstrike.Data_Transfer:
 			t.dispatchTx(msg.Token, data)
-
 		}
 	}()
 }
 
 func (t *TokenStrikeMock) dispatchBlock(ParentHash string, data *tokenstrike.Data_Block) {
-	t.dispatchers[ParentHash].Block <- &BlockEvent{
-		TokenID: ParentHash,
-		Content: *data.Block,
-	}
+	t.dispatchers[ParentHash].SendBlock(*data.Block)
 }
 
 func (t *TokenStrikeMock) dispatchLock(ParentHash string, data *tokenstrike.Data_Lock) {
-	t.dispatchers[ParentHash].Lock <- &LockEvent{
-		TokenID: ParentHash,
-		Content: *data.Lock,
-	}
+	t.dispatchers[ParentHash].SendLock(*data.Lock)
 }
 
 func (t *TokenStrikeMock) dispatchTx(ParentHash string, data *tokenstrike.Data_Transfer) {
-	t.dispatchers[ParentHash].TX <- &TxEvent{
-		TokenID: ParentHash,
-		Content: justifications.TranferToken{
-			HtlcSecret: hex.EncodeToString(data.Transfer.GetHtlc()),
-			Lock:       data.Transfer.GetLockId(),
-		},
-	}
+	t.dispatchers[ParentHash].SendTx(*data.Transfer)
 }

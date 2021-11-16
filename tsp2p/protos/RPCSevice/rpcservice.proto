@@ -30,12 +30,17 @@ service RPCService {
     // Inv — send meta information to token strike
     rpc Inv(tokenstrike.InvReq) returns (tokenstrike.InvResp);
 
+    // DiscoverToken — subscribe on parent hash
+    rpc DiscoverToken(DiscoverTokenRequest) 
+        returns (google.protobuf.Empty);
+
     // PostData — send full data to replication
     rpc PostData(tokenstrike.Data) returns (tokenstrike.PostDataResp);
     
     // GetTokenStatus — response with information about token
     rpc GetTokenStatus(tokenstrike.TokenStatusReq) 
         returns (tokenstrike.TokenStatus);
+
 }
 
 // TransferTokensRequest contain information about sending transaction
@@ -92,4 +97,10 @@ message LockTokenResponse {
 message PeerRequest {
     // url for rpc connection
     string url = 1;
+}
+
+// DiscoverTokenRequest contain parent hash to subscribe
+message DiscoverTokenRequest {
+    // parent_hash — token id or issuer pubkey for subscription
+    string parent_hash = 1;
 }

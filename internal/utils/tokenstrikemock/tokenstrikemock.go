@@ -3,6 +3,7 @@ package tokenstrikemock
 import (
 	"token-strike/internal/database"
 	"token-strike/internal/types/address"
+	"token-strike/internal/types/dispatcher"
 	"token-strike/internal/types/pkt"
 	"token-strike/internal/utils/pktchain"
 	addressScheme "token-strike/internal/utils/simple"
@@ -22,12 +23,12 @@ type TokenStrikeMock struct {
 	pktChain       pkt.PktChain
 	addressScheme  addressScheme.SimpleAddressScheme
 	invCache       map[string]tokenstrike.Inv
-	dispatchers    map[string]*Dispatcher
+	dispatchers    map[string]dispatcher.TokenDispatcher
 	mempoolEntries map[string]*MempoolEntry
 	peers          []string
 }
 
-//var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
+var _ tokenstrike.TokenStrikeServer = &TokenStrikeMock{}
 
 func New(db database.DBRepository, simpleAddress address.Address) (res *TokenStrikeMock) {
 	defer func() {
@@ -42,6 +43,6 @@ func New(db database.DBRepository, simpleAddress address.Address) (res *TokenStr
 		address:        simpleAddress,
 		mempoolEntries: make(map[string]*MempoolEntry, 0),
 		peers:          make([]string, 0),
-		dispatchers:    make(map[string]*Dispatcher),
+		dispatchers:    make(map[string]dispatcher.TokenDispatcher),
 	}
 }

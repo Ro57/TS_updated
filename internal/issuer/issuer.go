@@ -14,6 +14,9 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 var _ rpcservice.RPCServiceServer = &Issuer{}
@@ -76,10 +79,10 @@ func (i *Issuer) AddPeer(ctx context.Context, request *rpcservice.PeerRequest) (
 }
 
 func (i *Issuer) SendToken(ctx context.Context, req *rpcservice.TransferTokensRequest) (*rpcservice.TransferTokensResponse, error) {
-	return &rpcservice.TransferTokensResponse{}, nil
+	return &rpcservice.TransferTokensResponse{}, status.Error(codes.Unimplemented, "implement me")
 }
 func (i *Issuer) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest) (*rpcservice.LockTokenResponse, error) {
-	return &rpcservice.LockTokenResponse{}, nil
+	return &rpcservice.LockTokenResponse{}, status.Error(codes.Unimplemented, "implement me")
 }
 func (i *Issuer) PostData(ctx context.Context, req *tokenstrike.Data) (*tokenstrike.PostDataResp, error) {
 	return i.invServer.PostData(ctx, req)
@@ -91,4 +94,8 @@ func (i *Issuer) Inv(ctx context.Context, req *tokenstrike.InvReq) (*tokenstrike
 
 func (i *Issuer) GetTokenStatus(ctx context.Context, req *tokenstrike.TokenStatusReq) (*tokenstrike.TokenStatus, error) {
 	return i.invServer.GetTokenStatus(ctx, req)
+}
+
+func (i *Issuer) DiscoverToken(ctx context.Context, req *rpcservice.DiscoverTokenRequest) (*empty.Empty, error) {
+	return &emptypb.Empty{}, status.Error(codes.Unimplemented, "implement me")
 }

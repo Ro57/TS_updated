@@ -86,14 +86,15 @@ func TestAllFunctions(t *testing.T) {
 		err := issuerNew.NewServer(cfg, tokendb, isaacPrivateKey, httpIsaac)
 		if err != nil {
 			t.Error(err)
+			return
 		}
 	}()
 
 	go func() {
 		err := wallet.NewServer(tokendb, alicePrivateKey, httpAlice, []string{httpIsaac})
 		if err != nil {
-
 			t.Error(err)
+			return
 		}
 	}()
 
@@ -103,11 +104,13 @@ func TestAllFunctions(t *testing.T) {
 	issuer, err := issuerNew.CreateClient(httpIsaac, "asd")
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	alice, err := wallet.CreateClient(httpAlice, httpIsaac)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	tokenID, err := issuer.IssueToken(
@@ -127,9 +130,19 @@ func TestAllFunctions(t *testing.T) {
 			Expiration: math.MaxInt32,
 		},
 	)
+
 	if err != nil {
 		t.Error(err)
+		return
 	}
+
+	// Skip first block
+	time.Sleep(1 * time.Second)
+
+	alice.DiscoverToken(
+		context.Background(),
+		&rpcservice.DiscoverTokenRequest{ParentHash: tokenID.TokenId},
+	)
 
 	lockResp, err := alice.LockToken(
 		context.Background(),
@@ -142,6 +155,7 @@ func TestAllFunctions(t *testing.T) {
 	)
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	transferHash, err := alice.SendToken(
@@ -153,6 +167,7 @@ func TestAllFunctions(t *testing.T) {
 		})
 	if err != nil {
 		t.Error(err)
+		return
 	}
 
 	fmt.Println(transferHash.Txid)

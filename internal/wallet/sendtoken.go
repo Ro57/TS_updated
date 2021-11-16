@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"token-strike/internal/utils/idgen"
 	"token-strike/internal/utils/tokenstrikemock"
+	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/rpcservice"
 	"token-strike/tsp2p/server/tokenstrike"
 
@@ -25,8 +26,6 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 
 	transferTokensHash := sha256.Sum256(transferTokensB)
 
-	dispatcher := s.inv.Subscribe(req.TokenId)
-
 	_ = s.inv.Insert(tokenstrikemock.MempoolEntry{
 		ParentHash: req.TokenId,
 		Expiration: 123,
@@ -34,21 +33,28 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 		Message:    transferTokens,
 	})
 
-	txBlock := <-dispatcher.Block
+	wait := s.dispatcher.WaitBlockAction(func(b DB.Block) (string, error) {
+		number, err := idgen.EntityIndex(b, transferTokensHash[:])
+		if err != nil {
+			return "", err
+		}
 
-	number, err := idgen.EntityIndex(txBlock.Content, transferTokensHash[:])
-	if err != nil {
-		return nil, err
+		txBlockBytes, err := b.GetHash()
+		if err != nil {
+			return "", err
+		}
+
+		txBlockHash := hex.EncodeToString(txBlockBytes)
+
+		id := idgen.Encode(txBlockHash, number)
+
+		return id, nil
+	})
+
+	txID := <-wait
+
+	if txID.Err != nil {
+		return &rpcservice.TransferTokensResponse{}, txID.Err
 	}
-
-	txBlockBytes, err := txBlock.Content.GetHash()
-	if err != nil {
-		return nil, err
-	}
-
-	txBlockHash := hex.EncodeToString(txBlockBytes)
-
-	id := idgen.Encode(txBlockHash, number)
-
-	return &rpcservice.TransferTokensResponse{Txid: id}, nil
+	return &rpcservice.TransferTokensResponse{Txid: txID.ID}, nil
 }
