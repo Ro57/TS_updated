@@ -71,7 +71,8 @@ func (i *Issuer) IssueToken(ctx context.Context, request *rpcservice.IssueTokenR
 			Type:       tokenstrike.TYPE_BLOCK,
 			Message:    block,
 			Expiration: 123,
-		})
+		},
+	)
 
 	i.startBlockGenerator(tokenID)
 

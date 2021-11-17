@@ -30,13 +30,20 @@ func (t *TokenStrikeMock) dispatch(msg *tokenstrike.Data) {
 }
 
 func (t *TokenStrikeMock) dispatchBlock(ParentHash string, data *tokenstrike.Data_Block) {
-	t.dispatchers[ParentHash].SendBlock(*data.Block)
+	if parentDispatcher, ok := t.dispatchers[ParentHash]; ok {
+		parentDispatcher.SendBlock(*data.Block)
+	}
+
 }
 
 func (t *TokenStrikeMock) dispatchLock(ParentHash string, data *tokenstrike.Data_Lock) {
-	t.dispatchers[ParentHash].SendLock(*data.Lock)
+	if parentDispatcher, ok := t.dispatchers[ParentHash]; ok {
+		parentDispatcher.SendLock(*data.Lock)
+	}
 }
 
 func (t *TokenStrikeMock) dispatchTx(ParentHash string, data *tokenstrike.Data_Transfer) {
-	t.dispatchers[ParentHash].SendTx(*data.Transfer)
+	if parentDispatcher, ok := t.dispatchers[ParentHash]; ok {
+		parentDispatcher.SendTx(*data.Transfer)
+	}
 }
