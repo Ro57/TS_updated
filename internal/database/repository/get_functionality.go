@@ -55,7 +55,7 @@ func (b *Bbolt) GetChainInfoDB(tokenId string) (*replicator.ChainInfo, error) {
 
 		// getting chain blocks
 		var (
-			rootHash    = tokenBucket.Get(database.RootHashKey)
+			rootHash    = tokenBucket.Get(database.TipBlockHashKey)
 			currentHash = rootHash
 		)
 
@@ -136,7 +136,7 @@ func (b *Bbolt) GetMerkleBlockDB(tokenId, hash string) ([]*replicator.MerkleBloc
 			return errors.InfoNotFoundErr
 		}
 
-		rootHash := tokenBucket.Get(database.RootHashKey)
+		rootHash := tokenBucket.Get(database.TipBlockHashKey)
 		if rootHash == nil {
 			return errors.RootHashNotFoundErr
 		}
@@ -206,7 +206,7 @@ func (b *Bbolt) GetTokenList() ([]*replicator.Token, error) {
 			token := replicator.Token{
 				Name:  string(k),
 				Token: &tokenInfo,
-				Root:  string(tokenBucket.Get(database.RootHashKey)),
+				Root:  string(tokenBucket.Get(database.TipBlockHashKey)),
 			}
 
 			resultList = append(resultList, &token)
@@ -290,7 +290,7 @@ func (b *Bbolt) GetToken(name string) (replicator.Token, error) {
 			return err
 		}
 
-		token.Root = string(tokenBucket.Get(database.RootHashKey))
+		token.Root = string(tokenBucket.Get(database.TipBlockHashKey))
 		return nil
 	})
 

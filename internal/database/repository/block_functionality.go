@@ -43,7 +43,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 			return errors.RootBucketNotFoundErr
 		}
 
-		lastHash := tokenBucket.Get(database.RootHashKey)
+		lastHash := tokenBucket.Get(database.TipBlockHashKey)
 		if lastHash == nil {
 			return errors.LastBlockNotFoundErr
 		}
@@ -90,7 +90,7 @@ func (b *Bbolt) AssemblyBlock(name string, justifications []*DB.Justification) (
 		}
 
 		blockSignatureBytes := []byte(block.GetSignature())
-		err = tokenBucket.Put(database.RootHashKey, blockSignatureBytes)
+		err = tokenBucket.Put(database.TipBlockHashKey, blockSignatureBytes)
 		if err != nil {
 			return err
 		}
@@ -128,7 +128,7 @@ func (b *Bbolt) SyncBlock(name string, blocks []*DB.Block) error {
 
 			// every time with a new pass we request the current signature
 			// after saving it changes
-			currentSignature := string(tokenBucket.Get(database.RootHashKey))
+			currentSignature := string(tokenBucket.Get(database.TipBlockHashKey))
 
 			// if the first block is incorrect
 			if currentSignature != blocks[0].PrevBlock {
@@ -170,10 +170,10 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 			return errors.TokenNotFoundErr
 		}
 
-		if hex.EncodeToString(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
+		if hex.EncodeToString(tokenBucket.Get(database.TipBlockHashKey)) != block.PrevBlock {
 			return fmt.Errorf(
 				"invalid hash of the previous block want %s but get %s",
-				hex.EncodeToString(tokenBucket.Get(database.RootHashKey)),
+				hex.EncodeToString(tokenBucket.Get(database.TipBlockHashKey)),
 				block.PrevBlock,
 			)
 		}
@@ -183,7 +183,7 @@ func (b *Bbolt) SaveBlock(name string, block *DB.Block) error {
 			return err
 		}
 
-		err = tokenBucket.Put(database.RootHashKey, blockHash)
+		err = tokenBucket.Put(database.TipBlockHashKey, blockHash)
 		if err != nil {
 			return err
 		}

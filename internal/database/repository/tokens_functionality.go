@@ -56,16 +56,16 @@ func (b *Bbolt) IssueTokenDB(tokenID string, tokenInfo *DB.Token, block *DB.Bloc
 			return errPut
 		}
 
-		err = tokenBucket.Put(database.RootHashKey, []byte(""))
+		err = tokenBucket.Put(database.TipBlockHashKey, []byte(""))
 		if err != nil {
 			return err
 		}
 
 		// TODO: remove after do refactoring
-		//if string(tokenBucket.Get(database.RootHashKey)) != block.PrevBlock {
+		//if string(tokenBucket.Get(database.TipBlockHashKey)) != block.PrevBlock {
 		//	return fmt.Errorf(
 		//		"invalid hash of the previous block want %s but get %s",
-		//		tokenBucket.Get(database.RootHashKey),
+		//		tokenBucket.Get(database.TipBlockHashKey),
 		//		block.PrevBlock,
 		//	)
 		//}
@@ -76,7 +76,7 @@ func (b *Bbolt) IssueTokenDB(tokenID string, tokenInfo *DB.Token, block *DB.Bloc
 			return err
 		}
 
-		err = tokenBucket.Put(database.RootHashKey, blockHash)
+		err = tokenBucket.Put(database.TipBlockHashKey, blockHash)
 		if err != nil {
 			return err
 		}
