@@ -38,7 +38,7 @@ type TokenDispatcher interface {
 	SendBlock(DB.Block)
 	SendTx(tokenstrike.TransferTokens)
 	WaitLockAction(LockAction) chan IdResult
-	WaitBlockAction(BlockAction) chan IdResult
+	WaitBlockAction([]byte, BlockAction) chan IdResult
 	WaitTxAction(TXAction) chan IdResult
 }
 

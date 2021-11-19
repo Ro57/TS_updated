@@ -3,6 +3,7 @@ package simple
 import (
 	"encoding/hex"
 	"token-strike/internal/types/dispatcher"
+	"token-strike/internal/utils/idgen"
 	"token-strike/tsp2p/server/DB"
 	"token-strike/tsp2p/server/justifications"
 	"token-strike/tsp2p/server/lock"
@@ -10,22 +11,22 @@ import (
 )
 
 type SimpleTokenDispatcher struct {
-	lock              chan dispatcher.LockEvent
-	block             chan dispatcher.BlockEvent
-	tx                chan dispatcher.TxEvent
-	lockActionsSlice  []func(lock.Lock)
-	blockActionsSlice []func(DB.Block)
-	txActionsSlice    []func(justifications.TranferToken)
+	lock             chan dispatcher.LockEvent
+	block            chan dispatcher.BlockEvent
+	tx               chan dispatcher.TxEvent
+	lockActionsSlice []func(lock.Lock)
+	blockActionsMap  map[string]func(DB.Block)
+	txActionsSlice   []func(justifications.TranferToken)
 }
 
 func NewTokenDispatcher() dispatcher.TokenDispatcher {
 	return &SimpleTokenDispatcher{
-		lock:              make(chan dispatcher.LockEvent),
-		block:             make(chan dispatcher.BlockEvent),
-		tx:                make(chan dispatcher.TxEvent),
-		lockActionsSlice:  []func(lock.Lock){},
-		blockActionsSlice: []func(DB.Block){},
-		txActionsSlice:    []func(justifications.TranferToken){},
+		lock:             make(chan dispatcher.LockEvent),
+		block:            make(chan dispatcher.BlockEvent),
+		tx:               make(chan dispatcher.TxEvent),
+		lockActionsSlice: []func(lock.Lock){},
+		blockActionsMap:  make(map[string]func(DB.Block)),
+		txActionsSlice:   []func(justifications.TranferToken){},
 	}
 }
 
@@ -79,15 +80,17 @@ func (s *SimpleTokenDispatcher) WaitLockAction(action dispatcher.LockAction) cha
 	return wait
 }
 
-func (s *SimpleTokenDispatcher) WaitBlockAction(action dispatcher.BlockAction) chan dispatcher.IdResult {
+func (s *SimpleTokenDispatcher) WaitBlockAction(hash []byte, action dispatcher.BlockAction) chan dispatcher.IdResult {
 	wait := make(chan dispatcher.IdResult)
-	s.blockActionsSlice = append(s.blockActionsSlice, func(b DB.Block) {
+	entity := hex.EncodeToString(hash)
+
+	s.blockActionsMap[entity] = func(b DB.Block) {
 		id, err := action(b)
 		wait <- dispatcher.IdResult{
 			ID:  id,
 			Err: err,
 		}
-	})
+	}
 
 	return wait
 }
@@ -114,11 +117,15 @@ func (s *SimpleTokenDispatcher) executeLockActions(eventLock lock.Lock) {
 }
 
 func (s *SimpleTokenDispatcher) executeBlockActions(block DB.Block) {
-	for _, waiter := range s.blockActionsSlice {
-		waiter(block)
-	}
+	for k, waiter := range s.blockActionsMap {
+		hash, _ := hex.DecodeString(k)
+		_, err := idgen.EntityIndex(block, hash)
 
-	s.blockActionsSlice = []func(DB.Block){}
+		if err == nil {
+			waiter(block)
+			delete(s.blockActionsMap, k)
+		}
+	}
 }
 
 func (s *SimpleTokenDispatcher) executeTXActions(tx justifications.TranferToken) {

@@ -33,7 +33,7 @@ func (s *Server) SendToken(ctx context.Context, req *rpcservice.TransferTokensRe
 		Message:    transferTokens,
 	})
 
-	wait := s.dispatcher.WaitBlockAction(func(b DB.Block) (string, error) {
+	wait := s.dispatcher.WaitBlockAction(transferTokensHash[:], func(b DB.Block) (string, error) {
 		number, err := idgen.EntityIndex(b, transferTokensHash[:])
 		if err != nil {
 			return "", err

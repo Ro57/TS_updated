@@ -49,7 +49,7 @@ func (s Server) LockToken(ctx context.Context, req *rpcservice.LockTokenRequest)
 		Message:    lockEl,
 	})
 
-	wait := s.dispatcher.WaitBlockAction(func(b DB.Block) (string, error) {
+	wait := s.dispatcher.WaitBlockAction(lockHash[:], func(b DB.Block) (string, error) {
 		number, err := idgen.EntityIndex(b, lockHash[:])
 		if err != nil {
 			return "", err
