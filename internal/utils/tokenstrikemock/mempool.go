@@ -120,10 +120,15 @@ func (t *TokenStrikeMock) timerSendingMessages() {
 			countPeers = len(t.peers) - 1
 		)
 
-		if len(t.mempoolEntries) > 1 && countPeers >= 1 {
+		if len(t.mempoolEntries) > 0 && countPeers > 0 {
 			rand.Seed(time.Now().UnixNano())
 
-			err := t.sendMessageToPeer("m", t.peers[rand.Intn(countPeers)], 1)
+			hash := t.randomHash()
+			if hash == "" {
+				fmt.Printf("mempool %v is empty?", t.mempoolEntries)
+			}
+
+			err := t.sendMessageToPeer(hash, t.peers[rand.Intn(countPeers)], 1)
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -131,4 +136,12 @@ func (t *TokenStrikeMock) timerSendingMessages() {
 
 		time.Sleep(time.Second * NumberSecondsWaitTime)
 	}
+}
+
+func (t *TokenStrikeMock) randomHash() string {
+	for k := range t.mempoolEntries {
+		return k
+	}
+
+	return ""
 }
